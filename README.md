@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MeshtasticNet472
 
 MeshtasticNet472 is a C# 7.3 / .NET Framework 4.7.2 client library and terminal
@@ -69,3 +70,7 @@ license copy is retained in `LICENSE-Meshtastic-Protobufs.txt`.
 
 See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for third-party component
 attribution and release-packaging notes.
+=======
+# MeshtasticConsoleClient
+A Windows Console Client for Meshtastic 
+>>>>>>> b3d62ccfdec834a5002527eeba200b1cd94650f5
