@@ -1,0 +1,51 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meshtastic.Client", "src\Meshtastic.Client\Meshtastic.Client.csproj", "{42A9691B-AF49-49D5-AE64-28B9F5DC6A90}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Meshtastic.Sample", "src\Meshtastic.Sample\Meshtastic.Sample.csproj", "{0A8E9AA8-1B67-4C0C-B3F2-11281A805C55}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleClient", "src\ConsoleClient\ConsoleClient.csproj", "{A42B5A26-6F57-4E0B-9B54-746CB9FB254C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiceDemo", "src\DiceDemo\DiceDemo.csproj", "{E5D98C4F-61D4-446C-94A9-749390B9D19F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Linux|Any CPU = Linux|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{42A9691B-AF49-49D5-AE64-28B9F5DC6A90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42A9691B-AF49-49D5-AE64-28B9F5DC6A90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42A9691B-AF49-49D5-AE64-28B9F5DC6A90}.Linux|Any CPU.ActiveCfg = Linux|Any CPU
+		{42A9691B-AF49-49D5-AE64-28B9F5DC6A90}.Linux|Any CPU.Build.0 = Linux|Any CPU
+		{42A9691B-AF49-49D5-AE64-28B9F5DC6A90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42A9691B-AF49-49D5-AE64-28B9F5DC6A90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A8E9AA8-1B67-4C0C-B3F2-11281A805C55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A8E9AA8-1B67-4C0C-B3F2-11281A805C55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A8E9AA8-1B67-4C0C-B3F2-11281A805C55}.Linux|Any CPU.ActiveCfg = Linux|Any CPU
+		{0A8E9AA8-1B67-4C0C-B3F2-11281A805C55}.Linux|Any CPU.Build.0 = Linux|Any CPU
+		{0A8E9AA8-1B67-4C0C-B3F2-11281A805C55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A8E9AA8-1B67-4C0C-B3F2-11281A805C55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A42B5A26-6F57-4E0B-9B54-746CB9FB254C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A42B5A26-6F57-4E0B-9B54-746CB9FB254C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A42B5A26-6F57-4E0B-9B54-746CB9FB254C}.Linux|Any CPU.ActiveCfg = Linux|Any CPU
+		{A42B5A26-6F57-4E0B-9B54-746CB9FB254C}.Linux|Any CPU.Build.0 = Linux|Any CPU
+		{A42B5A26-6F57-4E0B-9B54-746CB9FB254C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A42B5A26-6F57-4E0B-9B54-746CB9FB254C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5D98C4F-61D4-446C-94A9-749390B9D19F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5D98C4F-61D4-446C-94A9-749390B9D19F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5D98C4F-61D4-446C-94A9-749390B9D19F}.Linux|Any CPU.ActiveCfg = Linux|Any CPU
+		{E5D98C4F-61D4-446C-94A9-749390B9D19F}.Linux|Any CPU.Build.0 = Linux|Any CPU
+		{E5D98C4F-61D4-446C-94A9-749390B9D19F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5D98C4F-61D4-446C-94A9-749390B9D19F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C89E00C2-F1FC-4ACB-BD21-37AEBC67A4CE}
+	EndGlobalSection
+EndGlobal

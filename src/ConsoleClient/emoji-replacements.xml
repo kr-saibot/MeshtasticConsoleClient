@@ -1,0 +1,1918 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Generated from Unicode emoji-test.txt. Fully-qualified RGI emoji; skin-tone variants omitted. Category fields follow Unicode group and subgroup.-->
+<EmojiReplacements>
+  <Emoji value="😀" text="[:grinning face:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😃" text="[:grinning face with big eyes:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😄" text="[:grinning face with smiling eyes:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😁" text="[:beaming face with smiling eyes:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😆" text="[:grinning squinting face:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😅" text="[:grinning face with sweat:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="🤣" text="[:rolling on the floor laughing:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😂" text="[:face with tears of joy:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="🙂" text="[:slightly smiling face:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="🙃" text="[:upside-down face:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="🫠" text="[:melting face:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😉" text="[:winking face:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😊" text="[:smiling face with smiling eyes:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="😇" text="[:smiling face with halo:]" category="Smileys &amp; Emotion" subCategory="face-smiling" />
+  <Emoji value="🥰" text="[:smiling face with hearts:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="😍" text="[:smiling face with heart-eyes:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="🤩" text="[:star-struck:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="😘" text="[:face blowing a kiss:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="😗" text="[:kissing face:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="☺️" text="[:smiling face:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="😚" text="[:kissing face with closed eyes:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="😙" text="[:kissing face with smiling eyes:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="🥲" text="[:smiling face with tear:]" category="Smileys &amp; Emotion" subCategory="face-affection" />
+  <Emoji value="😋" text="[:face savoring food:]" category="Smileys &amp; Emotion" subCategory="face-tongue" />
+  <Emoji value="😛" text="[:face with tongue:]" category="Smileys &amp; Emotion" subCategory="face-tongue" />
+  <Emoji value="😜" text="[:winking face with tongue:]" category="Smileys &amp; Emotion" subCategory="face-tongue" />
+  <Emoji value="🤪" text="[:zany face:]" category="Smileys &amp; Emotion" subCategory="face-tongue" />
+  <Emoji value="😝" text="[:squinting face with tongue:]" category="Smileys &amp; Emotion" subCategory="face-tongue" />
+  <Emoji value="🤑" text="[:money-mouth face:]" category="Smileys &amp; Emotion" subCategory="face-tongue" />
+  <Emoji value="🤗" text="[:smiling face with open hands:]" category="Smileys &amp; Emotion" subCategory="face-hand" />
+  <Emoji value="🤭" text="[:face with hand over mouth:]" category="Smileys &amp; Emotion" subCategory="face-hand" />
+  <Emoji value="🫢" text="[:face with open eyes and hand over mouth:]" category="Smileys &amp; Emotion" subCategory="face-hand" />
+  <Emoji value="🫣" text="[:face with peeking eye:]" category="Smileys &amp; Emotion" subCategory="face-hand" />
+  <Emoji value="🤫" text="[:shushing face:]" category="Smileys &amp; Emotion" subCategory="face-hand" />
+  <Emoji value="🤔" text="[:thinking face:]" category="Smileys &amp; Emotion" subCategory="face-hand" />
+  <Emoji value="🫡" text="[:saluting face:]" category="Smileys &amp; Emotion" subCategory="face-hand" />
+  <Emoji value="🤐" text="[:zipper-mouth face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="🤨" text="[:face with raised eyebrow:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😐" text="[:neutral face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😑" text="[:expressionless face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😶" text="[:face without mouth:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="🫥" text="[:dotted line face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😶‍🌫️" text="[:face in clouds:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😏" text="[:smirking face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😒" text="[:unamused face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="🙄" text="[:face with rolling eyes:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😬" text="[:grimacing face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😮‍💨" text="[:face exhaling:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="🤥" text="[:lying face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="🫨" text="[:shaking face:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="🙂‍↔️" text="[:head shaking horizontally:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="🙂‍↕️" text="[:head shaking vertically:]" category="Smileys &amp; Emotion" subCategory="face-neutral-skeptical" />
+  <Emoji value="😌" text="[:relieved face:]" category="Smileys &amp; Emotion" subCategory="face-sleepy" />
+  <Emoji value="😔" text="[:pensive face:]" category="Smileys &amp; Emotion" subCategory="face-sleepy" />
+  <Emoji value="😪" text="[:sleepy face:]" category="Smileys &amp; Emotion" subCategory="face-sleepy" />
+  <Emoji value="🤤" text="[:drooling face:]" category="Smileys &amp; Emotion" subCategory="face-sleepy" />
+  <Emoji value="😴" text="[:sleeping face:]" category="Smileys &amp; Emotion" subCategory="face-sleepy" />
+  <Emoji value="🫩" text="[:face with bags under eyes:]" category="Smileys &amp; Emotion" subCategory="face-sleepy" />
+  <Emoji value="😷" text="[:face with medical mask:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🤒" text="[:face with thermometer:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🤕" text="[:face with head-bandage:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🤢" text="[:nauseated face:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🤮" text="[:face vomiting:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🤧" text="[:sneezing face:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🥵" text="[:hot face:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🥶" text="[:cold face:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🥴" text="[:woozy face:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="😵" text="[:face with crossed-out eyes:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="😵‍💫" text="[:face with spiral eyes:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🤯" text="[:exploding head:]" category="Smileys &amp; Emotion" subCategory="face-unwell" />
+  <Emoji value="🤠" text="[:cowboy hat face:]" category="Smileys &amp; Emotion" subCategory="face-hat" />
+  <Emoji value="🥳" text="[:partying face:]" category="Smileys &amp; Emotion" subCategory="face-hat" />
+  <Emoji value="🥸" text="[:disguised face:]" category="Smileys &amp; Emotion" subCategory="face-hat" />
+  <Emoji value="😎" text="[:smiling face with sunglasses:]" category="Smileys &amp; Emotion" subCategory="face-glasses" />
+  <Emoji value="🤓" text="[:nerd face:]" category="Smileys &amp; Emotion" subCategory="face-glasses" />
+  <Emoji value="🧐" text="[:face with monocle:]" category="Smileys &amp; Emotion" subCategory="face-glasses" />
+  <Emoji value="😕" text="[:confused face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="🫤" text="[:face with diagonal mouth:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😟" text="[:worried face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="🙁" text="[:slightly frowning face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="☹️" text="[:frowning face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😮" text="[:face with open mouth:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😯" text="[:hushed face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😲" text="[:astonished face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😳" text="[:flushed face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="🫪" text="[:distorted face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="🥺" text="[:pleading face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="🥹" text="[:face holding back tears:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😦" text="[:frowning face with open mouth:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😧" text="[:anguished face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😨" text="[:fearful face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😰" text="[:anxious face with sweat:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😥" text="[:sad but relieved face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😢" text="[:crying face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😭" text="[:loudly crying face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😱" text="[:face screaming in fear:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😖" text="[:confounded face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😣" text="[:persevering face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😞" text="[:disappointed face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😓" text="[:downcast face with sweat:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😩" text="[:weary face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😫" text="[:tired face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="🥱" text="[:yawning face:]" category="Smileys &amp; Emotion" subCategory="face-concerned" />
+  <Emoji value="😤" text="[:face with steam from nose:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="😡" text="[:enraged face:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="😠" text="[:angry face:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="🤬" text="[:face with symbols on mouth:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="😈" text="[:smiling face with horns:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="👿" text="[:angry face with horns:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="💀" text="[:skull:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="☠️" text="[:skull and crossbones:]" category="Smileys &amp; Emotion" subCategory="face-negative" />
+  <Emoji value="💩" text="[:pile of poo:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="🤡" text="[:clown face:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="👹" text="[:ogre:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="👺" text="[:goblin:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="👻" text="[:ghost:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="👽" text="[:alien:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="👾" text="[:alien monster:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="🤖" text="[:robot:]" category="Smileys &amp; Emotion" subCategory="face-costume" />
+  <Emoji value="😺" text="[:grinning cat:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="😸" text="[:grinning cat with smiling eyes:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="😹" text="[:cat with tears of joy:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="😻" text="[:smiling cat with heart-eyes:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="😼" text="[:cat with wry smile:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="😽" text="[:kissing cat:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="🙀" text="[:weary cat:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="😿" text="[:crying cat:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="😾" text="[:pouting cat:]" category="Smileys &amp; Emotion" subCategory="cat-face" />
+  <Emoji value="🙈" text="[:see-no-evil monkey:]" category="Smileys &amp; Emotion" subCategory="monkey-face" />
+  <Emoji value="🙉" text="[:hear-no-evil monkey:]" category="Smileys &amp; Emotion" subCategory="monkey-face" />
+  <Emoji value="🙊" text="[:speak-no-evil monkey:]" category="Smileys &amp; Emotion" subCategory="monkey-face" />
+  <Emoji value="💌" text="[:love letter:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💘" text="[:heart with arrow:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💝" text="[:heart with ribbon:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💖" text="[:sparkling heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💗" text="[:growing heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💓" text="[:beating heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💞" text="[:revolving hearts:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💕" text="[:two hearts:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💟" text="[:heart decoration:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="❣️" text="[:heart exclamation:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💔" text="[:broken heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="❤️‍🔥" text="[:heart on fire:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="❤️‍🩹" text="[:mending heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="❤️" text="[:red heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="🩷" text="[:pink heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="🧡" text="[:orange heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💛" text="[:yellow heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💚" text="[:green heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💙" text="[:blue heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="🩵" text="[:light blue heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💜" text="[:purple heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="🤎" text="[:brown heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="🖤" text="[:black heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="🩶" text="[:grey heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="🤍" text="[:white heart:]" category="Smileys &amp; Emotion" subCategory="heart" />
+  <Emoji value="💋" text="[:kiss mark:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💯" text="[:hundred points:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💢" text="[:anger symbol:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="🫯" text="[:fight cloud:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💥" text="[:collision:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💫" text="[:dizzy:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💦" text="[:sweat droplets:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💨" text="[:dashing away:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="🕳️" text="[:hole:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💬" text="[:speech balloon:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="👁️‍🗨️" text="[:eye in speech bubble:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="🗨️" text="[:left speech bubble:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="🗯️" text="[:right anger bubble:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💭" text="[:thought balloon:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="💤" text="[:ZZZ:]" category="Smileys &amp; Emotion" subCategory="emotion" />
+  <Emoji value="👋" text="[:waving hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🤚" text="[:raised back of hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🖐️" text="[:hand with fingers splayed:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="✋" text="[:raised hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🖖" text="[:vulcan salute:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🫱" text="[:rightwards hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🫲" text="[:leftwards hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🫳" text="[:palm down hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🫴" text="[:palm up hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🫷" text="[:leftwards pushing hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="🫸" text="[:rightwards pushing hand:]" category="People &amp; Body" subCategory="hand-fingers-open" />
+  <Emoji value="👌" text="[:OK hand:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="🤌" text="[:pinched fingers:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="🤏" text="[:pinching hand:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="✌️" text="[:victory hand:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="🤞" text="[:crossed fingers:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="🫰" text="[:hand with index finger and thumb crossed:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="🤟" text="[:love-you gesture:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="🤘" text="[:sign of the horns:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="🤙" text="[:call me hand:]" category="People &amp; Body" subCategory="hand-fingers-partial" />
+  <Emoji value="👈" text="[:backhand index pointing left:]" category="People &amp; Body" subCategory="hand-single-finger" />
+  <Emoji value="👉" text="[:backhand index pointing right:]" category="People &amp; Body" subCategory="hand-single-finger" />
+  <Emoji value="👆" text="[:backhand index pointing up:]" category="People &amp; Body" subCategory="hand-single-finger" />
+  <Emoji value="🖕" text="[:middle finger:]" category="People &amp; Body" subCategory="hand-single-finger" />
+  <Emoji value="👇" text="[:backhand index pointing down:]" category="People &amp; Body" subCategory="hand-single-finger" />
+  <Emoji value="☝️" text="[:index pointing up:]" category="People &amp; Body" subCategory="hand-single-finger" />
+  <Emoji value="🫵" text="[:index pointing at the viewer:]" category="People &amp; Body" subCategory="hand-single-finger" />
+  <Emoji value="👍" text="[:thumbs up:]" category="People &amp; Body" subCategory="hand-fingers-closed" />
+  <Emoji value="👎" text="[:thumbs down:]" category="People &amp; Body" subCategory="hand-fingers-closed" />
+  <Emoji value="✊" text="[:raised fist:]" category="People &amp; Body" subCategory="hand-fingers-closed" />
+  <Emoji value="👊" text="[:oncoming fist:]" category="People &amp; Body" subCategory="hand-fingers-closed" />
+  <Emoji value="🤛" text="[:left-facing fist:]" category="People &amp; Body" subCategory="hand-fingers-closed" />
+  <Emoji value="🤜" text="[:right-facing fist:]" category="People &amp; Body" subCategory="hand-fingers-closed" />
+  <Emoji value="👏" text="[:clapping hands:]" category="People &amp; Body" subCategory="hands" />
+  <Emoji value="🙌" text="[:raising hands:]" category="People &amp; Body" subCategory="hands" />
+  <Emoji value="🫶" text="[:heart hands:]" category="People &amp; Body" subCategory="hands" />
+  <Emoji value="👐" text="[:open hands:]" category="People &amp; Body" subCategory="hands" />
+  <Emoji value="🤲" text="[:palms up together:]" category="People &amp; Body" subCategory="hands" />
+  <Emoji value="🤝" text="[:handshake:]" category="People &amp; Body" subCategory="hands" />
+  <Emoji value="🙏" text="[:folded hands:]" category="People &amp; Body" subCategory="hands" />
+  <Emoji value="✍️" text="[:writing hand:]" category="People &amp; Body" subCategory="hand-prop" />
+  <Emoji value="💅" text="[:nail polish:]" category="People &amp; Body" subCategory="hand-prop" />
+  <Emoji value="🤳" text="[:selfie:]" category="People &amp; Body" subCategory="hand-prop" />
+  <Emoji value="💪" text="[:flexed biceps:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🦾" text="[:mechanical arm:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🦿" text="[:mechanical leg:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🦵" text="[:leg:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🦶" text="[:foot:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="👂" text="[:ear:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🦻" text="[:ear with hearing aid:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="👃" text="[:nose:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🧠" text="[:brain:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🫀" text="[:anatomical heart:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🫁" text="[:lungs:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🦷" text="[:tooth:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🦴" text="[:bone:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="👀" text="[:eyes:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="👁️" text="[:eye:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="👅" text="[:tongue:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="👄" text="[:mouth:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="🫦" text="[:biting lip:]" category="People &amp; Body" subCategory="body-parts" />
+  <Emoji value="👶" text="[:baby:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧒" text="[:child:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👦" text="[:boy:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👧" text="[:girl:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧑" text="[:person:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👱" text="[:person: blond hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👨" text="[:man:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧔" text="[:person: beard:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧔‍♂️" text="[:man: beard:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧔‍♀️" text="[:woman: beard:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👨‍🦰" text="[:man: red hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👨‍🦱" text="[:man: curly hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👨‍🦳" text="[:man: white hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👨‍🦲" text="[:man: bald:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👩" text="[:woman:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👩‍🦰" text="[:woman: red hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧑‍🦰" text="[:person: red hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👩‍🦱" text="[:woman: curly hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧑‍🦱" text="[:person: curly hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👩‍🦳" text="[:woman: white hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧑‍🦳" text="[:person: white hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👩‍🦲" text="[:woman: bald:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧑‍🦲" text="[:person: bald:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👱‍♀️" text="[:woman: blond hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👱‍♂️" text="[:man: blond hair:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🧓" text="[:older person:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👴" text="[:old man:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="👵" text="[:old woman:]" category="People &amp; Body" subCategory="person" />
+  <Emoji value="🙍" text="[:person frowning:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙍‍♂️" text="[:man frowning:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙍‍♀️" text="[:woman frowning:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙎" text="[:person pouting:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙎‍♂️" text="[:man pouting:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙎‍♀️" text="[:woman pouting:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙅" text="[:person gesturing NO:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙅‍♂️" text="[:man gesturing NO:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙅‍♀️" text="[:woman gesturing NO:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙆" text="[:person gesturing OK:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙆‍♂️" text="[:man gesturing OK:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙆‍♀️" text="[:woman gesturing OK:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="💁" text="[:person tipping hand:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="💁‍♂️" text="[:man tipping hand:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="💁‍♀️" text="[:woman tipping hand:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙋" text="[:person raising hand:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙋‍♂️" text="[:man raising hand:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙋‍♀️" text="[:woman raising hand:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🧏" text="[:deaf person:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🧏‍♂️" text="[:deaf man:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🧏‍♀️" text="[:deaf woman:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙇" text="[:person bowing:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙇‍♂️" text="[:man bowing:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🙇‍♀️" text="[:woman bowing:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🤦" text="[:person facepalming:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🤦‍♂️" text="[:man facepalming:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🤦‍♀️" text="[:woman facepalming:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🤷" text="[:person shrugging:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🤷‍♂️" text="[:man shrugging:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🤷‍♀️" text="[:woman shrugging:]" category="People &amp; Body" subCategory="person-gesture" />
+  <Emoji value="🧑‍⚕️" text="[:health worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍⚕️" text="[:man health worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍⚕️" text="[:woman health worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🎓" text="[:student:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🎓" text="[:man student:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🎓" text="[:woman student:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🏫" text="[:teacher:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🏫" text="[:man teacher:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🏫" text="[:woman teacher:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍⚖️" text="[:judge:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍⚖️" text="[:man judge:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍⚖️" text="[:woman judge:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🌾" text="[:farmer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🌾" text="[:man farmer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🌾" text="[:woman farmer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🍳" text="[:cook:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🍳" text="[:man cook:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🍳" text="[:woman cook:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🔧" text="[:mechanic:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🔧" text="[:man mechanic:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🔧" text="[:woman mechanic:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🏭" text="[:factory worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🏭" text="[:man factory worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🏭" text="[:woman factory worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍💼" text="[:office worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍💼" text="[:man office worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍💼" text="[:woman office worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🔬" text="[:scientist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🔬" text="[:man scientist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🔬" text="[:woman scientist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍💻" text="[:technologist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍💻" text="[:man technologist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍💻" text="[:woman technologist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🎤" text="[:singer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🎤" text="[:man singer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🎤" text="[:woman singer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🎨" text="[:artist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🎨" text="[:man artist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🎨" text="[:woman artist:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍✈️" text="[:pilot:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍✈️" text="[:man pilot:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍✈️" text="[:woman pilot:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🚀" text="[:astronaut:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🚀" text="[:man astronaut:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🚀" text="[:woman astronaut:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🚒" text="[:firefighter:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🚒" text="[:man firefighter:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🚒" text="[:woman firefighter:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👮" text="[:police officer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👮‍♂️" text="[:man police officer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👮‍♀️" text="[:woman police officer:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🕵️" text="[:detective:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🕵️‍♂️" text="[:man detective:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🕵️‍♀️" text="[:woman detective:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="💂" text="[:guard:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="💂‍♂️" text="[:man guard:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="💂‍♀️" text="[:woman guard:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🥷" text="[:ninja:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👷" text="[:construction worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👷‍♂️" text="[:man construction worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👷‍♀️" text="[:woman construction worker:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🫅" text="[:person with crown:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🤴" text="[:prince:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👸" text="[:princess:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👳" text="[:person wearing turban:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👳‍♂️" text="[:man wearing turban:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👳‍♀️" text="[:woman wearing turban:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👲" text="[:person with skullcap:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧕" text="[:woman with headscarf:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🤵" text="[:person in tuxedo:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🤵‍♂️" text="[:man in tuxedo:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🤵‍♀️" text="[:woman in tuxedo:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👰" text="[:person with veil:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👰‍♂️" text="[:man with veil:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👰‍♀️" text="[:woman with veil:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🤰" text="[:pregnant woman:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🫃" text="[:pregnant man:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🫄" text="[:pregnant person:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🤱" text="[:breast-feeding:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👩‍🍼" text="[:woman feeding baby:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👨‍🍼" text="[:man feeding baby:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="🧑‍🍼" text="[:person feeding baby:]" category="People &amp; Body" subCategory="person-role" />
+  <Emoji value="👼" text="[:baby angel:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🎅" text="[:Santa Claus:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🤶" text="[:Mrs. Claus:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧑‍🎄" text="[:Mx Claus:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🦸" text="[:superhero:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🦸‍♂️" text="[:man superhero:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🦸‍♀️" text="[:woman superhero:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🦹" text="[:supervillain:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🦹‍♂️" text="[:man supervillain:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🦹‍♀️" text="[:woman supervillain:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧙" text="[:mage:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧙‍♂️" text="[:man mage:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧙‍♀️" text="[:woman mage:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧚" text="[:fairy:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧚‍♂️" text="[:man fairy:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧚‍♀️" text="[:woman fairy:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧛" text="[:vampire:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧛‍♂️" text="[:man vampire:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧛‍♀️" text="[:woman vampire:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧜" text="[:merperson:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧜‍♂️" text="[:merman:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧜‍♀️" text="[:mermaid:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧝" text="[:elf:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧝‍♂️" text="[:man elf:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧝‍♀️" text="[:woman elf:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧞" text="[:genie:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧞‍♂️" text="[:man genie:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧞‍♀️" text="[:woman genie:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧟" text="[:zombie:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧟‍♂️" text="[:man zombie:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧟‍♀️" text="[:woman zombie:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🧌" text="[:troll:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="🫈" text="[:hairy creature:]" category="People &amp; Body" subCategory="person-fantasy" />
+  <Emoji value="💆" text="[:person getting massage:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="💆‍♂️" text="[:man getting massage:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="💆‍♀️" text="[:woman getting massage:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="💇" text="[:person getting haircut:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="💇‍♂️" text="[:man getting haircut:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="💇‍♀️" text="[:woman getting haircut:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🚶" text="[:person walking:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🚶‍♂️" text="[:man walking:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🚶‍♀️" text="[:woman walking:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🚶‍➡️" text="[:person walking facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🚶‍♀️‍➡️" text="[:woman walking facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🚶‍♂️‍➡️" text="[:man walking facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧍" text="[:person standing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧍‍♂️" text="[:man standing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧍‍♀️" text="[:woman standing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧎" text="[:person kneeling:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧎‍♂️" text="[:man kneeling:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧎‍♀️" text="[:woman kneeling:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧎‍➡️" text="[:person kneeling facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧎‍♀️‍➡️" text="[:woman kneeling facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧎‍♂️‍➡️" text="[:man kneeling facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧑‍🦯" text="[:person with white cane:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧑‍🦯‍➡️" text="[:person with white cane facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👨‍🦯" text="[:man with white cane:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👨‍🦯‍➡️" text="[:man with white cane facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👩‍🦯" text="[:woman with white cane:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👩‍🦯‍➡️" text="[:woman with white cane facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧑‍🦼" text="[:person in motorized wheelchair:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧑‍🦼‍➡️" text="[:person in motorized wheelchair facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👨‍🦼" text="[:man in motorized wheelchair:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👨‍🦼‍➡️" text="[:man in motorized wheelchair facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👩‍🦼" text="[:woman in motorized wheelchair:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👩‍🦼‍➡️" text="[:woman in motorized wheelchair facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧑‍🦽" text="[:person in manual wheelchair:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧑‍🦽‍➡️" text="[:person in manual wheelchair facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👨‍🦽" text="[:man in manual wheelchair:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👨‍🦽‍➡️" text="[:man in manual wheelchair facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👩‍🦽" text="[:woman in manual wheelchair:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👩‍🦽‍➡️" text="[:woman in manual wheelchair facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🏃" text="[:person running:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🏃‍♂️" text="[:man running:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🏃‍♀️" text="[:woman running:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🏃‍➡️" text="[:person running facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🏃‍♀️‍➡️" text="[:woman running facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🏃‍♂️‍➡️" text="[:man running facing right:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧑‍🩰" text="[:ballet dancer:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="💃" text="[:woman dancing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🕺" text="[:man dancing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🕴️" text="[:person in suit levitating:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👯" text="[:people with bunny ears:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👯‍♂️" text="[:men with bunny ears:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="👯‍♀️" text="[:women with bunny ears:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧖" text="[:person in steamy room:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧖‍♂️" text="[:man in steamy room:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧖‍♀️" text="[:woman in steamy room:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧗" text="[:person climbing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧗‍♂️" text="[:man climbing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🧗‍♀️" text="[:woman climbing:]" category="People &amp; Body" subCategory="person-activity" />
+  <Emoji value="🤺" text="[:person fencing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏇" text="[:horse racing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="⛷️" text="[:skier:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏂" text="[:snowboarder:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏌️" text="[:person golfing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏌️‍♂️" text="[:man golfing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏌️‍♀️" text="[:woman golfing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏄" text="[:person surfing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏄‍♂️" text="[:man surfing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏄‍♀️" text="[:woman surfing:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚣" text="[:person rowing boat:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚣‍♂️" text="[:man rowing boat:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚣‍♀️" text="[:woman rowing boat:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏊" text="[:person swimming:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏊‍♂️" text="[:man swimming:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏊‍♀️" text="[:woman swimming:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="⛹️" text="[:person bouncing ball:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="⛹️‍♂️" text="[:man bouncing ball:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="⛹️‍♀️" text="[:woman bouncing ball:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏋️" text="[:person lifting weights:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏋️‍♂️" text="[:man lifting weights:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🏋️‍♀️" text="[:woman lifting weights:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚴" text="[:person biking:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚴‍♂️" text="[:man biking:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚴‍♀️" text="[:woman biking:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚵" text="[:person mountain biking:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚵‍♂️" text="[:man mountain biking:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🚵‍♀️" text="[:woman mountain biking:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤸" text="[:person cartwheeling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤸‍♂️" text="[:man cartwheeling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤸‍♀️" text="[:woman cartwheeling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤼" text="[:people wrestling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤼‍♂️" text="[:men wrestling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤼‍♀️" text="[:women wrestling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤽" text="[:person playing water polo:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤽‍♂️" text="[:man playing water polo:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤽‍♀️" text="[:woman playing water polo:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤾" text="[:person playing handball:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤾‍♂️" text="[:man playing handball:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤾‍♀️" text="[:woman playing handball:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤹" text="[:person juggling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤹‍♂️" text="[:man juggling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🤹‍♀️" text="[:woman juggling:]" category="People &amp; Body" subCategory="person-sport" />
+  <Emoji value="🧘" text="[:person in lotus position:]" category="People &amp; Body" subCategory="person-resting" />
+  <Emoji value="🧘‍♂️" text="[:man in lotus position:]" category="People &amp; Body" subCategory="person-resting" />
+  <Emoji value="🧘‍♀️" text="[:woman in lotus position:]" category="People &amp; Body" subCategory="person-resting" />
+  <Emoji value="🛀" text="[:person taking bath:]" category="People &amp; Body" subCategory="person-resting" />
+  <Emoji value="🛌" text="[:person in bed:]" category="People &amp; Body" subCategory="person-resting" />
+  <Emoji value="🧑‍🤝‍🧑" text="[:people holding hands:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👭" text="[:women holding hands:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👫" text="[:woman and man holding hands:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👬" text="[:men holding hands:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="💏" text="[:kiss:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍❤️‍💋‍👨" text="[:kiss: woman, man:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍❤️‍💋‍👨" text="[:kiss: man, man:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍❤️‍💋‍👩" text="[:kiss: woman, woman:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="💑" text="[:couple with heart:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍❤️‍👨" text="[:couple with heart: woman, man:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍❤️‍👨" text="[:couple with heart: man, man:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍❤️‍👩" text="[:couple with heart: woman, woman:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👩‍👦" text="[:family: man, woman, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👩‍👧" text="[:family: man, woman, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👩‍👧‍👦" text="[:family: man, woman, girl, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👩‍👦‍👦" text="[:family: man, woman, boy, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👩‍👧‍👧" text="[:family: man, woman, girl, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👨‍👦" text="[:family: man, man, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👨‍👧" text="[:family: man, man, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👨‍👧‍👦" text="[:family: man, man, girl, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👨‍👦‍👦" text="[:family: man, man, boy, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👨‍👧‍👧" text="[:family: man, man, girl, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👩‍👦" text="[:family: woman, woman, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👩‍👧" text="[:family: woman, woman, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👩‍👧‍👦" text="[:family: woman, woman, girl, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👩‍👦‍👦" text="[:family: woman, woman, boy, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👩‍👧‍👧" text="[:family: woman, woman, girl, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👦" text="[:family: man, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👦‍👦" text="[:family: man, boy, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👧" text="[:family: man, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👧‍👦" text="[:family: man, girl, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👨‍👧‍👧" text="[:family: man, girl, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👦" text="[:family: woman, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👦‍👦" text="[:family: woman, boy, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👧" text="[:family: woman, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👧‍👦" text="[:family: woman, girl, boy:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="👩‍👧‍👧" text="[:family: woman, girl, girl:]" category="People &amp; Body" subCategory="family" />
+  <Emoji value="🗣️" text="[:speaking head:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="👤" text="[:bust in silhouette:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="👥" text="[:busts in silhouette:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="🫂" text="[:people hugging:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="👪" text="[:family:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="🧑‍🧑‍🧒" text="[:family: adult, adult, child:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="🧑‍🧑‍🧒‍🧒" text="[:family: adult, adult, child, child:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="🧑‍🧒" text="[:family: adult, child:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="🧑‍🧒‍🧒" text="[:family: adult, child, child:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="👣" text="[:footprints:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="🫆" text="[:fingerprint:]" category="People &amp; Body" subCategory="person-symbol" />
+  <Emoji value="🐵" text="[:monkey face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐒" text="[:monkey:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦍" text="[:gorilla:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦧" text="[:orangutan:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐶" text="[:dog face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐕" text="[:dog:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦮" text="[:guide dog:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐕‍🦺" text="[:service dog:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐩" text="[:poodle:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐺" text="[:wolf:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦊" text="[:fox:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦝" text="[:raccoon:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐱" text="[:cat face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐈" text="[:cat:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐈‍⬛" text="[:black cat:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦁" text="[:lion:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐯" text="[:tiger face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐅" text="[:tiger:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐆" text="[:leopard:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐴" text="[:horse face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🫎" text="[:moose:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🫏" text="[:donkey:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐎" text="[:horse:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦄" text="[:unicorn:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦓" text="[:zebra:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦌" text="[:deer:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦬" text="[:bison:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐮" text="[:cow face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐂" text="[:ox:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐃" text="[:water buffalo:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐄" text="[:cow:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐷" text="[:pig face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐖" text="[:pig:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐗" text="[:boar:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐽" text="[:pig nose:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐏" text="[:ram:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐑" text="[:ewe:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐐" text="[:goat:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐪" text="[:camel:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐫" text="[:two-hump camel:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦙" text="[:llama:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦒" text="[:giraffe:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐘" text="[:elephant:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦣" text="[:mammoth:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦏" text="[:rhinoceros:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦛" text="[:hippopotamus:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐭" text="[:mouse face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐁" text="[:mouse:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐀" text="[:rat:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐹" text="[:hamster:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐰" text="[:rabbit face:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐇" text="[:rabbit:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐿️" text="[:chipmunk:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦫" text="[:beaver:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦔" text="[:hedgehog:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦇" text="[:bat:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐻" text="[:bear:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐻‍❄️" text="[:polar bear:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐨" text="[:koala:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐼" text="[:panda:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦥" text="[:sloth:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦦" text="[:otter:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦨" text="[:skunk:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦘" text="[:kangaroo:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦡" text="[:badger:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🐾" text="[:paw prints:]" category="Animals &amp; Nature" subCategory="animal-mammal" />
+  <Emoji value="🦃" text="[:turkey:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐔" text="[:chicken:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐓" text="[:rooster:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐣" text="[:hatching chick:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐤" text="[:baby chick:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐥" text="[:front-facing baby chick:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐦" text="[:bird:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐧" text="[:penguin:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🕊️" text="[:dove:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦅" text="[:eagle:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦆" text="[:duck:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦢" text="[:swan:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦉" text="[:owl:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦤" text="[:dodo:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🪶" text="[:feather:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦩" text="[:flamingo:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦚" text="[:peacock:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🦜" text="[:parrot:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🪽" text="[:wing:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐦‍⬛" text="[:black bird:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🪿" text="[:goose:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐦‍🔥" text="[:phoenix:]" category="Animals &amp; Nature" subCategory="animal-bird" />
+  <Emoji value="🐸" text="[:frog:]" category="Animals &amp; Nature" subCategory="animal-amphibian" />
+  <Emoji value="🐊" text="[:crocodile:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🐢" text="[:turtle:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🦎" text="[:lizard:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🐍" text="[:snake:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🐲" text="[:dragon face:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🐉" text="[:dragon:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🦕" text="[:sauropod:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🦖" text="[:T-Rex:]" category="Animals &amp; Nature" subCategory="animal-reptile" />
+  <Emoji value="🐳" text="[:spouting whale:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐋" text="[:whale:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐬" text="[:dolphin:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🫍" text="[:orca:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🦭" text="[:seal:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐟" text="[:fish:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐠" text="[:tropical fish:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐡" text="[:blowfish:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🦈" text="[:shark:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐙" text="[:octopus:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐚" text="[:spiral shell:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🪸" text="[:coral:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🪼" text="[:jellyfish:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🦀" text="[:crab:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🦞" text="[:lobster:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🦐" text="[:shrimp:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🦑" text="[:squid:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🦪" text="[:oyster:]" category="Animals &amp; Nature" subCategory="animal-marine" />
+  <Emoji value="🐌" text="[:snail:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🦋" text="[:butterfly:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🐛" text="[:bug:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🐜" text="[:ant:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🐝" text="[:honeybee:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🪲" text="[:beetle:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🐞" text="[:lady beetle:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🦗" text="[:cricket:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🪳" text="[:cockroach:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🕷️" text="[:spider:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🕸️" text="[:spider web:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🦂" text="[:scorpion:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🦟" text="[:mosquito:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🪰" text="[:fly:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🪱" text="[:worm:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="🦠" text="[:microbe:]" category="Animals &amp; Nature" subCategory="animal-bug" />
+  <Emoji value="💐" text="[:bouquet:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🌸" text="[:cherry blossom:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="💮" text="[:white flower:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🪷" text="[:lotus:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🏵️" text="[:rosette:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🌹" text="[:rose:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🥀" text="[:wilted flower:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🌺" text="[:hibiscus:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🌻" text="[:sunflower:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🌼" text="[:blossom:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🌷" text="[:tulip:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🪻" text="[:hyacinth:]" category="Animals &amp; Nature" subCategory="plant-flower" />
+  <Emoji value="🌱" text="[:seedling:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🪴" text="[:potted plant:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🌲" text="[:evergreen tree:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🌳" text="[:deciduous tree:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🌴" text="[:palm tree:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🌵" text="[:cactus:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🌾" text="[:sheaf of rice:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🌿" text="[:herb:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="☘️" text="[:shamrock:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🍀" text="[:four leaf clover:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🍁" text="[:maple leaf:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🍂" text="[:fallen leaf:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🍃" text="[:leaf fluttering in wind:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🪹" text="[:empty nest:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🪺" text="[:nest with eggs:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🍄" text="[:mushroom:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🪾" text="[:leafless tree:]" category="Animals &amp; Nature" subCategory="plant-other" />
+  <Emoji value="🍇" text="[:grapes:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍈" text="[:melon:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍉" text="[:watermelon:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍊" text="[:tangerine:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍋" text="[:lemon:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍋‍🟩" text="[:lime:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍌" text="[:banana:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍍" text="[:pineapple:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🥭" text="[:mango:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍎" text="[:red apple:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍏" text="[:green apple:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍐" text="[:pear:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍑" text="[:peach:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍒" text="[:cherries:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍓" text="[:strawberry:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🫐" text="[:blueberries:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🥝" text="[:kiwi fruit:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🍅" text="[:tomato:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🫒" text="[:olive:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🥥" text="[:coconut:]" category="Food &amp; Drink" subCategory="food-fruit" />
+  <Emoji value="🥑" text="[:avocado:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🍆" text="[:eggplant:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🥔" text="[:potato:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🥕" text="[:carrot:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🌽" text="[:ear of corn:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🌶️" text="[:hot pepper:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🫑" text="[:bell pepper:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🥒" text="[:cucumber:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🥬" text="[:leafy green:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🥦" text="[:broccoli:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🧄" text="[:garlic:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🧅" text="[:onion:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🥜" text="[:peanuts:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🫘" text="[:beans:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🌰" text="[:chestnut:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🫚" text="[:ginger root:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🫛" text="[:pea pod:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🍄‍🟫" text="[:brown mushroom:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🫜" text="[:root vegetable:]" category="Food &amp; Drink" subCategory="food-vegetable" />
+  <Emoji value="🍞" text="[:bread:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥐" text="[:croissant:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥖" text="[:baguette bread:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🫓" text="[:flatbread:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥨" text="[:pretzel:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥯" text="[:bagel:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥞" text="[:pancakes:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🧇" text="[:waffle:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🧀" text="[:cheese wedge:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍖" text="[:meat on bone:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍗" text="[:poultry leg:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥩" text="[:cut of meat:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥓" text="[:bacon:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍔" text="[:hamburger:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍟" text="[:french fries:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍕" text="[:pizza:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🌭" text="[:hot dog:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥪" text="[:sandwich:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🌮" text="[:taco:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🌯" text="[:burrito:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🫔" text="[:tamale:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥙" text="[:stuffed flatbread:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🧆" text="[:falafel:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥚" text="[:egg:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍳" text="[:cooking:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥘" text="[:shallow pan of food:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍲" text="[:pot of food:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🫕" text="[:fondue:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥣" text="[:bowl with spoon:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥗" text="[:green salad:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍿" text="[:popcorn:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🧈" text="[:butter:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🧂" text="[:salt:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🥫" text="[:canned food:]" category="Food &amp; Drink" subCategory="food-prepared" />
+  <Emoji value="🍱" text="[:bento box:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍘" text="[:rice cracker:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍙" text="[:rice ball:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍚" text="[:cooked rice:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍛" text="[:curry rice:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍜" text="[:steaming bowl:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍝" text="[:spaghetti:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍠" text="[:roasted sweet potato:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍢" text="[:oden:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍣" text="[:sushi:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍤" text="[:fried shrimp:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍥" text="[:fish cake with swirl:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🥮" text="[:moon cake:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍡" text="[:dango:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🥟" text="[:dumpling:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🥠" text="[:fortune cookie:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🥡" text="[:takeout box:]" category="Food &amp; Drink" subCategory="food-asian" />
+  <Emoji value="🍦" text="[:soft ice cream:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍧" text="[:shaved ice:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍨" text="[:ice cream:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍩" text="[:doughnut:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍪" text="[:cookie:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🎂" text="[:birthday cake:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍰" text="[:shortcake:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🧁" text="[:cupcake:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🥧" text="[:pie:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍫" text="[:chocolate bar:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍬" text="[:candy:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍭" text="[:lollipop:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍮" text="[:custard:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍯" text="[:honey pot:]" category="Food &amp; Drink" subCategory="food-sweet" />
+  <Emoji value="🍼" text="[:baby bottle:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🥛" text="[:glass of milk:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="☕" text="[:hot beverage:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🫖" text="[:teapot:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍵" text="[:teacup without handle:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍶" text="[:sake:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍾" text="[:bottle with popping cork:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍷" text="[:wine glass:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍸" text="[:cocktail glass:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍹" text="[:tropical drink:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍺" text="[:beer mug:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🍻" text="[:clinking beer mugs:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🥂" text="[:clinking glasses:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🥃" text="[:tumbler glass:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🫗" text="[:pouring liquid:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🥤" text="[:cup with straw:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🧋" text="[:bubble tea:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🧃" text="[:beverage box:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🧉" text="[:mate:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🧊" text="[:ice:]" category="Food &amp; Drink" subCategory="drink" />
+  <Emoji value="🥢" text="[:chopsticks:]" category="Food &amp; Drink" subCategory="dishware" />
+  <Emoji value="🍽️" text="[:fork and knife with plate:]" category="Food &amp; Drink" subCategory="dishware" />
+  <Emoji value="🍴" text="[:fork and knife:]" category="Food &amp; Drink" subCategory="dishware" />
+  <Emoji value="🥄" text="[:spoon:]" category="Food &amp; Drink" subCategory="dishware" />
+  <Emoji value="🔪" text="[:kitchen knife:]" category="Food &amp; Drink" subCategory="dishware" />
+  <Emoji value="🫙" text="[:jar:]" category="Food &amp; Drink" subCategory="dishware" />
+  <Emoji value="🏺" text="[:amphora:]" category="Food &amp; Drink" subCategory="dishware" />
+  <Emoji value="🌍" text="[:globe showing Europe-Africa:]" category="Travel &amp; Places" subCategory="place-map" />
+  <Emoji value="🌎" text="[:globe showing Americas:]" category="Travel &amp; Places" subCategory="place-map" />
+  <Emoji value="🌏" text="[:globe showing Asia-Australia:]" category="Travel &amp; Places" subCategory="place-map" />
+  <Emoji value="🌐" text="[:globe with meridians:]" category="Travel &amp; Places" subCategory="place-map" />
+  <Emoji value="🗺️" text="[:world map:]" category="Travel &amp; Places" subCategory="place-map" />
+  <Emoji value="🗾" text="[:map of Japan:]" category="Travel &amp; Places" subCategory="place-map" />
+  <Emoji value="🧭" text="[:compass:]" category="Travel &amp; Places" subCategory="place-map" />
+  <Emoji value="🏔️" text="[:snow-capped mountain:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="⛰️" text="[:mountain:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🛘" text="[:landslide:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🌋" text="[:volcano:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🗻" text="[:mount fuji:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🏕️" text="[:camping:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🏖️" text="[:beach with umbrella:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🏜️" text="[:desert:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🏝️" text="[:desert island:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🏞️" text="[:national park:]" category="Travel &amp; Places" subCategory="place-geographic" />
+  <Emoji value="🏟️" text="[:stadium:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏛️" text="[:classical building:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏗️" text="[:building construction:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🧱" text="[:brick:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🪨" text="[:rock:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🪵" text="[:wood:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🛖" text="[:hut:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏘️" text="[:houses:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏚️" text="[:derelict house:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏠" text="[:house:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏡" text="[:house with garden:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏢" text="[:office building:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏣" text="[:Japanese post office:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏤" text="[:post office:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏥" text="[:hospital:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏦" text="[:bank:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏨" text="[:hotel:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏩" text="[:love hotel:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏪" text="[:convenience store:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏫" text="[:school:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏬" text="[:department store:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏭" text="[:factory:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏯" text="[:Japanese castle:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🏰" text="[:castle:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="💒" text="[:wedding:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🗼" text="[:Tokyo tower:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="🗽" text="[:Statue of Liberty:]" category="Travel &amp; Places" subCategory="place-building" />
+  <Emoji value="⛪" text="[:church:]" category="Travel &amp; Places" subCategory="place-religious" />
+  <Emoji value="🕌" text="[:mosque:]" category="Travel &amp; Places" subCategory="place-religious" />
+  <Emoji value="🛕" text="[:hindu temple:]" category="Travel &amp; Places" subCategory="place-religious" />
+  <Emoji value="🕍" text="[:synagogue:]" category="Travel &amp; Places" subCategory="place-religious" />
+  <Emoji value="⛩️" text="[:shinto shrine:]" category="Travel &amp; Places" subCategory="place-religious" />
+  <Emoji value="🕋" text="[:kaaba:]" category="Travel &amp; Places" subCategory="place-religious" />
+  <Emoji value="⛲" text="[:fountain:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="⛺" text="[:tent:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🌁" text="[:foggy:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🌃" text="[:night with stars:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🏙️" text="[:cityscape:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🌄" text="[:sunrise over mountains:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🌅" text="[:sunrise:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🌆" text="[:cityscape at dusk:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🌇" text="[:sunset:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🌉" text="[:bridge at night:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="♨️" text="[:hot springs:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🎠" text="[:carousel horse:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🛝" text="[:playground slide:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🎡" text="[:ferris wheel:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🎢" text="[:roller coaster:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="💈" text="[:barber pole:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🎪" text="[:circus tent:]" category="Travel &amp; Places" subCategory="place-other" />
+  <Emoji value="🚂" text="[:locomotive:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚃" text="[:railway car:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚄" text="[:high-speed train:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚅" text="[:bullet train:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚆" text="[:train:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚇" text="[:metro:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚈" text="[:light rail:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚉" text="[:station:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚊" text="[:tram:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚝" text="[:monorail:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚞" text="[:mountain railway:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚋" text="[:tram car:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚌" text="[:bus:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚍" text="[:oncoming bus:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚎" text="[:trolleybus:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚐" text="[:minibus:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚑" text="[:ambulance:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚒" text="[:fire engine:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚓" text="[:police car:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚔" text="[:oncoming police car:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚕" text="[:taxi:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚖" text="[:oncoming taxi:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚗" text="[:automobile:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚘" text="[:oncoming automobile:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚙" text="[:sport utility vehicle:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛻" text="[:pickup truck:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚚" text="[:delivery truck:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚛" text="[:articulated lorry:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚜" text="[:tractor:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🏎️" text="[:racing car:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🏍️" text="[:motorcycle:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛵" text="[:motor scooter:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🦽" text="[:manual wheelchair:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🦼" text="[:motorized wheelchair:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛺" text="[:auto rickshaw:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚲" text="[:bicycle:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛴" text="[:kick scooter:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛹" text="[:skateboard:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛼" text="[:roller skate:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚏" text="[:bus stop:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛣️" text="[:motorway:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛤️" text="[:railway track:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛢️" text="[:oil drum:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="⛽" text="[:fuel pump:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛞" text="[:wheel:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚨" text="[:police car light:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚥" text="[:horizontal traffic light:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚦" text="[:vertical traffic light:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🛑" text="[:stop sign:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="🚧" text="[:construction:]" category="Travel &amp; Places" subCategory="transport-ground" />
+  <Emoji value="⚓" text="[:anchor:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="🛟" text="[:ring buoy:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="⛵" text="[:sailboat:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="🛶" text="[:canoe:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="🚤" text="[:speedboat:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="🛳️" text="[:passenger ship:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="⛴️" text="[:ferry:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="🛥️" text="[:motor boat:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="🚢" text="[:ship:]" category="Travel &amp; Places" subCategory="transport-water" />
+  <Emoji value="✈️" text="[:airplane:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🛩️" text="[:small airplane:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🛫" text="[:airplane departure:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🛬" text="[:airplane arrival:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🪂" text="[:parachute:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="💺" text="[:seat:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🚁" text="[:helicopter:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🚟" text="[:suspension railway:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🚠" text="[:mountain cableway:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🚡" text="[:aerial tramway:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🛰️" text="[:satellite:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🚀" text="[:rocket:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🛸" text="[:flying saucer:]" category="Travel &amp; Places" subCategory="transport-air" />
+  <Emoji value="🛎️" text="[:bellhop bell:]" category="Travel &amp; Places" subCategory="hotel" />
+  <Emoji value="🧳" text="[:luggage:]" category="Travel &amp; Places" subCategory="hotel" />
+  <Emoji value="⌛" text="[:hourglass done:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="⏳" text="[:hourglass not done:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="⌚" text="[:watch:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="⏰" text="[:alarm clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="⏱️" text="[:stopwatch:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="⏲️" text="[:timer clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕰️" text="[:mantelpiece clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕛" text="[:twelve oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕧" text="[:twelve-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕐" text="[:one oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕜" text="[:one-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕑" text="[:two oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕝" text="[:two-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕒" text="[:three oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕞" text="[:three-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕓" text="[:four oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕟" text="[:four-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕔" text="[:five oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕠" text="[:five-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕕" text="[:six oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕡" text="[:six-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕖" text="[:seven oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕢" text="[:seven-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕗" text="[:eight oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕣" text="[:eight-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕘" text="[:nine oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕤" text="[:nine-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕙" text="[:ten oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕥" text="[:ten-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕚" text="[:eleven oâ€™clock:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🕦" text="[:eleven-thirty:]" category="Travel &amp; Places" subCategory="time" />
+  <Emoji value="🌑" text="[:new moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌒" text="[:waxing crescent moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌓" text="[:first quarter moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌔" text="[:waxing gibbous moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌕" text="[:full moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌖" text="[:waning gibbous moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌗" text="[:last quarter moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌘" text="[:waning crescent moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌙" text="[:crescent moon:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌚" text="[:new moon face:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌛" text="[:first quarter moon face:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌜" text="[:last quarter moon face:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌡️" text="[:thermometer:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="☀️" text="[:sun:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌝" text="[:full moon face:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌞" text="[:sun with face:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🪐" text="[:ringed planet:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="⭐" text="[:star:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌟" text="[:glowing star:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌠" text="[:shooting star:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌌" text="[:milky way:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="☁️" text="[:cloud:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="⛅" text="[:sun behind cloud:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="⛈️" text="[:cloud with lightning and rain:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌤️" text="[:sun behind small cloud:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌥️" text="[:sun behind large cloud:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌦️" text="[:sun behind rain cloud:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌧️" text="[:cloud with rain:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌨️" text="[:cloud with snow:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌩️" text="[:cloud with lightning:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌪️" text="[:tornado:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌫️" text="[:fog:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌬️" text="[:wind face:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌀" text="[:cyclone:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌈" text="[:rainbow:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌂" text="[:closed umbrella:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="☂️" text="[:umbrella:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="☔" text="[:umbrella with rain drops:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="⛱️" text="[:umbrella on ground:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="⚡" text="[:high voltage:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="❄️" text="[:snowflake:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="☃️" text="[:snowman:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="⛄" text="[:snowman without snow:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="☄️" text="[:comet:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🔥" text="[:fire:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="💧" text="[:droplet:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🌊" text="[:water wave:]" category="Travel &amp; Places" subCategory="sky &amp; weather" />
+  <Emoji value="🎃" text="[:jack-o-lantern:]" category="Activities" subCategory="event" />
+  <Emoji value="🎄" text="[:Christmas tree:]" category="Activities" subCategory="event" />
+  <Emoji value="🎆" text="[:fireworks:]" category="Activities" subCategory="event" />
+  <Emoji value="🎇" text="[:sparkler:]" category="Activities" subCategory="event" />
+  <Emoji value="🧨" text="[:firecracker:]" category="Activities" subCategory="event" />
+  <Emoji value="✨" text="[:sparkles:]" category="Activities" subCategory="event" />
+  <Emoji value="🎈" text="[:balloon:]" category="Activities" subCategory="event" />
+  <Emoji value="🎉" text="[:party popper:]" category="Activities" subCategory="event" />
+  <Emoji value="🎊" text="[:confetti ball:]" category="Activities" subCategory="event" />
+  <Emoji value="🎋" text="[:tanabata tree:]" category="Activities" subCategory="event" />
+  <Emoji value="🎍" text="[:pine decoration:]" category="Activities" subCategory="event" />
+  <Emoji value="🎎" text="[:Japanese dolls:]" category="Activities" subCategory="event" />
+  <Emoji value="🎏" text="[:carp streamer:]" category="Activities" subCategory="event" />
+  <Emoji value="🎐" text="[:wind chime:]" category="Activities" subCategory="event" />
+  <Emoji value="🎑" text="[:moon viewing ceremony:]" category="Activities" subCategory="event" />
+  <Emoji value="🧧" text="[:red envelope:]" category="Activities" subCategory="event" />
+  <Emoji value="🎀" text="[:ribbon:]" category="Activities" subCategory="event" />
+  <Emoji value="🎁" text="[:wrapped gift:]" category="Activities" subCategory="event" />
+  <Emoji value="🎗️" text="[:reminder ribbon:]" category="Activities" subCategory="event" />
+  <Emoji value="🎟️" text="[:admission tickets:]" category="Activities" subCategory="event" />
+  <Emoji value="🎫" text="[:ticket:]" category="Activities" subCategory="event" />
+  <Emoji value="🎖️" text="[:military medal:]" category="Activities" subCategory="award-medal" />
+  <Emoji value="🏆" text="[:trophy:]" category="Activities" subCategory="award-medal" />
+  <Emoji value="🏅" text="[:sports medal:]" category="Activities" subCategory="award-medal" />
+  <Emoji value="🥇" text="[:1st place medal:]" category="Activities" subCategory="award-medal" />
+  <Emoji value="🥈" text="[:2nd place medal:]" category="Activities" subCategory="award-medal" />
+  <Emoji value="🥉" text="[:3rd place medal:]" category="Activities" subCategory="award-medal" />
+  <Emoji value="⚽" text="[:soccer ball:]" category="Activities" subCategory="sport" />
+  <Emoji value="⚾" text="[:baseball:]" category="Activities" subCategory="sport" />
+  <Emoji value="🥎" text="[:softball:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏀" text="[:basketball:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏐" text="[:volleyball:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏈" text="[:american football:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏉" text="[:rugby football:]" category="Activities" subCategory="sport" />
+  <Emoji value="🎾" text="[:tennis:]" category="Activities" subCategory="sport" />
+  <Emoji value="🥏" text="[:flying disc:]" category="Activities" subCategory="sport" />
+  <Emoji value="🎳" text="[:bowling:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏏" text="[:cricket game:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏑" text="[:field hockey:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏒" text="[:ice hockey:]" category="Activities" subCategory="sport" />
+  <Emoji value="🥍" text="[:lacrosse:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏓" text="[:ping pong:]" category="Activities" subCategory="sport" />
+  <Emoji value="🏸" text="[:badminton:]" category="Activities" subCategory="sport" />
+  <Emoji value="🥊" text="[:boxing glove:]" category="Activities" subCategory="sport" />
+  <Emoji value="🥋" text="[:martial arts uniform:]" category="Activities" subCategory="sport" />
+  <Emoji value="🥅" text="[:goal net:]" category="Activities" subCategory="sport" />
+  <Emoji value="⛳" text="[:flag in hole:]" category="Activities" subCategory="sport" />
+  <Emoji value="⛸️" text="[:ice skate:]" category="Activities" subCategory="sport" />
+  <Emoji value="🎣" text="[:fishing pole:]" category="Activities" subCategory="sport" />
+  <Emoji value="🤿" text="[:diving mask:]" category="Activities" subCategory="sport" />
+  <Emoji value="🎽" text="[:running shirt:]" category="Activities" subCategory="sport" />
+  <Emoji value="🎿" text="[:skis:]" category="Activities" subCategory="sport" />
+  <Emoji value="🛷" text="[:sled:]" category="Activities" subCategory="sport" />
+  <Emoji value="🥌" text="[:curling stone:]" category="Activities" subCategory="sport" />
+  <Emoji value="🎯" text="[:bullseye:]" category="Activities" subCategory="game" />
+  <Emoji value="🪀" text="[:yo-yo:]" category="Activities" subCategory="game" />
+  <Emoji value="🪁" text="[:kite:]" category="Activities" subCategory="game" />
+  <Emoji value="🔫" text="[:water pistol:]" category="Activities" subCategory="game" />
+  <Emoji value="🎱" text="[:pool 8 ball:]" category="Activities" subCategory="game" />
+  <Emoji value="🔮" text="[:crystal ball:]" category="Activities" subCategory="game" />
+  <Emoji value="🪄" text="[:magic wand:]" category="Activities" subCategory="game" />
+  <Emoji value="🎮" text="[:video game:]" category="Activities" subCategory="game" />
+  <Emoji value="🕹️" text="[:joystick:]" category="Activities" subCategory="game" />
+  <Emoji value="🎰" text="[:slot machine:]" category="Activities" subCategory="game" />
+  <Emoji value="🎲" text="[:game die:]" category="Activities" subCategory="game" />
+  <Emoji value="🧩" text="[:puzzle piece:]" category="Activities" subCategory="game" />
+  <Emoji value="🧸" text="[:teddy bear:]" category="Activities" subCategory="game" />
+  <Emoji value="🪅" text="[:piÃ±ata:]" category="Activities" subCategory="game" />
+  <Emoji value="🪩" text="[:mirror ball:]" category="Activities" subCategory="game" />
+  <Emoji value="🪆" text="[:nesting dolls:]" category="Activities" subCategory="game" />
+  <Emoji value="♠️" text="[:spade suit:]" category="Activities" subCategory="game" />
+  <Emoji value="♥️" text="[:heart suit:]" category="Activities" subCategory="game" />
+  <Emoji value="♦️" text="[:diamond suit:]" category="Activities" subCategory="game" />
+  <Emoji value="♣️" text="[:club suit:]" category="Activities" subCategory="game" />
+  <Emoji value="♟️" text="[:chess pawn:]" category="Activities" subCategory="game" />
+  <Emoji value="🃏" text="[:joker:]" category="Activities" subCategory="game" />
+  <Emoji value="🀄" text="[:mahjong red dragon:]" category="Activities" subCategory="game" />
+  <Emoji value="🎴" text="[:flower playing cards:]" category="Activities" subCategory="game" />
+  <Emoji value="🎭" text="[:performing arts:]" category="Activities" subCategory="arts &amp; crafts" />
+  <Emoji value="🖼️" text="[:framed picture:]" category="Activities" subCategory="arts &amp; crafts" />
+  <Emoji value="🎨" text="[:artist palette:]" category="Activities" subCategory="arts &amp; crafts" />
+  <Emoji value="🧵" text="[:thread:]" category="Activities" subCategory="arts &amp; crafts" />
+  <Emoji value="🪡" text="[:sewing needle:]" category="Activities" subCategory="arts &amp; crafts" />
+  <Emoji value="🧶" text="[:yarn:]" category="Activities" subCategory="arts &amp; crafts" />
+  <Emoji value="🪢" text="[:knot:]" category="Activities" subCategory="arts &amp; crafts" />
+  <Emoji value="👓" text="[:glasses:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🕶️" text="[:sunglasses:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🥽" text="[:goggles:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🥼" text="[:lab coat:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🦺" text="[:safety vest:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👔" text="[:necktie:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👕" text="[:t-shirt:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👖" text="[:jeans:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🧣" text="[:scarf:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🧤" text="[:gloves:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🧥" text="[:coat:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🧦" text="[:socks:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👗" text="[:dress:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👘" text="[:kimono:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🥻" text="[:sari:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🩱" text="[:one-piece swimsuit:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🩲" text="[:briefs:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🩳" text="[:shorts:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👙" text="[:bikini:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👚" text="[:womanâ€™s clothes:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🪭" text="[:folding hand fan:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👛" text="[:purse:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👜" text="[:handbag:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👝" text="[:clutch bag:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🛍️" text="[:shopping bags:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🎒" text="[:backpack:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🩴" text="[:thong sandal:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👞" text="[:manâ€™s shoe:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👟" text="[:running shoe:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🥾" text="[:hiking boot:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🥿" text="[:flat shoe:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👠" text="[:high-heeled shoe:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👡" text="[:womanâ€™s sandal:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🩰" text="[:ballet shoes:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👢" text="[:womanâ€™s boot:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🪮" text="[:hair pick:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👑" text="[:crown:]" category="Objects" subCategory="clothing" />
+  <Emoji value="👒" text="[:womanâ€™s hat:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🎩" text="[:top hat:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🎓" text="[:graduation cap:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🧢" text="[:billed cap:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🪖" text="[:military helmet:]" category="Objects" subCategory="clothing" />
+  <Emoji value="⛑️" text="[:rescue workerâ€™s helmet:]" category="Objects" subCategory="clothing" />
+  <Emoji value="📿" text="[:prayer beads:]" category="Objects" subCategory="clothing" />
+  <Emoji value="💄" text="[:lipstick:]" category="Objects" subCategory="clothing" />
+  <Emoji value="💍" text="[:ring:]" category="Objects" subCategory="clothing" />
+  <Emoji value="💎" text="[:gem stone:]" category="Objects" subCategory="clothing" />
+  <Emoji value="🔇" text="[:muted speaker:]" category="Objects" subCategory="sound" />
+  <Emoji value="🔈" text="[:speaker low volume:]" category="Objects" subCategory="sound" />
+  <Emoji value="🔉" text="[:speaker medium volume:]" category="Objects" subCategory="sound" />
+  <Emoji value="🔊" text="[:speaker high volume:]" category="Objects" subCategory="sound" />
+  <Emoji value="📢" text="[:loudspeaker:]" category="Objects" subCategory="sound" />
+  <Emoji value="📣" text="[:megaphone:]" category="Objects" subCategory="sound" />
+  <Emoji value="📯" text="[:postal horn:]" category="Objects" subCategory="sound" />
+  <Emoji value="🔔" text="[:bell:]" category="Objects" subCategory="sound" />
+  <Emoji value="🔕" text="[:bell with slash:]" category="Objects" subCategory="sound" />
+  <Emoji value="🎼" text="[:musical score:]" category="Objects" subCategory="music" />
+  <Emoji value="🎵" text="[:musical note:]" category="Objects" subCategory="music" />
+  <Emoji value="🎶" text="[:musical notes:]" category="Objects" subCategory="music" />
+  <Emoji value="🎙️" text="[:studio microphone:]" category="Objects" subCategory="music" />
+  <Emoji value="🎚️" text="[:level slider:]" category="Objects" subCategory="music" />
+  <Emoji value="🎛️" text="[:control knobs:]" category="Objects" subCategory="music" />
+  <Emoji value="🎤" text="[:microphone:]" category="Objects" subCategory="music" />
+  <Emoji value="🎧" text="[:headphone:]" category="Objects" subCategory="music" />
+  <Emoji value="📻" text="[:radio:]" category="Objects" subCategory="music" />
+  <Emoji value="🎷" text="[:saxophone:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🎺" text="[:trumpet:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🪊" text="[:trombone:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🪗" text="[:accordion:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🎸" text="[:guitar:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🎹" text="[:musical keyboard:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🎻" text="[:violin:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🪕" text="[:banjo:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🥁" text="[:drum:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🪘" text="[:long drum:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🪇" text="[:maracas:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🪈" text="[:flute:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="🪉" text="[:harp:]" category="Objects" subCategory="musical-instrument" />
+  <Emoji value="📱" text="[:mobile phone:]" category="Objects" subCategory="phone" />
+  <Emoji value="📲" text="[:mobile phone with arrow:]" category="Objects" subCategory="phone" />
+  <Emoji value="☎️" text="[:telephone:]" category="Objects" subCategory="phone" />
+  <Emoji value="📞" text="[:telephone receiver:]" category="Objects" subCategory="phone" />
+  <Emoji value="📟" text="[:pager:]" category="Objects" subCategory="phone" />
+  <Emoji value="📠" text="[:fax machine:]" category="Objects" subCategory="phone" />
+  <Emoji value="🔋" text="[:battery:]" category="Objects" subCategory="computer" />
+  <Emoji value="🪫" text="[:low battery:]" category="Objects" subCategory="computer" />
+  <Emoji value="🔌" text="[:electric plug:]" category="Objects" subCategory="computer" />
+  <Emoji value="💻" text="[:laptop:]" category="Objects" subCategory="computer" />
+  <Emoji value="🖥️" text="[:desktop computer:]" category="Objects" subCategory="computer" />
+  <Emoji value="🖨️" text="[:printer:]" category="Objects" subCategory="computer" />
+  <Emoji value="⌨️" text="[:keyboard:]" category="Objects" subCategory="computer" />
+  <Emoji value="🖱️" text="[:computer mouse:]" category="Objects" subCategory="computer" />
+  <Emoji value="🖲️" text="[:trackball:]" category="Objects" subCategory="computer" />
+  <Emoji value="💽" text="[:computer disk:]" category="Objects" subCategory="computer" />
+  <Emoji value="💾" text="[:floppy disk:]" category="Objects" subCategory="computer" />
+  <Emoji value="💿" text="[:optical disk:]" category="Objects" subCategory="computer" />
+  <Emoji value="📀" text="[:dvd:]" category="Objects" subCategory="computer" />
+  <Emoji value="🧮" text="[:abacus:]" category="Objects" subCategory="computer" />
+  <Emoji value="🎥" text="[:movie camera:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🎞️" text="[:film frames:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="📽️" text="[:film projector:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🎬" text="[:clapper board:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="📺" text="[:television:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="📷" text="[:camera:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="📸" text="[:camera with flash:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="📹" text="[:video camera:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="📼" text="[:videocassette:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🔍" text="[:magnifying glass tilted left:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🔎" text="[:magnifying glass tilted right:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🕯️" text="[:candle:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="💡" text="[:light bulb:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🔦" text="[:flashlight:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🏮" text="[:red paper lantern:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="🪔" text="[:diya lamp:]" category="Objects" subCategory="light &amp; video" />
+  <Emoji value="📔" text="[:notebook with decorative cover:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📕" text="[:closed book:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📖" text="[:open book:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📗" text="[:green book:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📘" text="[:blue book:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📙" text="[:orange book:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📚" text="[:books:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📓" text="[:notebook:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📒" text="[:ledger:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📃" text="[:page with curl:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📜" text="[:scroll:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📄" text="[:page facing up:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📰" text="[:newspaper:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="🗞️" text="[:rolled-up newspaper:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="📑" text="[:bookmark tabs:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="🔖" text="[:bookmark:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="🏷️" text="[:label:]" category="Objects" subCategory="book-paper" />
+  <Emoji value="🪙" text="[:coin:]" category="Objects" subCategory="money" />
+  <Emoji value="💰" text="[:money bag:]" category="Objects" subCategory="money" />
+  <Emoji value="🪎" text="[:treasure chest:]" category="Objects" subCategory="money" />
+  <Emoji value="💴" text="[:yen banknote:]" category="Objects" subCategory="money" />
+  <Emoji value="💵" text="[:dollar banknote:]" category="Objects" subCategory="money" />
+  <Emoji value="💶" text="[:euro banknote:]" category="Objects" subCategory="money" />
+  <Emoji value="💷" text="[:pound banknote:]" category="Objects" subCategory="money" />
+  <Emoji value="💸" text="[:money with wings:]" category="Objects" subCategory="money" />
+  <Emoji value="💳" text="[:credit card:]" category="Objects" subCategory="money" />
+  <Emoji value="🧾" text="[:receipt:]" category="Objects" subCategory="money" />
+  <Emoji value="💹" text="[:chart increasing with yen:]" category="Objects" subCategory="money" />
+  <Emoji value="✉️" text="[:envelope:]" category="Objects" subCategory="mail" />
+  <Emoji value="📧" text="[:e-mail:]" category="Objects" subCategory="mail" />
+  <Emoji value="📨" text="[:incoming envelope:]" category="Objects" subCategory="mail" />
+  <Emoji value="📩" text="[:envelope with arrow:]" category="Objects" subCategory="mail" />
+  <Emoji value="📤" text="[:outbox tray:]" category="Objects" subCategory="mail" />
+  <Emoji value="📥" text="[:inbox tray:]" category="Objects" subCategory="mail" />
+  <Emoji value="📦" text="[:package:]" category="Objects" subCategory="mail" />
+  <Emoji value="📫" text="[:closed mailbox with raised flag:]" category="Objects" subCategory="mail" />
+  <Emoji value="📪" text="[:closed mailbox with lowered flag:]" category="Objects" subCategory="mail" />
+  <Emoji value="📬" text="[:open mailbox with raised flag:]" category="Objects" subCategory="mail" />
+  <Emoji value="📭" text="[:open mailbox with lowered flag:]" category="Objects" subCategory="mail" />
+  <Emoji value="📮" text="[:postbox:]" category="Objects" subCategory="mail" />
+  <Emoji value="🗳️" text="[:ballot box with ballot:]" category="Objects" subCategory="mail" />
+  <Emoji value="✏️" text="[:pencil:]" category="Objects" subCategory="writing" />
+  <Emoji value="✒️" text="[:black nib:]" category="Objects" subCategory="writing" />
+  <Emoji value="🖋️" text="[:fountain pen:]" category="Objects" subCategory="writing" />
+  <Emoji value="🖊️" text="[:pen:]" category="Objects" subCategory="writing" />
+  <Emoji value="🖌️" text="[:paintbrush:]" category="Objects" subCategory="writing" />
+  <Emoji value="🖍️" text="[:crayon:]" category="Objects" subCategory="writing" />
+  <Emoji value="📝" text="[:memo:]" category="Objects" subCategory="writing" />
+  <Emoji value="💼" text="[:briefcase:]" category="Objects" subCategory="office" />
+  <Emoji value="📁" text="[:file folder:]" category="Objects" subCategory="office" />
+  <Emoji value="📂" text="[:open file folder:]" category="Objects" subCategory="office" />
+  <Emoji value="🗂️" text="[:card index dividers:]" category="Objects" subCategory="office" />
+  <Emoji value="📅" text="[:calendar:]" category="Objects" subCategory="office" />
+  <Emoji value="📆" text="[:tear-off calendar:]" category="Objects" subCategory="office" />
+  <Emoji value="🗒️" text="[:spiral notepad:]" category="Objects" subCategory="office" />
+  <Emoji value="🗓️" text="[:spiral calendar:]" category="Objects" subCategory="office" />
+  <Emoji value="📇" text="[:card index:]" category="Objects" subCategory="office" />
+  <Emoji value="📈" text="[:chart increasing:]" category="Objects" subCategory="office" />
+  <Emoji value="📉" text="[:chart decreasing:]" category="Objects" subCategory="office" />
+  <Emoji value="📊" text="[:bar chart:]" category="Objects" subCategory="office" />
+  <Emoji value="📋" text="[:clipboard:]" category="Objects" subCategory="office" />
+  <Emoji value="📌" text="[:pushpin:]" category="Objects" subCategory="office" />
+  <Emoji value="📍" text="[:round pushpin:]" category="Objects" subCategory="office" />
+  <Emoji value="📎" text="[:paperclip:]" category="Objects" subCategory="office" />
+  <Emoji value="🖇️" text="[:linked paperclips:]" category="Objects" subCategory="office" />
+  <Emoji value="📏" text="[:straight ruler:]" category="Objects" subCategory="office" />
+  <Emoji value="📐" text="[:triangular ruler:]" category="Objects" subCategory="office" />
+  <Emoji value="✂️" text="[:scissors:]" category="Objects" subCategory="office" />
+  <Emoji value="🗃️" text="[:card file box:]" category="Objects" subCategory="office" />
+  <Emoji value="🗄️" text="[:file cabinet:]" category="Objects" subCategory="office" />
+  <Emoji value="🗑️" text="[:wastebasket:]" category="Objects" subCategory="office" />
+  <Emoji value="🔒" text="[:locked:]" category="Objects" subCategory="lock" />
+  <Emoji value="🔓" text="[:unlocked:]" category="Objects" subCategory="lock" />
+  <Emoji value="🔏" text="[:locked with pen:]" category="Objects" subCategory="lock" />
+  <Emoji value="🔐" text="[:locked with key:]" category="Objects" subCategory="lock" />
+  <Emoji value="🔑" text="[:key:]" category="Objects" subCategory="lock" />
+  <Emoji value="🗝️" text="[:old key:]" category="Objects" subCategory="lock" />
+  <Emoji value="🔨" text="[:hammer:]" category="Objects" subCategory="tool" />
+  <Emoji value="🪓" text="[:axe:]" category="Objects" subCategory="tool" />
+  <Emoji value="⛏️" text="[:pick:]" category="Objects" subCategory="tool" />
+  <Emoji value="⚒️" text="[:hammer and pick:]" category="Objects" subCategory="tool" />
+  <Emoji value="🛠️" text="[:hammer and wrench:]" category="Objects" subCategory="tool" />
+  <Emoji value="🗡️" text="[:dagger:]" category="Objects" subCategory="tool" />
+  <Emoji value="⚔️" text="[:crossed swords:]" category="Objects" subCategory="tool" />
+  <Emoji value="💣" text="[:bomb:]" category="Objects" subCategory="tool" />
+  <Emoji value="🪃" text="[:boomerang:]" category="Objects" subCategory="tool" />
+  <Emoji value="🏹" text="[:bow and arrow:]" category="Objects" subCategory="tool" />
+  <Emoji value="🛡️" text="[:shield:]" category="Objects" subCategory="tool" />
+  <Emoji value="🪚" text="[:carpentry saw:]" category="Objects" subCategory="tool" />
+  <Emoji value="🔧" text="[:wrench:]" category="Objects" subCategory="tool" />
+  <Emoji value="🪛" text="[:screwdriver:]" category="Objects" subCategory="tool" />
+  <Emoji value="🔩" text="[:nut and bolt:]" category="Objects" subCategory="tool" />
+  <Emoji value="⚙️" text="[:gear:]" category="Objects" subCategory="tool" />
+  <Emoji value="🗜️" text="[:clamp:]" category="Objects" subCategory="tool" />
+  <Emoji value="⚖️" text="[:balance scale:]" category="Objects" subCategory="tool" />
+  <Emoji value="🦯" text="[:white cane:]" category="Objects" subCategory="tool" />
+  <Emoji value="🔗" text="[:link:]" category="Objects" subCategory="tool" />
+  <Emoji value="⛓️‍💥" text="[:broken chain:]" category="Objects" subCategory="tool" />
+  <Emoji value="⛓️" text="[:chains:]" category="Objects" subCategory="tool" />
+  <Emoji value="🪝" text="[:hook:]" category="Objects" subCategory="tool" />
+  <Emoji value="🧰" text="[:toolbox:]" category="Objects" subCategory="tool" />
+  <Emoji value="🧲" text="[:magnet:]" category="Objects" subCategory="tool" />
+  <Emoji value="🪜" text="[:ladder:]" category="Objects" subCategory="tool" />
+  <Emoji value="🪏" text="[:shovel:]" category="Objects" subCategory="tool" />
+  <Emoji value="⚗️" text="[:alembic:]" category="Objects" subCategory="science" />
+  <Emoji value="🧪" text="[:test tube:]" category="Objects" subCategory="science" />
+  <Emoji value="🧫" text="[:petri dish:]" category="Objects" subCategory="science" />
+  <Emoji value="🧬" text="[:dna:]" category="Objects" subCategory="science" />
+  <Emoji value="🔬" text="[:microscope:]" category="Objects" subCategory="science" />
+  <Emoji value="🔭" text="[:telescope:]" category="Objects" subCategory="science" />
+  <Emoji value="📡" text="[:satellite antenna:]" category="Objects" subCategory="science" />
+  <Emoji value="💉" text="[:syringe:]" category="Objects" subCategory="medical" />
+  <Emoji value="🩸" text="[:drop of blood:]" category="Objects" subCategory="medical" />
+  <Emoji value="💊" text="[:pill:]" category="Objects" subCategory="medical" />
+  <Emoji value="🩹" text="[:adhesive bandage:]" category="Objects" subCategory="medical" />
+  <Emoji value="🩼" text="[:crutch:]" category="Objects" subCategory="medical" />
+  <Emoji value="🩺" text="[:stethoscope:]" category="Objects" subCategory="medical" />
+  <Emoji value="🩻" text="[:x-ray:]" category="Objects" subCategory="medical" />
+  <Emoji value="🚪" text="[:door:]" category="Objects" subCategory="household" />
+  <Emoji value="🛗" text="[:elevator:]" category="Objects" subCategory="household" />
+  <Emoji value="🪞" text="[:mirror:]" category="Objects" subCategory="household" />
+  <Emoji value="🪟" text="[:window:]" category="Objects" subCategory="household" />
+  <Emoji value="🛏️" text="[:bed:]" category="Objects" subCategory="household" />
+  <Emoji value="🛋️" text="[:couch and lamp:]" category="Objects" subCategory="household" />
+  <Emoji value="🪑" text="[:chair:]" category="Objects" subCategory="household" />
+  <Emoji value="🚽" text="[:toilet:]" category="Objects" subCategory="household" />
+  <Emoji value="🪠" text="[:plunger:]" category="Objects" subCategory="household" />
+  <Emoji value="🚿" text="[:shower:]" category="Objects" subCategory="household" />
+  <Emoji value="🛁" text="[:bathtub:]" category="Objects" subCategory="household" />
+  <Emoji value="🪤" text="[:mouse trap:]" category="Objects" subCategory="household" />
+  <Emoji value="🪒" text="[:razor:]" category="Objects" subCategory="household" />
+  <Emoji value="🧴" text="[:lotion bottle:]" category="Objects" subCategory="household" />
+  <Emoji value="🧷" text="[:safety pin:]" category="Objects" subCategory="household" />
+  <Emoji value="🧹" text="[:broom:]" category="Objects" subCategory="household" />
+  <Emoji value="🧺" text="[:basket:]" category="Objects" subCategory="household" />
+  <Emoji value="🧻" text="[:roll of paper:]" category="Objects" subCategory="household" />
+  <Emoji value="🪣" text="[:bucket:]" category="Objects" subCategory="household" />
+  <Emoji value="🧼" text="[:soap:]" category="Objects" subCategory="household" />
+  <Emoji value="🫧" text="[:bubbles:]" category="Objects" subCategory="household" />
+  <Emoji value="🪥" text="[:toothbrush:]" category="Objects" subCategory="household" />
+  <Emoji value="🧽" text="[:sponge:]" category="Objects" subCategory="household" />
+  <Emoji value="🧯" text="[:fire extinguisher:]" category="Objects" subCategory="household" />
+  <Emoji value="🛒" text="[:shopping cart:]" category="Objects" subCategory="household" />
+  <Emoji value="🚬" text="[:cigarette:]" category="Objects" subCategory="other-object" />
+  <Emoji value="⚰️" text="[:coffin:]" category="Objects" subCategory="other-object" />
+  <Emoji value="🪦" text="[:headstone:]" category="Objects" subCategory="other-object" />
+  <Emoji value="⚱️" text="[:funeral urn:]" category="Objects" subCategory="other-object" />
+  <Emoji value="🧿" text="[:nazar amulet:]" category="Objects" subCategory="other-object" />
+  <Emoji value="🪬" text="[:hamsa:]" category="Objects" subCategory="other-object" />
+  <Emoji value="🗿" text="[:moai:]" category="Objects" subCategory="other-object" />
+  <Emoji value="🪧" text="[:placard:]" category="Objects" subCategory="other-object" />
+  <Emoji value="🪪" text="[:identification card:]" category="Objects" subCategory="other-object" />
+  <Emoji value="🏧" text="[:ATM sign:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🚮" text="[:litter in bin sign:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🚰" text="[:potable water:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="♿" text="[:wheelchair symbol:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🚹" text="[:menâ€™s room:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🚺" text="[:womenâ€™s room:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🚻" text="[:restroom:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🚼" text="[:baby symbol:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🚾" text="[:water closet:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🛂" text="[:passport control:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🛃" text="[:customs:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🛄" text="[:baggage claim:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="🛅" text="[:left luggage:]" category="Symbols" subCategory="transport-sign" />
+  <Emoji value="⚠️" text="[:warning:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🚸" text="[:children crossing:]" category="Symbols" subCategory="warning" />
+  <Emoji value="⛔" text="[:no entry:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🚫" text="[:prohibited:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🚳" text="[:no bicycles:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🚭" text="[:no smoking:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🚯" text="[:no littering:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🚱" text="[:non-potable water:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🚷" text="[:no pedestrians:]" category="Symbols" subCategory="warning" />
+  <Emoji value="📵" text="[:no mobile phones:]" category="Symbols" subCategory="warning" />
+  <Emoji value="🔞" text="[:no one under eighteen:]" category="Symbols" subCategory="warning" />
+  <Emoji value="☢️" text="[:radioactive:]" category="Symbols" subCategory="warning" />
+  <Emoji value="☣️" text="[:biohazard:]" category="Symbols" subCategory="warning" />
+  <Emoji value="⬆️" text="[:up arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↗️" text="[:up-right arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="➡️" text="[:right arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↘️" text="[:down-right arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="⬇️" text="[:down arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↙️" text="[:down-left arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="⬅️" text="[:left arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↖️" text="[:up-left arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↕️" text="[:up-down arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↔️" text="[:left-right arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↩️" text="[:right arrow curving left:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="↪️" text="[:left arrow curving right:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="⤴️" text="[:right arrow curving up:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="⤵️" text="[:right arrow curving down:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🔃" text="[:clockwise vertical arrows:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🔄" text="[:counterclockwise arrows button:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🔙" text="[:BACK arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🔚" text="[:END arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🔛" text="[:ON! arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🔜" text="[:SOON arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🔝" text="[:TOP arrow:]" category="Symbols" subCategory="arrow" />
+  <Emoji value="🛐" text="[:place of worship:]" category="Symbols" subCategory="religion" />
+  <Emoji value="⚛️" text="[:atom symbol:]" category="Symbols" subCategory="religion" />
+  <Emoji value="🕉️" text="[:om:]" category="Symbols" subCategory="religion" />
+  <Emoji value="✡️" text="[:star of David:]" category="Symbols" subCategory="religion" />
+  <Emoji value="☸️" text="[:wheel of dharma:]" category="Symbols" subCategory="religion" />
+  <Emoji value="☯️" text="[:yin yang:]" category="Symbols" subCategory="religion" />
+  <Emoji value="✝️" text="[:latin cross:]" category="Symbols" subCategory="religion" />
+  <Emoji value="☦️" text="[:orthodox cross:]" category="Symbols" subCategory="religion" />
+  <Emoji value="☪️" text="[:star and crescent:]" category="Symbols" subCategory="religion" />
+  <Emoji value="☮️" text="[:peace symbol:]" category="Symbols" subCategory="religion" />
+  <Emoji value="🕎" text="[:menorah:]" category="Symbols" subCategory="religion" />
+  <Emoji value="🔯" text="[:dotted six-pointed star:]" category="Symbols" subCategory="religion" />
+  <Emoji value="🪯" text="[:khanda:]" category="Symbols" subCategory="religion" />
+  <Emoji value="♈" text="[:Aries:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♉" text="[:Taurus:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♊" text="[:Gemini:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♋" text="[:Cancer:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♌" text="[:Leo:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♍" text="[:Virgo:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♎" text="[:Libra:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♏" text="[:Scorpio:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♐" text="[:Sagittarius:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♑" text="[:Capricorn:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♒" text="[:Aquarius:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="♓" text="[:Pisces:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="⛎" text="[:Ophiuchus:]" category="Symbols" subCategory="zodiac" />
+  <Emoji value="🔀" text="[:shuffle tracks button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🔁" text="[:repeat button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🔂" text="[:repeat single button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="▶️" text="[:play button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏩" text="[:fast-forward button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏭️" text="[:next track button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏯️" text="[:play or pause button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="◀️" text="[:reverse button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏪" text="[:fast reverse button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏮️" text="[:last track button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🔼" text="[:upwards button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏫" text="[:fast up button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🔽" text="[:downwards button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏬" text="[:fast down button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏸️" text="[:pause button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏹️" text="[:stop button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏺️" text="[:record button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="⏏️" text="[:eject button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🎦" text="[:cinema:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🔅" text="[:dim button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🔆" text="[:bright button:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="📶" text="[:antenna bars:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="🛜" text="[:wireless:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="📳" text="[:vibration mode:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="📴" text="[:mobile phone off:]" category="Symbols" subCategory="av-symbol" />
+  <Emoji value="♀️" text="[:female sign:]" category="Symbols" subCategory="gender" />
+  <Emoji value="♂️" text="[:male sign:]" category="Symbols" subCategory="gender" />
+  <Emoji value="⚧️" text="[:transgender symbol:]" category="Symbols" subCategory="gender" />
+  <Emoji value="✖️" text="[:multiply:]" category="Symbols" subCategory="math" />
+  <Emoji value="➕" text="[:plus:]" category="Symbols" subCategory="math" />
+  <Emoji value="➖" text="[:minus:]" category="Symbols" subCategory="math" />
+  <Emoji value="➗" text="[:divide:]" category="Symbols" subCategory="math" />
+  <Emoji value="🟰" text="[:heavy equals sign:]" category="Symbols" subCategory="math" />
+  <Emoji value="♾️" text="[:infinity:]" category="Symbols" subCategory="math" />
+  <Emoji value="‼️" text="[:double exclamation mark:]" category="Symbols" subCategory="punctuation" />
+  <Emoji value="⁉️" text="[:exclamation question mark:]" category="Symbols" subCategory="punctuation" />
+  <Emoji value="❓" text="[:red question mark:]" category="Symbols" subCategory="punctuation" />
+  <Emoji value="❔" text="[:white question mark:]" category="Symbols" subCategory="punctuation" />
+  <Emoji value="❕" text="[:white exclamation mark:]" category="Symbols" subCategory="punctuation" />
+  <Emoji value="❗" text="[:red exclamation mark:]" category="Symbols" subCategory="punctuation" />
+  <Emoji value="〰️" text="[:wavy dash:]" category="Symbols" subCategory="punctuation" />
+  <Emoji value="💱" text="[:currency exchange:]" category="Symbols" subCategory="currency" />
+  <Emoji value="💲" text="[:heavy dollar sign:]" category="Symbols" subCategory="currency" />
+  <Emoji value="⚕️" text="[:medical symbol:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="♻️" text="[:recycling symbol:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="⚜️" text="[:fleur-de-lis:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="🔱" text="[:trident emblem:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="📛" text="[:name badge:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="🔰" text="[:Japanese symbol for beginner:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="⭕" text="[:hollow red circle:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="✅" text="[:check mark button:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="☑️" text="[:check box with check:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="✔️" text="[:check mark:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="❌" text="[:cross mark:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="❎" text="[:cross mark button:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="➰" text="[:curly loop:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="➿" text="[:double curly loop:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="〽️" text="[:part alternation mark:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="✳️" text="[:eight-spoked asterisk:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="✴️" text="[:eight-pointed star:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="❇️" text="[:sparkle:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="©️" text="[:copyright:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="®️" text="[:registered:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="™️" text="[:trade mark:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="🫟" text="[:splatter:]" category="Symbols" subCategory="other-symbol" />
+  <Emoji value="#️⃣" text="[:keycap: #:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="*️⃣" text="[:keycap: *:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="0️⃣" text="[:keycap: 0:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="1️⃣" text="[:keycap: 1:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="2️⃣" text="[:keycap: 2:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="3️⃣" text="[:keycap: 3:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="4️⃣" text="[:keycap: 4:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="5️⃣" text="[:keycap: 5:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="6️⃣" text="[:keycap: 6:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="7️⃣" text="[:keycap: 7:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="8️⃣" text="[:keycap: 8:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="9️⃣" text="[:keycap: 9:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="🔟" text="[:keycap: 10:]" category="Symbols" subCategory="keycap" />
+  <Emoji value="🔠" text="[:input latin uppercase:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🔡" text="[:input latin lowercase:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🔢" text="[:input numbers:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🔣" text="[:input symbols:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🔤" text="[:input latin letters:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🅰️" text="[:A button (blood type):]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆎" text="[:AB button (blood type):]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🅱️" text="[:B button (blood type):]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆑" text="[:CL button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆒" text="[:COOL button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆓" text="[:FREE button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="ℹ️" text="[:information:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆔" text="[:ID button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="Ⓜ️" text="[:circled M:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆕" text="[:NEW button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆖" text="[:NG button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🅾️" text="[:O button (blood type):]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆗" text="[:OK button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🅿️" text="[:P button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆘" text="[:SOS button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆙" text="[:UP! button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🆚" text="[:VS button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈁" text="[:Japanese â€œhereâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈂️" text="[:Japanese â€œservice chargeâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈷️" text="[:Japanese â€œmonthly amountâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈶" text="[:Japanese â€œnot free of chargeâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈯" text="[:Japanese â€œreservedâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🉐" text="[:Japanese â€œbargainâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈹" text="[:Japanese â€œdiscountâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈚" text="[:Japanese â€œfree of chargeâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈲" text="[:Japanese â€œprohibitedâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🉑" text="[:Japanese â€œacceptableâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈸" text="[:Japanese â€œapplicationâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈴" text="[:Japanese â€œpassing gradeâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈳" text="[:Japanese â€œvacancyâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="㊗️" text="[:Japanese â€œcongratulationsâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="㊙️" text="[:Japanese â€œsecretâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈺" text="[:Japanese â€œopen for businessâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🈵" text="[:Japanese â€œno vacancyâ€ button:]" category="Symbols" subCategory="alphanum" />
+  <Emoji value="🔴" text="[:red circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟠" text="[:orange circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟡" text="[:yellow circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟢" text="[:green circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔵" text="[:blue circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟣" text="[:purple circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟤" text="[:brown circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="⚫" text="[:black circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="⚪" text="[:white circle:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟥" text="[:red square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟧" text="[:orange square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟨" text="[:yellow square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟩" text="[:green square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟦" text="[:blue square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟪" text="[:purple square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🟫" text="[:brown square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="⬛" text="[:black large square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="⬜" text="[:white large square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="◼️" text="[:black medium square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="◻️" text="[:white medium square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="◾" text="[:black medium-small square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="◽" text="[:white medium-small square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="▪️" text="[:black small square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="▫️" text="[:white small square:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔶" text="[:large orange diamond:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔷" text="[:large blue diamond:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔸" text="[:small orange diamond:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔹" text="[:small blue diamond:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔺" text="[:red triangle pointed up:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔻" text="[:red triangle pointed down:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="💠" text="[:diamond with a dot:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔘" text="[:radio button:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔳" text="[:white square button:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🔲" text="[:black square button:]" category="Symbols" subCategory="geometric" />
+  <Emoji value="🏁" text="[:chequered flag:]" category="Flags" subCategory="flag" />
+  <Emoji value="🚩" text="[:triangular flag:]" category="Flags" subCategory="flag" />
+  <Emoji value="🎌" text="[:crossed flags:]" category="Flags" subCategory="flag" />
+  <Emoji value="🏴" text="[:black flag:]" category="Flags" subCategory="flag" />
+  <Emoji value="🏳️" text="[:white flag:]" category="Flags" subCategory="flag" />
+  <Emoji value="🏳️‍🌈" text="[:rainbow flag:]" category="Flags" subCategory="flag" />
+  <Emoji value="🏳️‍⚧️" text="[:transgender flag:]" category="Flags" subCategory="flag" />
+  <Emoji value="🏴‍☠️" text="[:pirate flag:]" category="Flags" subCategory="flag" />
+  <Emoji value="🇦🇨" text="[:flag: Ascension Island:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇩" text="[:flag: Andorra:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇪" text="[:flag: United Arab Emirates:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇫" text="[:flag: Afghanistan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇬" text="[:flag: Antigua &amp; Barbuda:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇮" text="[:flag: Anguilla:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇱" text="[:flag: Albania:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇲" text="[:flag: Armenia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇴" text="[:flag: Angola:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇶" text="[:flag: Antarctica:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇷" text="[:flag: Argentina:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇸" text="[:flag: American Samoa:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇹" text="[:flag: Austria:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇺" text="[:flag: Australia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇼" text="[:flag: Aruba:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇽" text="[:flag: Ã…land Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇦🇿" text="[:flag: Azerbaijan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇦" text="[:flag: Bosnia &amp; Herzegovina:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇧" text="[:flag: Barbados:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇩" text="[:flag: Bangladesh:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇪" text="[:flag: Belgium:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇫" text="[:flag: Burkina Faso:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇬" text="[:flag: Bulgaria:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇭" text="[:flag: Bahrain:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇮" text="[:flag: Burundi:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇯" text="[:flag: Benin:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇱" text="[:flag: St. BarthÃ©lemy:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇲" text="[:flag: Bermuda:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇳" text="[:flag: Brunei:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇴" text="[:flag: Bolivia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇶" text="[:flag: Caribbean Netherlands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇷" text="[:flag: Brazil:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇸" text="[:flag: Bahamas:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇹" text="[:flag: Bhutan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇻" text="[:flag: Bouvet Island:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇼" text="[:flag: Botswana:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇾" text="[:flag: Belarus:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇧🇿" text="[:flag: Belize:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇦" text="[:flag: Canada:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇨" text="[:flag: Cocos (Keeling) Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇩" text="[:flag: Congo - Kinshasa:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇫" text="[:flag: Central African Republic:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇬" text="[:flag: Congo - Brazzaville:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇭" text="[:flag: Switzerland:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇮" text="[:flag: CÃ´te dâ€™Ivoire:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇰" text="[:flag: Cook Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇱" text="[:flag: Chile:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇲" text="[:flag: Cameroon:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇳" text="[:flag: China:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇴" text="[:flag: Colombia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇵" text="[:flag: Clipperton Island:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇶" text="[:flag: Sark:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇷" text="[:flag: Costa Rica:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇺" text="[:flag: Cuba:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇻" text="[:flag: Cape Verde:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇼" text="[:flag: CuraÃ§ao:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇽" text="[:flag: Christmas Island:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇾" text="[:flag: Cyprus:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇨🇿" text="[:flag: Czechia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇩🇪" text="[:flag: Germany:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇩🇬" text="[:flag: Diego Garcia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇩🇯" text="[:flag: Djibouti:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇩🇰" text="[:flag: Denmark:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇩🇲" text="[:flag: Dominica:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇩🇴" text="[:flag: Dominican Republic:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇩🇿" text="[:flag: Algeria:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇦" text="[:flag: Ceuta &amp; Melilla:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇨" text="[:flag: Ecuador:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇪" text="[:flag: Estonia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇬" text="[:flag: Egypt:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇭" text="[:flag: Western Sahara:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇷" text="[:flag: Eritrea:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇸" text="[:flag: Spain:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇹" text="[:flag: Ethiopia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇪🇺" text="[:flag: European Union:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇫🇮" text="[:flag: Finland:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇫🇯" text="[:flag: Fiji:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇫🇰" text="[:flag: Falkland Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇫🇲" text="[:flag: Micronesia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇫🇴" text="[:flag: Faroe Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇫🇷" text="[:flag: France:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇦" text="[:flag: Gabon:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇧" text="[:flag: United Kingdom:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇩" text="[:flag: Grenada:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇪" text="[:flag: Georgia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇫" text="[:flag: French Guiana:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇬" text="[:flag: Guernsey:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇭" text="[:flag: Ghana:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇮" text="[:flag: Gibraltar:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇱" text="[:flag: Greenland:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇲" text="[:flag: Gambia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇳" text="[:flag: Guinea:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇵" text="[:flag: Guadeloupe:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇶" text="[:flag: Equatorial Guinea:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇷" text="[:flag: Greece:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇸" text="[:flag: South Georgia &amp; South Sandwich Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇹" text="[:flag: Guatemala:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇺" text="[:flag: Guam:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇼" text="[:flag: Guinea-Bissau:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇬🇾" text="[:flag: Guyana:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇭🇰" text="[:flag: Hong Kong SAR China:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇭🇲" text="[:flag: Heard &amp; McDonald Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇭🇳" text="[:flag: Honduras:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇭🇷" text="[:flag: Croatia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇭🇹" text="[:flag: Haiti:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇭🇺" text="[:flag: Hungary:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇨" text="[:flag: Canary Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇩" text="[:flag: Indonesia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇪" text="[:flag: Ireland:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇱" text="[:flag: Israel:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇲" text="[:flag: Isle of Man:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇳" text="[:flag: India:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇴" text="[:flag: British Indian Ocean Territory:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇶" text="[:flag: Iraq:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇷" text="[:flag: Iran:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇸" text="[:flag: Iceland:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇮🇹" text="[:flag: Italy:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇯🇪" text="[:flag: Jersey:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇯🇲" text="[:flag: Jamaica:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇯🇴" text="[:flag: Jordan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇯🇵" text="[:flag: Japan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇪" text="[:flag: Kenya:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇬" text="[:flag: Kyrgyzstan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇭" text="[:flag: Cambodia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇮" text="[:flag: Kiribati:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇲" text="[:flag: Comoros:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇳" text="[:flag: St. Kitts &amp; Nevis:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇵" text="[:flag: North Korea:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇷" text="[:flag: South Korea:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇼" text="[:flag: Kuwait:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇾" text="[:flag: Cayman Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇰🇿" text="[:flag: Kazakhstan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇦" text="[:flag: Laos:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇧" text="[:flag: Lebanon:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇨" text="[:flag: St. Lucia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇮" text="[:flag: Liechtenstein:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇰" text="[:flag: Sri Lanka:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇷" text="[:flag: Liberia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇸" text="[:flag: Lesotho:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇹" text="[:flag: Lithuania:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇺" text="[:flag: Luxembourg:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇻" text="[:flag: Latvia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇱🇾" text="[:flag: Libya:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇦" text="[:flag: Morocco:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇨" text="[:flag: Monaco:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇩" text="[:flag: Moldova:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇪" text="[:flag: Montenegro:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇫" text="[:flag: St. Martin:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇬" text="[:flag: Madagascar:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇭" text="[:flag: Marshall Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇰" text="[:flag: North Macedonia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇱" text="[:flag: Mali:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇲" text="[:flag: Myanmar (Burma):]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇳" text="[:flag: Mongolia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇴" text="[:flag: Macao SAR China:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇵" text="[:flag: Northern Mariana Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇶" text="[:flag: Martinique:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇷" text="[:flag: Mauritania:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇸" text="[:flag: Montserrat:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇹" text="[:flag: Malta:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇺" text="[:flag: Mauritius:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇻" text="[:flag: Maldives:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇼" text="[:flag: Malawi:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇽" text="[:flag: Mexico:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇾" text="[:flag: Malaysia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇲🇿" text="[:flag: Mozambique:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇦" text="[:flag: Namibia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇨" text="[:flag: New Caledonia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇪" text="[:flag: Niger:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇫" text="[:flag: Norfolk Island:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇬" text="[:flag: Nigeria:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇮" text="[:flag: Nicaragua:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇱" text="[:flag: Netherlands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇴" text="[:flag: Norway:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇵" text="[:flag: Nepal:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇷" text="[:flag: Nauru:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇺" text="[:flag: Niue:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇳🇿" text="[:flag: New Zealand:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇴🇲" text="[:flag: Oman:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇦" text="[:flag: Panama:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇪" text="[:flag: Peru:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇫" text="[:flag: French Polynesia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇬" text="[:flag: Papua New Guinea:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇭" text="[:flag: Philippines:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇰" text="[:flag: Pakistan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇱" text="[:flag: Poland:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇲" text="[:flag: St. Pierre &amp; Miquelon:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇳" text="[:flag: Pitcairn Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇷" text="[:flag: Puerto Rico:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇸" text="[:flag: Palestinian Territories:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇹" text="[:flag: Portugal:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇼" text="[:flag: Palau:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇵🇾" text="[:flag: Paraguay:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇶🇦" text="[:flag: Qatar:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇷🇪" text="[:flag: RÃ©union:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇷🇴" text="[:flag: Romania:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇷🇸" text="[:flag: Serbia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇷🇺" text="[:flag: Russia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇷🇼" text="[:flag: Rwanda:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇦" text="[:flag: Saudi Arabia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇧" text="[:flag: Solomon Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇨" text="[:flag: Seychelles:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇩" text="[:flag: Sudan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇪" text="[:flag: Sweden:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇬" text="[:flag: Singapore:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇭" text="[:flag: St. Helena:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇮" text="[:flag: Slovenia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇯" text="[:flag: Svalbard &amp; Jan Mayen:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇰" text="[:flag: Slovakia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇱" text="[:flag: Sierra Leone:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇲" text="[:flag: San Marino:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇳" text="[:flag: Senegal:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇴" text="[:flag: Somalia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇷" text="[:flag: Suriname:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇸" text="[:flag: South Sudan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇹" text="[:flag: SÃ£o TomÃ© &amp; PrÃ­ncipe:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇻" text="[:flag: El Salvador:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇽" text="[:flag: Sint Maarten:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇾" text="[:flag: Syria:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇸🇿" text="[:flag: Eswatini:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇦" text="[:flag: Tristan da Cunha:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇨" text="[:flag: Turks &amp; Caicos Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇩" text="[:flag: Chad:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇫" text="[:flag: French Southern Territories:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇬" text="[:flag: Togo:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇭" text="[:flag: Thailand:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇯" text="[:flag: Tajikistan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇰" text="[:flag: Tokelau:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇱" text="[:flag: Timor-Leste:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇲" text="[:flag: Turkmenistan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇳" text="[:flag: Tunisia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇴" text="[:flag: Tonga:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇷" text="[:flag: TÃ¼rkiye:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇹" text="[:flag: Trinidad &amp; Tobago:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇻" text="[:flag: Tuvalu:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇼" text="[:flag: Taiwan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇹🇿" text="[:flag: Tanzania:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇺🇦" text="[:flag: Ukraine:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇺🇬" text="[:flag: Uganda:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇺🇲" text="[:flag: U.S. Outlying Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇺🇳" text="[:flag: United Nations:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇺🇸" text="[:flag: United States:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇺🇾" text="[:flag: Uruguay:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇺🇿" text="[:flag: Uzbekistan:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇻🇦" text="[:flag: Vatican City:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇻🇨" text="[:flag: St. Vincent &amp; Grenadines:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇻🇪" text="[:flag: Venezuela:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇻🇬" text="[:flag: British Virgin Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇻🇮" text="[:flag: U.S. Virgin Islands:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇻🇳" text="[:flag: Vietnam:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇻🇺" text="[:flag: Vanuatu:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇼🇫" text="[:flag: Wallis &amp; Futuna:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇼🇸" text="[:flag: Samoa:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇽🇰" text="[:flag: Kosovo:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇾🇪" text="[:flag: Yemen:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇾🇹" text="[:flag: Mayotte:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇿🇦" text="[:flag: South Africa:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇿🇲" text="[:flag: Zambia:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🇿🇼" text="[:flag: Zimbabwe:]" category="Flags" subCategory="country-flag" />
+  <Emoji value="🏴󠁧󠁢󠁥󠁮󠁧󠁿" text="[:flag: England:]" category="Flags" subCategory="subdivision-flag" />
+  <Emoji value="🏴󠁧󠁢󠁳󠁣󠁴󠁿" text="[:flag: Scotland:]" category="Flags" subCategory="subdivision-flag" />
+  <Emoji value="🏴󠁧󠁢󠁷󠁬󠁳󠁿" text="[:flag: Wales:]" category="Flags" subCategory="subdivision-flag" />
+</EmojiReplacements>

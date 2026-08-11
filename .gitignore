@@ -1,0 +1,24 @@
+# IDE and build output
+.vs/
+**/bin/
+**/obj/
+work/.dotnet/
+*.user
+*.suo
+
+# Local configuration and private data
+**/meshtastic-settings.xml
+**/meshtastic-messages.db
+**/meshtastic-messages.db-shm
+**/meshtastic-messages.db-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Local logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Personal logo files
+src/ConsoleClient/logo/*DM2TK*.txt
