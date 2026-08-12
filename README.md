@@ -5,6 +5,8 @@ application for the native Meshtastic Protobuf API. It connects by USB/serial
 or TCP, stores messages, nodes and telemetry in SQLite, and supports optional
 Telegram gateways and local or HTTP chat bots.
 
+Source code and releases: https://github.com/kr-saibot/MeshtasticConsoleClient
+
 ![Screenshot of the terminal client](Screenshot.png)
 
 ## Features

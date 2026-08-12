@@ -249,6 +249,7 @@ namespace ConsoleClient
         private static Dialog _pleaseWait;
         private static Label _pleaseWaitText;
         private static ProgressBar _pleaseWaitProgress;
+        private static int _connectionAttemptId;
         private static Window _chatPage;
         private static Window _nodesPage;
         private static Window _telemetryPage;
@@ -519,6 +520,7 @@ namespace ConsoleClient
         private static void StartConnect()
         {
             if (_mesh.State != ConnectionState.Disconnected) { MessageBox.Query("Connection", "A connection is already active.", "OK"); return; }
+            var attemptId = ++_connectionAttemptId;
             ShowPleaseWait("Connecting to Meshtastic...");
             // Give Terminal.Gui a complete drawing cycle before the transport starts its
             // potentially expensive initial node/configuration synchronization.
@@ -528,31 +530,44 @@ namespace ConsoleClient
                 {
                     try
                     {
+                        if (attemptId != _connectionAttemptId) return;
                         var c = _settings.Connection;
                         if (c.Transport == MeshtasticTransportType.Serial) await _mesh.ConnectSerialAsync(c.SerialPort, c.SerialBaudRate);
                         else await _mesh.ConnectTcpAsync(c.TcpHost, c.TcpPort);
-                        Ui(delegate { ShowPleaseWait("Loading nodes and device data..."); });
+                        if (attemptId != _connectionAttemptId) return;
+                        Ui(delegate { if (attemptId == _connectionAttemptId) ShowPleaseWait("Loading nodes and device data..."); });
                         await _mesh.RequestFullStateAsync();
+                        if (attemptId != _connectionAttemptId) return;
                         await _mesh.ActivatePacketStreamingAsync();
+                        if (attemptId != _connectionAttemptId) return;
                         await RestartTelegramGatewaysAsync();
-                        Ui(delegate { HidePleaseWait(); RefreshChats(); });
+                        Ui(delegate { if (attemptId == _connectionAttemptId) { HidePleaseWait(); RefreshChats(); } });
                     }
-                    catch (Exception ex) { try { await _mesh.DisconnectAsync(); } catch { } Ui(delegate { HidePleaseWait(); MessageBox.ErrorQuery("Connection", ex.Message, "OK"); }); }
+                    catch (Exception ex)
+                    {
+                        try { await _mesh.DisconnectAsync(); } catch { }
+                        if (attemptId != _connectionAttemptId) return;
+                        Ui(delegate { if (attemptId == _connectionAttemptId) { HidePleaseWait(); MessageBox.ErrorQuery("Connection", ex.Message, "OK"); } });
+                    }
                 });
                 return false;
             });
-            Application.Run(_pleaseWait);
-            UpdateStatus();
         }
 
         private static void ShowPleaseWait(string text)
         {
             if (_pleaseWait == null)
             {
-                _pleaseWait = new Dialog("Please wait", 58, 7);
+                _pleaseWait = new Dialog("Please wait", 58, 7) { Modal = true };
                 _pleaseWaitText = new Label("") { X = 2, Y = 1, Width = Dim.Fill(4), TextAlignment = TextAlignment.Centered };
                 _pleaseWaitProgress = new ProgressBar { X = 2, Y = 3, Width = Dim.Fill(4), ProgressBarStyle = ProgressBarStyle.MarqueeBlocks };
-                _pleaseWait.Add(_pleaseWaitText, _pleaseWaitProgress);
+                var cancel = new Button("Cancel") { X = Pos.Center(), Y = 5 };
+                cancel.Clicked += CancelConnectionAttempt;
+                _pleaseWait.Add(_pleaseWaitText, _pleaseWaitProgress, cancel);
+                // Do not call Application.Run(dialog) here. A nested Terminal.Gui run loop
+                // leaves a stale Unix event descriptor under Mono and can busy-spin at 100% CPU.
+                Application.Top.Add(_pleaseWait);
+                _pleaseWait.SetFocus();
             }
             _pleaseWaitText.Text = text;
             _pleaseWait.SetNeedsDisplay();
@@ -580,8 +595,25 @@ namespace ConsoleClient
             if (_pleaseWait == null) return;
             var waitDialog = _pleaseWait;
             _pleaseWait = null;
+            Application.Top.Remove(waitDialog);
             _chatPage.SetFocus();
-            Application.RequestStop(waitDialog);
+            Application.Top.SetNeedsDisplay();
+        }
+
+        private static void CancelConnectionAttempt()
+        {
+            _connectionAttemptId++;
+            HidePleaseWait();
+            Task.Run(async delegate
+            {
+                try
+                {
+                    if (_telegramGateways != null) await _telegramGateways.StopAsync();
+                    await _mesh.DisconnectAsync();
+                }
+                catch { }
+                Ui(UpdateStatus);
+            });
         }
 
         private static void Disconnect() { Task.Run(async delegate { if (_telegramGateways != null) await _telegramGateways.StopAsync(); await _mesh.DisconnectAsync(); Ui(UpdateStatus); }); }
@@ -1567,7 +1599,7 @@ namespace ConsoleClient
             var assembly = Assembly.GetExecutingAssembly();
             var version = assembly.GetName().Version;
             var buildDate = assembly.GetCustomAttributes(typeof(AssemblyMetadataAttribute)).OfType<AssemblyMetadataAttribute>().FirstOrDefault(attribute => attribute.Key == "BuildDateUtc");
-            MessageBox.Query("Info", "Meshtastic ConsoleClient\n\nCreated by Tobias Krista with support from AI.\nBuild: " + (version == null ? "-" : version.ToString()) + "\nCompiled: " + (buildDate == null ? "-" : buildDate.Value + " UTC") + "\n\nThis program is published under the GNU General Public License v3.0 (GPLv3).", "OK");
+            MessageBox.Query("Info", "Meshtastic ConsoleClient\n\nCreated by Tobias Krista with support from AI.\nBuild: " + (version == null ? "-" : version.ToString()) + "\nCompiled: " + (buildDate == null ? "-" : buildDate.Value + " UTC") + "\n\nSource code:\nhttps://github.com/kr-saibot/MeshtasticConsoleClient\n\nThis program is published under the GNU General Public License v3.0 (GPLv3).", "OK");
         }
 
         private static string FormatChatBot(MeshtasticChatBotSettings bot)
