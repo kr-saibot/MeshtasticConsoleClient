@@ -23,7 +23,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Update="logo\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="map\*.xml" CopyToOutputDirectory="PreserveNewest" />
     <None Update="emoji-replacements.xml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="emoji-blocks-full.xml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="emoji-blocks-12line-full.xml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\LICENSE-Meshtastic-Protobufs.txt" Link="LICENSE-Meshtastic-Protobufs.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\THIRD-PARTY-NOTICES.md" Link="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" />

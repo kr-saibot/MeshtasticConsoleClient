@@ -17,6 +17,8 @@ namespace Meshtastic.Client
         public int SerialBaudRate { get; set; }
         public string TcpHost { get; set; }
         public int TcpPort { get; set; }
+        public bool AutomaticReconnect { get; set; }
+        public int ReconnectIntervalSeconds { get; set; }
 
         public MeshtasticConnectionSettings()
         {
@@ -25,6 +27,8 @@ namespace Meshtastic.Client
             SerialBaudRate = 115200;
             TcpHost = "192.168.1.1";
             TcpPort = 4403;
+            AutomaticReconnect = true;
+            ReconnectIntervalSeconds = 5;
         }
     }
 
@@ -47,13 +51,15 @@ namespace Meshtastic.Client
         public string LogoFrameColor { get; set; }
         public string LogoTextColor { get; set; }
         public string EmojiTextColor { get; set; }
+        public string MapNodeColor { get; set; }
+        public string MapClusterColor { get; set; }
 
         public MeshtasticAppearanceSettings()
         {
             BackgroundColor = "Black"; FrameColor = "Gray"; TextColor = "Gray";
             SentMessageColor = "BrightYellow"; ReceivedMessageColor = "BrightCyan"; StatusTextColor = "White";
             InputBackgroundColor = "Black"; InputTextColor = "White"; MenuBackgroundColor = "Blue"; MenuTextColor = "White";
-            ButtonBackgroundColor = "Black"; ButtonTextColor = "BrightCyan"; PageFrameColor = "Gray"; LogoFrameColor = "Gray"; LogoTextColor = "BrightCyan"; EmojiTextColor = "BrightMagenta";
+            ButtonBackgroundColor = "Black"; ButtonTextColor = "BrightCyan"; PageFrameColor = "Gray"; LogoFrameColor = "Gray"; LogoTextColor = "BrightCyan"; EmojiTextColor = "BrightMagenta"; MapNodeColor = "BrightCyan"; MapClusterColor = "BrightMagenta";
         }
     }
 
@@ -61,13 +67,15 @@ namespace Meshtastic.Client
     public sealed class MeshtasticLogoSettings
     {
         public bool ShowLogo { get; set; }
+        public bool ShowFrame { get; set; }
         public bool AutomaticRotation { get; set; }
+        public bool ShowSelectedEmoji { get; set; }
         public int RotationIntervalSeconds { get; set; }
         public int InnerWidth { get; set; }
         public int InnerHeight { get; set; }
         public string LastLogoFileName { get; set; }
 
-        public MeshtasticLogoSettings() { ShowLogo = true; AutomaticRotation = true; RotationIntervalSeconds = 10; InnerWidth = 32; InnerHeight = 8; LastLogoFileName = ""; }
+        public MeshtasticLogoSettings() { ShowLogo = true; ShowFrame = true; AutomaticRotation = true; RotationIntervalSeconds = 10; InnerWidth = 32; InnerHeight = 8; LastLogoFileName = ""; }
     }
 
     /// <summary>Defines one command-triggered local chat bot.</summary>
@@ -112,21 +120,56 @@ namespace Meshtastic.Client
         public MeshtasticHttpBotSettings() { Url = ""; QueryParameters = new List<MeshtasticHttpBotParameter>(); for (var i = 0; i < 5; i++) QueryParameters.Add(new MeshtasticHttpBotParameter()); }
     }
 
+    /// <summary>Actions that notify the local operating system about unread incoming messages.</summary>
+    public sealed class MeshtasticAlertSettings
+    {
+        public int RepeatBeepIntervalSeconds { get; set; }
+        public bool EnableHttpGet { get; set; }
+        public string HttpGetUrl { get; set; }
+        public bool EnableExecutable { get; set; }
+        public string ExecutablePath { get; set; }
+
+        public MeshtasticAlertSettings()
+        {
+            RepeatBeepIntervalSeconds = 0; HttpGetUrl = ""; ExecutablePath = "";
+        }
+    }
+
+    public sealed class MeshtasticNodeListSettings
+    {
+        public bool FavoritesOnly { get; set; }
+        public string SearchText { get; set; }
+        public string SortMode { get; set; }
+        public bool SortAscending { get; set; }
+        public MeshtasticNodeListSettings() { SearchText = ""; SortMode = "Name"; SortAscending = true; }
+    }
+    public sealed class MeshtasticMapSettings
+    {
+        public double? CenterLatitude { get; set; }
+        public double? CenterLongitude { get; set; }
+        public double MetersPerRow { get; set; }
+        public List<string> ActiveOverlayFiles { get; set; }
+        public MeshtasticMapSettings() { MetersPerRow = 1000d; }
+    }
     /// <summary>Root object for a readable, application-owned settings file.</summary>
     [XmlRoot("MeshtasticApplicationSettings")]
     public sealed class MeshtasticApplicationSettings
     {
         public MeshtasticConnectionSettings Connection { get; set; }
         public bool EnableNewMessageBeep { get; set; }
+        public bool StoreTelemetryData { get; set; }
+        public MeshtasticAlertSettings Alerts { get; set; }
         public MeshtasticAppearanceSettings Appearance { get; set; }
         public MeshtasticLogoSettings Logo { get; set; }
+        public MeshtasticMapSettings Map { get; set; }
+        public MeshtasticNodeListSettings Nodes { get; set; }
         public List<MeshtasticChatBotSettings> ChatBots { get; set; }
         public List<TelegramGatewaySettings> TelegramGateways { get; set; }
         public List<MeshtasticHttpBotSettings> HttpBots { get; set; }
 
         public MeshtasticApplicationSettings()
         {
-            Connection = new MeshtasticConnectionSettings(); Appearance = new MeshtasticAppearanceSettings(); Logo = new MeshtasticLogoSettings(); ChatBots = new List<MeshtasticChatBotSettings>(); HttpBots = new List<MeshtasticHttpBotSettings>(); TelegramGateways = new List<TelegramGatewaySettings>(); EnableNewMessageBeep = true;
+            Connection = new MeshtasticConnectionSettings(); Appearance = new MeshtasticAppearanceSettings(); Logo = new MeshtasticLogoSettings(); Map = new MeshtasticMapSettings(); Nodes = new MeshtasticNodeListSettings(); Alerts = new MeshtasticAlertSettings(); ChatBots = new List<MeshtasticChatBotSettings>(); HttpBots = new List<MeshtasticHttpBotSettings>(); TelegramGateways = new List<TelegramGatewaySettings>(); EnableNewMessageBeep = true; StoreTelemetryData = true;
             for (var channel = 0; channel < 8; channel++) TelegramGateways.Add(new TelegramGatewaySettings { ChannelIndex = channel });
         }
     }
@@ -146,6 +189,10 @@ namespace Meshtastic.Client
                 if (settings.Appearance == null) settings.Appearance = new MeshtasticAppearanceSettings();
                 NormalizeAppearance(settings.Appearance);
                 if (settings.Logo == null) settings.Logo = new MeshtasticLogoSettings();
+                if (settings.Map == null) settings.Map = new MeshtasticMapSettings();
+                if (settings.Nodes == null) settings.Nodes = new MeshtasticNodeListSettings();
+                if (settings.Alerts == null) settings.Alerts = new MeshtasticAlertSettings();
+                if (settings.Alerts.RepeatBeepIntervalSeconds < 0) settings.Alerts.RepeatBeepIntervalSeconds = 0;
                 if (settings.Logo.RotationIntervalSeconds < 1) settings.Logo.RotationIntervalSeconds = 1;
                 if (settings.Logo.InnerWidth < 20) settings.Logo.InnerWidth = 20;
                 if (settings.Logo.InnerHeight < 1) settings.Logo.InnerHeight = 1;
@@ -166,6 +213,10 @@ namespace Meshtastic.Client
             if (settings.Appearance == null) settings.Appearance = new MeshtasticAppearanceSettings();
             NormalizeAppearance(settings.Appearance);
             if (settings.Logo == null) settings.Logo = new MeshtasticLogoSettings();
+            if (settings.Map == null) settings.Map = new MeshtasticMapSettings();
+            if (settings.Nodes == null) settings.Nodes = new MeshtasticNodeListSettings();
+            if (settings.Alerts == null) settings.Alerts = new MeshtasticAlertSettings();
+            if (settings.Alerts.RepeatBeepIntervalSeconds < 0) settings.Alerts.RepeatBeepIntervalSeconds = 0;
             if (settings.Logo.RotationIntervalSeconds < 1) settings.Logo.RotationIntervalSeconds = 1;
             if (settings.Logo.InnerWidth < 20) settings.Logo.InnerWidth = 20;
             if (settings.Logo.InnerHeight < 1) settings.Logo.InnerHeight = 1;
@@ -188,6 +239,7 @@ namespace Meshtastic.Client
             if (connection.Transport == MeshtasticTransportType.Tcp && String.IsNullOrWhiteSpace(connection.TcpHost)) throw new InvalidDataException("TcpHost is required for a TCP connection.");
             if (connection.SerialBaudRate <= 0) throw new InvalidDataException("SerialBaudRate must be positive.");
             if (connection.TcpPort < 1 || connection.TcpPort > 65535) throw new InvalidDataException("TcpPort must be between 1 and 65535.");
+            if (connection.ReconnectIntervalSeconds < 1 || connection.ReconnectIntervalSeconds > 86400) throw new InvalidDataException("ReconnectIntervalSeconds must be between 1 and 86400.");
         }
 
         private static void NormalizeAppearance(MeshtasticAppearanceSettings appearance)
@@ -195,6 +247,8 @@ namespace Meshtastic.Client
             if (String.IsNullOrWhiteSpace(appearance.LogoFrameColor)) appearance.LogoFrameColor = appearance.FrameColor ?? "Gray";
             if (String.IsNullOrWhiteSpace(appearance.LogoTextColor)) appearance.LogoTextColor = "BrightCyan";
             if (String.IsNullOrWhiteSpace(appearance.EmojiTextColor)) appearance.EmojiTextColor = "BrightMagenta";
+            if (String.IsNullOrWhiteSpace(appearance.MapNodeColor)) appearance.MapNodeColor = "BrightCyan";
+            if (String.IsNullOrWhiteSpace(appearance.MapClusterColor)) appearance.MapClusterColor = "BrightMagenta";
         }
 
         private static void EnsureTelegramGateways(MeshtasticApplicationSettings settings)

@@ -26,6 +26,7 @@ namespace Meshtastic.Client
     /// <summary>Thread-safe native Meshtastic Protobuf client for Serial and TCP transports.</summary>
     public sealed class MeshtasticClient : IDisposable
     {
+        public const int MaximumTextPayloadBytes = 233;
         private const uint BroadcastNode = UInt32.MaxValue;
         private readonly object _gate = new object();
         private readonly SemaphoreSlim _writer = new SemaphoreSlim(1, 1);
@@ -42,6 +43,7 @@ namespace Meshtastic.Client
         private uint _expectedConfigId;
         private bool _manualDisconnect;
         private ConnectionState _state = ConnectionState.Disconnected;
+        private DateTime? _nextReconnectUtc;
         private string _transportKind;
         private string _transportEndpoint;
         private DateTime? _connectedSinceUtc;
@@ -79,6 +81,7 @@ namespace Meshtastic.Client
 
         public ConnectionState State { get { lock (_gate) return _state; } }
         public bool IsConnected { get { return State == ConnectionState.Connected; } }
+        public DateTime? NextReconnectUtc { get { lock (_gate) return _nextReconnectUtc; } }
         public TimeSpan ReconnectDelay { get; set; }
         /// <summary>Regular native API heartbeat. A failed write makes the connection loop reconnect.</summary>
         public TimeSpan HeartbeatInterval { get; set; }
@@ -266,6 +269,8 @@ namespace Meshtastic.Client
         public async Task<uint> SendTextWithIdAsync(uint destination, string text, int channelIndex = 0, bool wantAck = true, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (String.IsNullOrEmpty(text)) throw new ArgumentException("Text must not be empty.", "text");
+            var payloadLength = Encoding.UTF8.GetByteCount(text);
+            if (payloadLength > MaximumTextPayloadBytes) throw new ArgumentException("Text messages are limited to " + MaximumTextPayloadBytes + " UTF-8 bytes (current: " + payloadLength + ").", "text");
             var data = new Data { Portnum = PortNum.TextMessageApp, Payload = ByteString.CopyFromUtf8(text) };
             var packet = new MeshPacket { Id = NextPacketId(), To = destination, Channel = (uint)channelIndex, WantAck = wantAck, Decoded = data };
             // QueueStatus confirms local acceptance even for broadcasts; only direct/reliable packets wait for a later ACK/NAK.
@@ -349,13 +354,16 @@ namespace Meshtastic.Client
             {
                 while (!token.IsCancellationRequested)
                 {
+                    lock (_gate) _nextReconnectUtc = null;
                     SetState(first ? ConnectionState.Connecting : ConnectionState.Reconnecting, null);
+                    var connectedThisAttempt = false;
                     try
                     {
                         var transport = _transportFactory();
                         lock (_gate) _transport = transport;
                         Debug("Opening transport " + transport.Kind + " at " + transport.Endpoint + ".");
                         await transport.OpenAsync(token).ConfigureAwait(false);
+                        connectedThisAttempt = true;
                         failedAttempts = 0;
                         lock (_gate)
                         {
@@ -401,7 +409,11 @@ namespace Meshtastic.Client
                             break;
                         }
                         SetState(ConnectionState.Reconnecting, ex);
-                        await Task.Delay(ReconnectDelay, token).ConfigureAwait(false);
+                        if (!connectedThisAttempt)
+                        {
+                            lock (_gate) _nextReconnectUtc = DateTime.UtcNow + ReconnectDelay;
+                            await Task.Delay(ReconnectDelay, token).ConfigureAwait(false);
+                        }
                     }
                     first = false;
                 }
@@ -411,7 +423,7 @@ namespace Meshtastic.Client
                 lock (_gate)
                 {
                     if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
-                    if (_transport != null) { _transport.Dispose(); _transport = null; } _lifetime = null; _connectionLoop = null;
+                    if (_transport != null) { _transport.Dispose(); _transport = null; } _nextReconnectUtc = null; _lifetime = null; _connectionLoop = null;
                 }
                 SetState(ConnectionState.Disconnected, null);
             }
