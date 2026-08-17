@@ -28,7 +28,7 @@ namespace Meshtastic.Client
             TcpHost = "192.168.1.1";
             TcpPort = 4403;
             AutomaticReconnect = true;
-            ReconnectIntervalSeconds = 5;
+            ReconnectIntervalSeconds = 300;
         }
     }
 
