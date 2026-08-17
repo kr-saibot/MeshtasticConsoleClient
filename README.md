@@ -1,13 +1,29 @@
-# MeshtasticNet472
+# MeshtasticConsoleClient
 
-MeshtasticNet472 is a C# 7.3 / .NET Framework 4.7.2 client library and terminal
+MeshtasticConsoleClient is a C# 7.3 / .NET Framework 4.7.2 client library and terminal
 application for the native Meshtastic Protobuf API. It connects by USB/serial
 or TCP, stores messages, nodes and telemetry in SQLite, and supports optional
 Telegram gateways and local or HTTP chat bots.
 
 Source code and releases: https://github.com/kr-saibot/MeshtasticConsoleClient
 
-![Screenshot of the terminal client](Screenshot.png)
+## Screenshots
+
+### Chat
+
+![Chat interface of MeshtasticConsoleClient](Screenshot.png)
+
+### Node map
+
+![Node map with nodes, overlays, grid and distance scale](Screenshot-map.png)
+
+### Node list
+
+![Filterable and sortable list of known Meshtastic nodes](Screenshot-nodes.png)
+
+### Emoji picker
+
+![Keyboard-controlled emoji picker](Screenshot-emoji.png)
 
 ## Features
 
@@ -15,8 +31,26 @@ Source code and releases: https://github.com/kr-saibot/MeshtasticConsoleClient
 - Node, channel, text-message, position and telemetry handling
 - SQLite message, node and telemetry storage
 - Terminal chat interface with direct chats, channels, node details and telemetry
+- Interactive node map with clustering, pan/zoom, GPS centring and XML overlays
+- Filterable and sortable node list with saved view settings
 - Optional Telegram gateways, local chat bots and HTTP bots
 - Configurable appearance, logo rotation and emoji replacement/picker support
+
+## Node map
+
+The Node Map displays all nodes with known positions relative to the current GPS
+position. It supports keyboard and mouse navigation, zooming, node selection,
+clustering, a coordinate crosshair, distance scale and configurable colours.
+Additional places and boundary data can be loaded from XML overlay files. Active
+overlays and their rendering priority are managed through **Map > Overlays** and
+are restored on the next start.
+
+## Emoji picker
+
+The emoji picker provides keyboard-friendly selection and preview of emoji in a
+terminal. Open it with **F6**, navigate with the cursor keys and insert the
+selected emoji with **Enter**. Where a terminal cannot render an emoji directly,
+the client can use generated ASCII representations or configured replacements.
 
 ## Build
 
@@ -38,9 +72,8 @@ dotnet build MeshtasticNet472.sln --configuration Linux
 ```
 
 The terminal client is built to `src/ConsoleClient/bin/<configuration>/net472/`.
-On Linux it is intended to run with Mono. The matching `libe_sqlite3.so` native
-library must be available in the release directory or in the runtime-specific
-native directory.
+On Linux it is intended to run with Mono and uses the distribution-provided
+`libsqlite3.so` library.
 
 ## Running
 
