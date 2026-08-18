@@ -37,6 +37,7 @@ namespace ConsoleClient
         public double MetersPerRow { get { return _metersPerRow; } }
         public Color NodeColor { get; set; } = Color.BrightCyan;
         public Color ClusterColor { get; set; } = Color.BrightMagenta;
+        public Color GridColor { get; set; } = Color.DarkGray;
         public NodeMapView() { CanFocus = true; }
 
         public void SetData(IEnumerable<StoredMeshNode> source, double? latitude, double? longitude)
@@ -124,7 +125,7 @@ namespace ConsoleClient
             for (var y = 0; y < height; y++) { Move(0, y); Application.Driver.AddStr(new string(' ', width)); }
             if (width < 8 || height < 4) return;
 
-            Application.Driver.SetAttribute(Application.Driver.MakeAttribute(Color.DarkGray, Color.Black));
+            Application.Driver.SetAttribute(Application.Driver.MakeAttribute(GridColor, Color.Black));
             for (var y = height / 2 % 5; y < height; y += 5)
                 for (var x = width / 2 % 10; x < width; x += 10) { Move(x, y); Application.Driver.AddRune('.'); }
 
@@ -146,13 +147,15 @@ namespace ConsoleClient
                 Draw(x, y, "[YOU]", Color.BrightGreen, Color.Black, width);
             }
 
-            var coordinates = _centerLatitude.ToString("F5", CultureInfo.InvariantCulture) + ", " + _centerLongitude.ToString("F5", CultureInfo.InvariantCulture);
-            Draw(coordinates.Length / 2 + 2, height - 1, coordinates, Color.Gray, Color.Black, width);
-
             var columns = Math.Min(12, Math.Max(4, width / 6));
             var meters = columns * _metersPerRow * .5d;
             var distance = meters < 1000d ? Math.Round(meters) + " m" : (meters / 1000d).ToString(meters < 10000d ? "F1" : "F0", CultureInfo.InvariantCulture) + " km";
-            Draw(width - columns - distance.Length / 2 - 2, height - 1, "|" + new string('-', columns - 2) + "| " + distance, Color.Gray, Color.Black, width);
+            var scaleText = "|" + new string('-', columns - 2) + "| " + distance;
+            var scaleLeft = Math.Max(0, width - scaleText.Length - 1);
+            var coordinates = _centerLatitude.ToString("F5", CultureInfo.InvariantCulture) + ", " + _centerLongitude.ToString("F5", CultureInfo.InvariantCulture);
+            var coordinatesLeft = Math.Max(0, scaleLeft - coordinates.Length - 1);
+            Draw(coordinatesLeft + coordinates.Length / 2, height - 1, coordinates, Color.Gray, Color.Black, Math.Max(0, scaleLeft - 1));
+            Draw(scaleLeft + scaleText.Length / 2, height - 1, scaleText, Color.Gray, Color.Black, width);
         }
 
         private void AddOverlayMarkers(int width, int height)
@@ -185,9 +188,9 @@ namespace ConsoleClient
         {
             var x = width / 2;
             var y = height / 2;
-            Draw(x, y - 1, "|", Color.DarkGray, Color.Black, width);
-            Draw(x, y, "--+--", Color.DarkGray, Color.Black, width);
-            Draw(x, y + 1, "|", Color.DarkGray, Color.Black, width);
+            Draw(x, y - 1, "|", GridColor, Color.Black, width);
+            Draw(x, y, "--+--", GridColor, Color.Black, width);
+            Draw(x, y + 1, "|", GridColor, Color.Black, width);
         }
         private void BuildVisibleMarkers(int width, int height)
         {
@@ -337,11 +340,12 @@ namespace ConsoleClient
             putCentered(width / 2, height / 2 - 1, "|"); putCentered(width / 2, height / 2, "--+--"); putCentered(width / 2, height / 2 + 1, "|");
             foreach (var marker in _markers) putCentered(marker.X, marker.Y, marker.Label);
             if (_ownLatitude.HasValue && _ownLongitude.HasValue) { int x, y; Project(_ownLatitude.Value, _ownLongitude.Value, width, height, out x, out y); putCentered(x, y, "[YOU]"); }
-            var coordinates = _centerLatitude.ToString("F5", CultureInfo.InvariantCulture) + ", " + _centerLongitude.ToString("F5", CultureInfo.InvariantCulture);
-            for (var index = 0; index < coordinates.Length && index + 2 < width; index++) rows[height - 1][index + 2] = coordinates[index];
             var columns = Math.Min(12, Math.Max(4, width / 6)); var meters = columns * _metersPerRow * .5d;
             var distance = meters < 1000d ? Math.Round(meters) + " m" : (meters / 1000d).ToString(meters < 10000d ? "F1" : "F0", CultureInfo.InvariantCulture) + " km";
             var scaleText = "|" + new string('-', columns - 2) + "| " + distance; var scaleLeft = Math.Max(0, width - scaleText.Length - 1);
+            var coordinates = _centerLatitude.ToString("F5", CultureInfo.InvariantCulture) + ", " + _centerLongitude.ToString("F5", CultureInfo.InvariantCulture);
+            var coordinatesLeft = Math.Max(0, scaleLeft - coordinates.Length - 1);
+            for (var index = 0; index < coordinates.Length && coordinatesLeft + index < Math.Max(0, scaleLeft - 1); index++) rows[height - 1][coordinatesLeft + index] = coordinates[index];
             for (var index = 0; index < scaleText.Length && scaleLeft + index < width; index++) rows[height - 1][scaleLeft + index] = scaleText[index];
             return String.Join(Environment.NewLine, rows.Select(row => new string(row).TrimEnd()));
         }

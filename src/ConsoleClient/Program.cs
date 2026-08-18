@@ -30,6 +30,7 @@ namespace ConsoleClient
     {
         private readonly List<Tuple<string, bool>> _lines = new List<Tuple<string, bool>>();
         private readonly List<StoredMeshMessage> _messageItems = new List<StoredMeshMessage>();
+        private const string DaySeparatorPrefix = "\u0001DAY:";
         private int _scrollOffset;
         private int _selectedEmojiIndex = -1;
         private Guid? _selectedMessageId;
@@ -59,15 +60,24 @@ namespace ConsoleClient
         public Color EmojiTextColor { get; set; } = Color.BrightMagenta;
         public Color BackgroundColor { get; set; } = Color.Black;
         public Color NormalTextColor { get; set; } = Color.Gray;
+        public Color DaySeparatorColor { get; set; } = Color.DarkGray;
 
         public void SetMessages(IEnumerable<StoredMeshMessage> messages, Func<StoredMeshMessage, string> formatter)
         {
             _lines.Clear();
             _messageItems.Clear();
+            DateTime? previousDate = null;
             foreach (var message in messages)
             {
+                var messageDate = message.OccurredUtc.ToLocalTime().Date;
+                if (!previousDate.HasValue || messageDate != previousDate.Value)
+                {
+                    _lines.Add(Tuple.Create(DaySeparatorPrefix + FormatDayOffset(messageDate), false));
+                    _messageItems.Add(null);
+                }
                 _lines.Add(Tuple.Create(formatter(message), message.Direction == MessageDirection.Outgoing));
                 _messageItems.Add(message);
+                previousDate = messageDate;
             }
             _scrollOffset = 0;
             _selectedEmojiIndex = -1;
@@ -77,7 +87,7 @@ namespace ConsoleClient
             NotifySelectionChanged();
         }
 
-        public int MessageCount { get { return _lines.Count; } }
+        public int MessageCount { get { return _messageItems.Count(item => item != null); } }
         public string SelectedEmojiToken { get { return GetSelectedEmojiToken(); } }
         public int FirstVisibleMessageNumber
         {
@@ -88,16 +98,18 @@ namespace ConsoleClient
                 var height = Math.Max(1, Bounds.Height);
                 var displayLines = new List<Tuple<string, bool>>();
                 var messageNumbers = new List<int>();
-                for (var messageIndex = 0; messageIndex < _lines.Count; messageIndex++)
+                var messageNumber = 0;
+                for (var itemIndex = 0; itemIndex < _lines.Count; itemIndex++)
                 {
+                    if (_messageItems[itemIndex] != null) messageNumber++;
                     var lineCountBefore = displayLines.Count;
-                    AddWrappedLines(displayLines, _lines[messageIndex], width - 1);
-                    for (var lineIndex = lineCountBefore; lineIndex < displayLines.Count; lineIndex++) messageNumbers.Add(messageIndex);
+                    AddWrappedLines(displayLines, _lines[itemIndex], width - 1);
+                    for (var lineIndex = lineCountBefore; lineIndex < displayLines.Count; lineIndex++) messageNumbers.Add(Math.Max(1, messageNumber));
                 }
                 var maximumOffset = Math.Max(0, displayLines.Count - height);
                 var offset = Math.Min(_scrollOffset, maximumOffset);
                 var start = Math.Max(0, displayLines.Count - height - offset);
-                return messageNumbers.Count == 0 ? 0 : messageNumbers[Math.Min(start, messageNumbers.Count - 1)] + 1;
+                return messageNumbers.Count == 0 ? 0 : messageNumbers[Math.Min(start, messageNumbers.Count - 1)];
             }
         }
 
@@ -128,7 +140,7 @@ namespace ConsoleClient
                 var row = index - start;
                 var line = displayLines[index];
                 Move(0, row);
-                DrawMessageLine(line.Item1, line.Item2 ? OutgoingColor : IncomingColor, ref emojiIndex, HasFocus && displayStarts[index] && _selectedMessageId == displayOwners[index].Id);
+                DrawMessageLine(line.Item1, line.Item2 ? OutgoingColor : IncomingColor, ref emojiIndex, HasFocus && displayStarts[index] && displayOwners[index] != null && _selectedMessageId == displayOwners[index].Id);
             }
             if (displayLines.Count > height && height > 0)
             {
@@ -159,7 +171,7 @@ namespace ConsoleClient
             {
                 if (_selectedMessageId.HasValue)
                 {
-                    var message = _messageItems.FirstOrDefault(item => item.Id == _selectedMessageId.Value);
+                    var message = _messageItems.FirstOrDefault(item => item != null && item.Id == _selectedMessageId.Value);
                     if (message != null && MessageActivated != null) MessageActivated(message);
                     return true;
                 }
@@ -194,7 +206,7 @@ namespace ConsoleClient
                 _selectedMessageId = null;
                 if (mouseEvent.Flags.HasFlag(MouseFlags.Button1DoubleClicked)) ActivateSelectedEmoji();
             }
-            else if (clickedRow >= 0 && clickedRow < owners.Count && starts[clickedRow] && mouseEvent.X >= 0 && mouseEvent.X < 7)
+            else if (clickedRow >= 0 && clickedRow < owners.Count && starts[clickedRow] && mouseEvent.X >= 0 && mouseEvent.X < GetTimestampLength(lines[clickedRow].Item1))
             {
                 _selectedMessageId = owners[clickedRow].Id;
                 _selectedEmojiIndex = -1;
@@ -233,7 +245,7 @@ namespace ConsoleClient
                 for (var row = 0; row < wrapped.Count; row++)
                 {
                     owners.Add(_messageItems[index]);
-                    starts.Add(row == 0);
+                    starts.Add(row == 0 && _messageItems[index] != null);
                 }
             }
         }
@@ -389,11 +401,17 @@ namespace ConsoleClient
 
         private void DrawMessageLine(string text, Color messageColor, ref int emojiIndex, bool selectedTimestamp)
         {
-            var position = 0;
-            if (selectedTimestamp && text.Length >= 7 && text[0] == '[' && text[6] == ']')
+            if (text.StartsWith(DaySeparatorPrefix, StringComparison.Ordinal))
             {
-                DrawText(text.Substring(0, 7), messageColor, true);
-                position = 7;
+                DrawText(text.Substring(DaySeparatorPrefix.Length), DaySeparatorColor, false);
+                return;
+            }
+            var position = 0;
+            var timestampLength = GetTimestampLength(text);
+            if (selectedTimestamp && timestampLength > 0)
+            {
+                DrawText(text.Substring(0, timestampLength), messageColor, true);
+                position = timestampLength;
             }
             while (position < text.Length)
             {
@@ -408,6 +426,14 @@ namespace ConsoleClient
             }
         }
 
+
+        private static int GetTimestampLength(string text)
+        {
+            if (String.IsNullOrEmpty(text) || text[0] != '[') return 0;
+            var closingBracket = text.IndexOf(']');
+            return closingBracket < 0 ? 0 : closingBracket + 1;
+        }
+
         private void DrawText(string text, Color foreground, bool selected)
         {
             if (String.IsNullOrEmpty(text)) return;
@@ -419,6 +445,19 @@ namespace ConsoleClient
 
         private static void AddWrappedLines(ICollection<Tuple<string, bool>> target, Tuple<string, bool> line, int width)
         {
+            if (line.Item1.StartsWith(DaySeparatorPrefix, StringComparison.Ordinal))
+            {
+                var label = line.Item1.Substring(DaySeparatorPrefix.Length);
+                var availableWidth = Math.Max(1, width);
+                const int rightPadding = 4;
+                var labelWidth = Math.Min(label.Length, Math.Max(1, availableWidth - rightPadding - 1));
+                var visibleLabel = label.Length > labelWidth ? label.Substring(label.Length - labelWidth) : label;
+                var rightDashCount = Math.Min(rightPadding, Math.Max(0, availableWidth - visibleLabel.Length - 1));
+                var dashCount = Math.Max(0, availableWidth - visibleLabel.Length - rightDashCount - 2);
+                var separator = new string('-', dashCount) + (dashCount > 0 ? " " : "") + visibleLabel + (rightDashCount > 0 ? " " : "") + new string('-', rightDashCount);
+                target.Add(Tuple.Create(DaySeparatorPrefix + separator, false));
+                return;
+            }
             foreach (var part in line.Item1.Replace("\r", "").Split('\n'))
             {
                 if (part.Length == 0) { target.Add(Tuple.Create("", line.Item2)); continue; }
@@ -449,6 +488,12 @@ namespace ConsoleClient
             }
         }
 
+        private static string FormatDayOffset(DateTime date)
+        {
+            var days = Math.Max(0, (DateTime.Today - date.Date).Days);
+            var dayOffset = days == 0 ? "0" : "-" + days.ToString(CultureInfo.InvariantCulture);
+            return date.ToString("dddd dd. MMM", CultureInfo.InvariantCulture) + " / Day " + dayOffset;
+        }
         private static int GetDisplayWidth(string textElement)
         {
             var hasVisibleCharacter = false;
@@ -549,6 +594,7 @@ namespace ConsoleClient
         private static DateTime _lastAlertBeepUtc = DateTime.MinValue;
         private static DateTime _nextRepeatedAlertCheckUtc = DateTime.MinValue;
         private static int _lastKnownUnreadCount = -1;
+        private static bool _logoColorsSwapped;
         private static bool _disconnectedStatusVisible = true;
         private static ListView _channelList;
         private static ListView _directList;
@@ -598,6 +644,12 @@ namespace ConsoleClient
         private static readonly List<string> LogoFiles = new List<string>();
         private static int _logoIndex;
         private static DateTime _nextLogoChangeUtc;
+        private static string[] _animatedLogoLines;
+        private static int _animatedLogoVerticalOffset;
+        private static int _animatedLogoHorizontalOffset;
+        private static int _animatedLogoVerticalDirection = 1;
+        private static int _animatedLogoHorizontalDirection = 1;
+        private static DateTime _nextAnimatedLogoFrameUtc;
         private static readonly List<ChatItem> Chats = new List<ChatItem>();
         private static ChatItem _selected;
         private static readonly List<FrameView> Frames = new List<FrameView>();
@@ -611,6 +663,7 @@ namespace ConsoleClient
         private static string _lastMapPointShortName = "";
         private static string _lastMapPointDescription = "";
         private static bool _mapFollowGps;
+        private static System.Windows.Forms.NotifyIcon _desktopNotificationIcon;
 
         private static void Main(string[] args)
         {
@@ -629,6 +682,7 @@ namespace ConsoleClient
             SubscribeMeshEvents();
 
             Application.Init();
+            InitializeDesktopNotifications();
             BuildUi();
             // Start only after the first UI cycle so the waiting window can be drawn first.
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { StartConnect(); return false; });
@@ -638,9 +692,42 @@ namespace ConsoleClient
             _mesh.DisconnectAsync().GetAwaiter().GetResult();
             _mesh.Dispose();
             _store.Dispose();
+            if (_desktopNotificationIcon != null) { _desktopNotificationIcon.Visible = false; _desktopNotificationIcon.Dispose(); }
             Application.Shutdown();
         }
 
+        private static void InitializeDesktopNotifications()
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT) return;
+            try
+            {
+                _desktopNotificationIcon = new System.Windows.Forms.NotifyIcon
+                {
+                    Icon = System.Drawing.SystemIcons.Information,
+                    Text = "Meshtastic Console Client",
+                    Visible = true
+                };
+            }
+            catch { _desktopNotificationIcon = null; }
+        }
+
+        private static void ShowDesktopNotification(MeshMessage message)
+        {
+            var sender = message == null ? "Meshtastic" : DisplayNodeName(message.From);
+            ShowDesktopNotification("New message from " + sender, message == null ? "" : message.Text);
+        }
+
+        private static void ShowDesktopNotification(string title, string text)
+        {
+            if (_desktopNotificationIcon == null) return;
+            try
+            {
+                var body = text ?? "";
+                if (body.Length > 240) body = body.Substring(0, 237) + "...";
+                _desktopNotificationIcon.ShowBalloonTip(7000, title ?? "Meshtastic", body, System.Windows.Forms.ToolTipIcon.Info);
+            }
+            catch { }
+        }
         private static void NormalizeUnixTerminalType()
         {
             if (Environment.OSVersion.Platform == PlatformID.Win32NT) return;
@@ -664,7 +751,7 @@ namespace ConsoleClient
                 new MenuBarItem("_Telemetry", new[] { new MenuItem("_Show telemetry", "", ShowAllTelemetry), new MenuItem("_Delete current node telemetry", "", DeleteCurrentNodeTelemetry), new MenuItem("_Delete all telemetry", "", DeleteAllTelemetry) }),
                 new MenuBarItem("_Connection", new[] { new MenuItem("_Connect", "", StartConnect), new MenuItem("_Disconnect", "", Disconnect), new MenuItem("Connection _status", "", ShowConnectionStatus) }),
                 new MenuBarItem("_Settings", new[] { new MenuItem("_Connection settings", "", ShowSettings), new MenuItem("_Telemetry storage", "", ShowTelemetryStorageSettings), new MenuItem("_GPS position", "", ShowPositionSettings), new MenuItem("_Use device GPS", "", UseDeviceGps), new MenuItem("_Telegram Gateways", "", ShowTelegramGateways), new MenuItem("_Alerts", "", ShowAlertSettings), new MenuItem("_Appearance", "", ShowAppearanceSettings), new MenuItem("_Logo", "", ShowLogoSettings), new MenuItem("_Chat bots", "", ShowChatBots), new MenuItem("_HTTP bots", "", ShowHttpBots) }),
-                new MenuBarItem("_Debug", new[] { new MenuItem("_Telegram gateway status", "", ShowTelegramGatewayStatus), new MenuItem("_Chat bot", "", ShowChatBotDebug), new MenuItem("_HTTP bot", "", ShowHttpBotDebug), new MenuItem("_Alert HTTP", "", ShowAlertHttpDebug), new MenuItem("Alert shell _command", "", ShowAlertProcessDebug) }),
+                new MenuBarItem("_Debug", new[] { new MenuItem("_Telegram gateway status", "", ShowTelegramGatewayStatus), new MenuItem("_Chat bot", "", ShowChatBotDebug), new MenuItem("_HTTP bot", "", ShowHttpBotDebug), new MenuItem("_Alert HTTP", "", ShowAlertHttpDebug), new MenuItem("Alert shell _command", "", ShowAlertProcessDebug), new MenuItem("_Delete current logo", "", DeleteCurrentLogo) }),
                 new MenuBarItem("_Info", new[] { new MenuItem("_About", "", ShowInfo) }),
                 new MenuBarItem("_Quit", new[] { new MenuItem("_Exit", "", RequestQuit) })
             }) { Key = Key.F10 };
@@ -674,12 +761,28 @@ namespace ConsoleClient
                 if (e.KeyEvent.Key == Key.F1)
                 {
                     ShowChatPage();
+                    if ((_selected == null || _selected.Kind != ChatKind.Channel) && ChannelChats.Count > 0)
+                    {
+                        _refreshingChatLists = true;
+                        _channelList.SelectedItem = 0;
+                        _refreshingChatLists = false;
+                        _selected = ChannelChats[0];
+                        ShowSelectedChat();
+                    }
                     _channelList.SetFocus();
                     e.Handled = true;
                 }
                 else if (e.KeyEvent.Key == Key.F2)
                 {
                     ShowChatPage();
+                    if ((_selected == null || _selected.Kind != ChatKind.Direct) && DirectChats.Count > 0)
+                    {
+                        _refreshingChatLists = true;
+                        _directList.SelectedItem = 0;
+                        _refreshingChatLists = false;
+                        _selected = DirectChats[0];
+                        ShowSelectedChat();
+                    }
                     _directList.SetFocus();
                     e.Handled = true;
                 }
@@ -736,13 +839,73 @@ namespace ConsoleClient
             Frames.Add(_channelsFrame);
             _channelList = new ListView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
             _channelList.SelectedItemChanged += delegate(ListViewItemEventArgs e) { if (!_refreshingChatLists && e.Item >= 0 && e.Item < ChannelChats.Count) { _selected = ChannelChats[e.Item]; ShowSelectedChat(); } };
-            _channelList.KeyPress += e => { if (e.KeyEvent.Key != Key.Enter) return; e.Handled = true; var index = _channelList.SelectedItem; if (index < 0 || index >= ChannelChats.Count) return; _selected = ChannelChats[index]; ActivateSelectedChat(); };
+            _channelList.KeyPress += e =>
+            {
+                if (e.KeyEvent.Key == Key.CursorDown && ChannelChats.Count > 0 && _channelList.SelectedItem >= ChannelChats.Count - 1 && DirectChats.Count > 0)
+                {
+                    e.Handled = true;
+                    _refreshingChatLists = true;
+                    _directList.SelectedItem = 0;
+                    _refreshingChatLists = false;
+                    _selected = DirectChats[0];
+                    _directList.SetFocus();
+                    ShowSelectedChat();
+                    return;
+                }
+                if (e.KeyEvent.Key == Key.CursorUp && ChannelChats.Count > 0 && _channelList.SelectedItem <= 0 && DirectChats.Count > 0)
+                {
+                    e.Handled = true;
+                    _refreshingChatLists = true;
+                    _directList.SelectedItem = DirectChats.Count - 1;
+                    _refreshingChatLists = false;
+                    _selected = DirectChats[DirectChats.Count - 1];
+                    _directList.SetFocus();
+                    ShowSelectedChat();
+                    return;
+                }
+                if (e.KeyEvent.Key != Key.Enter) return;
+                e.Handled = true;
+                var index = _channelList.SelectedItem;
+                if (index < 0 || index >= ChannelChats.Count) return;
+                _selected = ChannelChats[index];
+                ActivateSelectedChat();
+            };
             _channelsFrame.Add(_channelList);
             _directChatsFrame = new FrameView("Direct chats [F2]") { X = 0, Y = Pos.Bottom(_channelsFrame), Width = sidebarOuterWidth, Height = Dim.Fill() };
             Frames.Add(_directChatsFrame);
             _directList = new ListView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill() };
             _directList.SelectedItemChanged += delegate(ListViewItemEventArgs e) { if (!_refreshingChatLists && e.Item >= 0 && e.Item < DirectChats.Count) { _selected = DirectChats[e.Item]; ShowSelectedChat(); } };
-            _directList.KeyPress += e => { if (e.KeyEvent.Key != Key.Enter) return; e.Handled = true; var index = _directList.SelectedItem; if (index < 0 || index >= DirectChats.Count) return; _selected = DirectChats[index]; ActivateSelectedChat(); };
+            _directList.KeyPress += e =>
+            {
+                if (e.KeyEvent.Key == Key.CursorDown && DirectChats.Count > 0 && _directList.SelectedItem >= DirectChats.Count - 1 && ChannelChats.Count > 0)
+                {
+                    e.Handled = true;
+                    _refreshingChatLists = true;
+                    _channelList.SelectedItem = 0;
+                    _refreshingChatLists = false;
+                    _selected = ChannelChats[0];
+                    _channelList.SetFocus();
+                    ShowSelectedChat();
+                    return;
+                }
+                if (e.KeyEvent.Key == Key.CursorUp && DirectChats.Count > 0 && _directList.SelectedItem <= 0 && ChannelChats.Count > 0)
+                {
+                    e.Handled = true;
+                    _refreshingChatLists = true;
+                    _channelList.SelectedItem = ChannelChats.Count - 1;
+                    _refreshingChatLists = false;
+                    _selected = ChannelChats[ChannelChats.Count - 1];
+                    _channelList.SetFocus();
+                    ShowSelectedChat();
+                    return;
+                }
+                if (e.KeyEvent.Key != Key.Enter) return;
+                e.Handled = true;
+                var index = _directList.SelectedItem;
+                if (index < 0 || index >= DirectChats.Count) return;
+                _selected = DirectChats[index];
+                ActivateSelectedChat();
+            };
             _directChatsFrame.Add(_directList);
             _nodeInfoFrame = new FrameView("Chat / node info") { X = sidebarOuterWidth + 1, Y = 0, Width = Dim.Fill(), Height = 5 };
             Frames.Add(_nodeInfoFrame);
@@ -846,8 +1009,10 @@ namespace ConsoleClient
             UpdateStatus();
             ApplyAppearanceSettings();
             ApplyLogoSettings();
-            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); return true; });
+            InstallReadOnInteractionHandlers();
+            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); return true; });
             Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { RotateLogoIfDue(); return true; });
+            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(50), delegate(MainLoop loop) { AnimateTallLogoIfDue(); return true; });
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(200), delegate(MainLoop loop)
             {
                 if (_pleaseWait != null)
@@ -857,6 +1022,36 @@ namespace ConsoleClient
                 }
                 return true;
             });
+        }
+
+        private static void InstallReadOnInteractionHandlers()
+        {
+            Application.RootKeyEvent += delegate(KeyEvent keyEvent)
+            {
+                Application.MainLoop.Invoke(MarkSelectedChatMessagesRead);
+                return false;
+            };
+            Application.RootMouseEvent += delegate(MouseEvent mouseEvent)
+            {
+                var clicked = mouseEvent.Flags.HasFlag(MouseFlags.Button1Clicked)
+                    || mouseEvent.Flags.HasFlag(MouseFlags.Button1DoubleClicked)
+                    || mouseEvent.Flags.HasFlag(MouseFlags.Button2Clicked)
+                    || mouseEvent.Flags.HasFlag(MouseFlags.Button3Clicked);
+                if (clicked) Application.MainLoop.Invoke(MarkSelectedChatMessagesRead);
+            };
+        }
+
+        private static void MarkSelectedChatMessagesRead()
+        {
+            if (_chatPage == null || !_chatPage.Visible || _selected == null || _store == null) return;
+            var unreadCount = _selected.Kind == ChatKind.Channel
+                ? _store.CountNewChannelMessages((int)_selected.Id)
+                : _store.CountNewDirectMessages(_selected.Id);
+            if (unreadCount <= 0) return;
+            if (_selected.Kind == ChatKind.Channel) _store.MarkChannelMessagesRead((int)_selected.Id);
+            else _store.MarkDirectMessagesRead(_selected.Id);
+            NotifyAlertStateChanged(null);
+            RefreshChats();
         }
 
         private static void SubscribeMeshEvents()
@@ -1078,13 +1273,12 @@ namespace ConsoleClient
 
         private static void ShowSelectedChat()
         {
+            ApplyChatListSelectionColors();
             if (_selected == null) { _header.Text = "No chat selected"; _latestTelemetry.Text = ""; _nodeConnectionInfo.Text = ""; _messages.SetMessages(new StoredMeshMessage[0], FormatMessage); return; }
             _header.Text = BuildChatHeader(_selected);
             IList<StoredMeshMessage> entries;
-            if (_selected.Kind == ChatKind.Channel) { entries = _store.GetChannelMessages((int)_selected.Id); _store.MarkChannelMessagesRead((int)_selected.Id); }
-            else { entries = _store.GetDirectMessages(_selected.Id); _store.MarkDirectMessagesRead(_selected.Id); }
-            if (_store.CountNewMessages() == 0) NotifyAlertStateChanged(null);
-            _selected.NewCount = 0;
+            if (_selected.Kind == ChatKind.Channel) entries = _store.GetChannelMessages((int)_selected.Id);
+            else entries = _store.GetDirectMessages(_selected.Id);
             _messages.SetMessages(entries, FormatMessage);
             _latestTelemetry.Text = BuildLatestTelemetryLine(_selected);
             _nodeConnectionInfo.Text = BuildNodeConnectionLine(_selected);
@@ -1135,7 +1329,7 @@ namespace ConsoleClient
         {
             var who = m.Direction == MessageDirection.Outgoing ? "You" : DisplayNodeName(m.FromNode.GetValueOrDefault());
             var delivery = m.Direction == MessageDirection.Outgoing && !String.IsNullOrEmpty(m.DeliveryStatus) ? " [" + m.DeliveryStatus + "]" : "";
-            var timePrefix = "[" + m.OccurredUtc.ToLocalTime().ToString("HH:mm") + "] ";
+            var timePrefix = "[" + m.OccurredUtc.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture) + "] ";
             return timePrefix + who + delivery + ": " + ConvertEmojiForTerminal(m.Text ?? "").Replace("\r\n", "\n").Replace("\n", "\n" + new string(' ', timePrefix.Length));
         }
 
@@ -2229,15 +2423,27 @@ namespace ConsoleClient
         private static void ShowLogoSettings()
         {
             var logo = _settings.Logo ?? (_settings.Logo = new MeshtasticLogoSettings());
-            var dialog = new Dialog("Logo settings", 66, 16);
+            var dialog = new Dialog("Logo settings", 70, 22);
             var enabled = new CheckBox("Show logo on the chat page") { X = 1, Y = 1, Checked = logo.ShowLogo };
             var showFrame = new CheckBox("Show logo frame") { X = 1, Y = 2, Checked = logo.ShowFrame };
             var automatic = new CheckBox("Automatically change logos") { X = 1, Y = 3, Checked = logo.AutomaticRotation };
             var showEmoji = new CheckBox("Show selected message emoji in logo frame") { X = 1, Y = 4, Checked = logo.ShowSelectedEmoji };
-            var interval = new TextField(logo.RotationIntervalSeconds.ToString(CultureInfo.InvariantCulture)) { X = 34, Y = 5, Width = 8 };
-            var width = new TextField(logo.InnerWidth.ToString(CultureInfo.InvariantCulture)) { X = 34, Y = 6, Width = 8 };
-            var height = new TextField(logo.InnerHeight.ToString(CultureInfo.InvariantCulture)) { X = 34, Y = 7, Width = 8 };
-            dialog.Add(enabled, showFrame, automatic, showEmoji, new Label("Change logo every (seconds):") { X = 1, Y = 5 }, interval, new Label("Logo and chat width:") { X = 1, Y = 6 }, width, new Label("Logo height:") { X = 1, Y = 7 }, height, new Label("F7: Previous logo | F8: Next logo") { X = 1, Y = 9 });
+            var animateTall = new CheckBox("Animate logo files larger than the logo frame") { X = 1, Y = 5, Checked = logo.AnimateTallLogos };
+            var pingPong = new CheckBox("Ping-pong animation (reverse at the end)") { X = 1, Y = 6, Checked = logo.AnimationPingPong };
+            var animationInterval = new TextField(logo.TallLogoFrameIntervalMilliseconds.ToString(CultureInfo.InvariantCulture)) { X = 42, Y = 7, Width = 8 };
+            var verticalStep = new TextField(logo.AnimationVerticalStepLines.ToString(CultureInfo.InvariantCulture)) { X = 42, Y = 8, Width = 8 };
+            var horizontalStep = new TextField(logo.AnimationHorizontalStepCharacters.ToString(CultureInfo.InvariantCulture)) { X = 42, Y = 9, Width = 8 };
+            var interval = new TextField(logo.RotationIntervalSeconds.ToString(CultureInfo.InvariantCulture)) { X = 34, Y = 10, Width = 8 };
+            var width = new TextField(logo.InnerWidth.ToString(CultureInfo.InvariantCulture)) { X = 34, Y = 11, Width = 8 };
+            var height = new TextField(logo.InnerHeight.ToString(CultureInfo.InvariantCulture)) { X = 34, Y = 12, Width = 8 };
+            dialog.Add(enabled, showFrame, automatic, showEmoji, animateTall, pingPong,
+                new Label("Animation frame interval (milliseconds):") { X = 1, Y = 7 }, animationInterval,
+                new Label("Vertical step (lines):") { X = 1, Y = 8 }, verticalStep,
+                new Label("Horizontal step (characters):") { X = 1, Y = 9 }, horizontalStep,
+                new Label("Change logo every (seconds):") { X = 1, Y = 10 }, interval,
+                new Label("Logo and chat width:") { X = 1, Y = 11 }, width,
+                new Label("Logo height:") { X = 1, Y = 12 }, height,
+                new Label("F7: Previous logo | F8: Next logo") { X = 1, Y = 14 });
             dialog.KeyPress += e =>
             {
                 if (e.KeyEvent.Key == Key.F7) { ShowPreviousLogo(); e.Handled = true; }
@@ -2246,10 +2452,25 @@ namespace ConsoleClient
             var save = new Button("Save", true);
             save.Clicked += delegate
             {
-                int seconds, innerWidth, innerHeight;
+                int seconds, animationMilliseconds, verticalStepLines, horizontalStepCharacters, innerWidth, innerHeight;
                 if (!Int32.TryParse(interval.Text.ToString(), out seconds) || seconds < 1)
                 {
                     MessageBox.ErrorQuery("Logo settings", "The interval must be at least one second.", "OK");
+                    return;
+                }
+                if (!Int32.TryParse(animationInterval.Text.ToString(), out animationMilliseconds) || animationMilliseconds < 50 || animationMilliseconds > 60000)
+                {
+                    MessageBox.ErrorQuery("Logo settings", "The animation interval must be between 50 and 60000 milliseconds.", "OK");
+                    return;
+                }
+                if (!Int32.TryParse(verticalStep.Text.ToString(), out verticalStepLines) || verticalStepLines < 1 || verticalStepLines > 10000)
+                {
+                    MessageBox.ErrorQuery("Logo settings", "The vertical step must be between 1 and 10000 lines.", "OK");
+                    return;
+                }
+                if (!Int32.TryParse(horizontalStep.Text.ToString(), out horizontalStepCharacters) || horizontalStepCharacters < 1 || horizontalStepCharacters > 10000)
+                {
+                    MessageBox.ErrorQuery("Logo settings", "The horizontal step must be between 1 and 10000 characters.", "OK");
                     return;
                 }
                 if (!Int32.TryParse(width.Text.ToString(), out innerWidth) || innerWidth < 20)
@@ -2266,7 +2487,12 @@ namespace ConsoleClient
                 logo.ShowFrame = showFrame.Checked;
                 logo.AutomaticRotation = automatic.Checked;
                 logo.ShowSelectedEmoji = showEmoji.Checked;
+                logo.AnimateTallLogos = animateTall.Checked;
+                logo.AnimationPingPong = pingPong.Checked;
                 logo.RotationIntervalSeconds = seconds;
+                logo.TallLogoFrameIntervalMilliseconds = animationMilliseconds;
+                logo.AnimationVerticalStepLines = verticalStepLines;
+                logo.AnimationHorizontalStepCharacters = horizontalStepCharacters;
                 logo.InnerWidth = innerWidth;
                 logo.InnerHeight = innerHeight;
                 MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
@@ -2352,18 +2578,141 @@ namespace ConsoleClient
             ShowCurrentLogo();
         }
 
+        private static void DeleteCurrentLogo()
+        {
+            if (LogoFiles.Count == 0) LoadLogoFiles();
+            if (LogoFiles.Count == 0)
+            {
+                MessageBox.ErrorQuery("Delete logo", "No logo file is currently available.", "OK");
+                return;
+            }
+
+            _logoIndex = Math.Max(0, Math.Min(_logoIndex, LogoFiles.Count - 1));
+            var logoFile = Path.GetFullPath(LogoFiles[_logoIndex]);
+            var logoFolder = Path.GetFullPath(Path.GetDirectoryName(logoFile) ?? "");
+            var applicationLogoFolder = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logo"));
+            var workingLogoFolder = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "logo"));
+            var isLogoFolder = String.Equals(logoFolder, applicationLogoFolder, StringComparison.OrdinalIgnoreCase) ||
+                               String.Equals(logoFolder, workingLogoFolder, StringComparison.OrdinalIgnoreCase);
+            if (!isLogoFolder || !String.Equals(Path.GetExtension(logoFile), ".txt", StringComparison.OrdinalIgnoreCase) || !File.Exists(logoFile))
+            {
+                MessageBox.ErrorQuery("Delete logo", "The current logo file is not a valid file in the logo folder.", "OK");
+                return;
+            }
+
+            var fileName = Path.GetFileName(logoFile);
+            if (MessageBox.Query("Delete logo", "Permanently delete the current logo?\n\n" + fileName, "Delete", "Cancel") != 0) return;
+
+            try
+            {
+                File.Delete(logoFile);
+                LogoFiles.RemoveAt(_logoIndex);
+                if (_logoIndex >= LogoFiles.Count) _logoIndex = 0;
+                _settings.Logo.LastLogoFileName = LogoFiles.Count == 0 ? "" : Path.GetFileName(LogoFiles[_logoIndex]);
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+                ShowCurrentLogo();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Delete logo", "Could not delete the logo file.\n\n" + ex.Message, "OK");
+            }
+        }
+
         private static void ShowCurrentLogo()
         {
             if (_logoText == null) return;
+            ClearAnimatedLogo();
             if (TryShowSelectedEmojiInLogo()) return;
             if (LogoFiles.Count == 0) _logoText.Text = "No logo files found.\nPlace *.txt files in .\\logo.";
             else
             {
-                try { _logoText.Text = File.ReadAllText(LogoFiles[_logoIndex]); _settings.Logo.LastLogoFileName = Path.GetFileName(LogoFiles[_logoIndex]); }
+                try
+                {
+                    var logoLines = File.ReadAllLines(LogoFiles[_logoIndex]);
+                    _settings.Logo.LastLogoFileName = Path.GetFileName(LogoFiles[_logoIndex]);
+                    var frameHeight = Math.Max(1, _settings.Logo.InnerHeight);
+                    var frameWidth = Math.Max(1, _settings.Logo.InnerWidth);
+                    var logoWidth = logoLines.Length == 0 ? 0 : logoLines.Max(line => line == null ? 0 : line.Length);
+                    if (_settings.Logo.AnimateTallLogos && (logoLines.Length > frameHeight || logoWidth > frameWidth))
+                    {
+                        _animatedLogoLines = logoLines;
+                        _animatedLogoVerticalOffset = 0;
+                        _animatedLogoHorizontalOffset = 0;
+                        _animatedLogoVerticalDirection = 1;
+                        _animatedLogoHorizontalDirection = 1;
+                        ShowAnimatedLogoFrame();
+                    }
+                    else _logoText.Text = String.Join(Environment.NewLine, logoLines);
+                }
                 catch { _logoText.Text = "Could not read logo file."; }
             }
             _nextLogoChangeUtc = DateTime.UtcNow.AddSeconds(Math.Max(1, _settings.Logo.RotationIntervalSeconds));
             _logoText.SetNeedsDisplay();
+        }
+
+        private static void ClearAnimatedLogo()
+        {
+            _animatedLogoLines = null;
+            _animatedLogoVerticalOffset = 0;
+            _animatedLogoHorizontalOffset = 0;
+            _animatedLogoVerticalDirection = 1;
+            _animatedLogoHorizontalDirection = 1;
+            _nextAnimatedLogoFrameUtc = DateTime.MinValue;
+        }
+
+        private static void AnimateTallLogoIfDue()
+        {
+            if (_animatedLogoLines == null || _animatedLogoLines.Length == 0 || _settings == null || _settings.Logo == null || !_settings.Logo.AnimateTallLogos || DateTime.UtcNow < _nextAnimatedLogoFrameUtc) return;
+            ShowAnimatedLogoFrame();
+        }
+
+        private static void ShowAnimatedLogoFrame()
+        {
+            if (_animatedLogoLines == null || _animatedLogoLines.Length == 0 || _logoText == null) return;
+            var frameHeight = Math.Max(1, _settings.Logo.InnerHeight);
+            var frameWidth = Math.Max(1, _settings.Logo.InnerWidth);
+            var logoWidth = _animatedLogoLines.Max(line => line == null ? 0 : line.Length);
+            var maximumVerticalOffset = Math.Max(0, _animatedLogoLines.Length - frameHeight);
+            var maximumHorizontalOffset = Math.Max(0, logoWidth - frameWidth);
+            var visibleLines = new List<string>();
+            for (var row = 0; row < frameHeight; row++)
+            {
+                var sourceRow = _animatedLogoVerticalOffset + row;
+                var sourceLine = sourceRow < _animatedLogoLines.Length ? (_animatedLogoLines[sourceRow] ?? "") : "";
+                var paddedLine = sourceLine.PadRight(logoWidth);
+                var available = Math.Max(0, paddedLine.Length - _animatedLogoHorizontalOffset);
+                var length = Math.Min(frameWidth, available);
+                var visibleLine = length > 0 ? paddedLine.Substring(_animatedLogoHorizontalOffset, length) : "";
+                visibleLines.Add(visibleLine.PadRight(frameWidth));
+            }
+            _logoText.Text = String.Join(Environment.NewLine, visibleLines);
+            _logoText.SetNeedsDisplay();
+            _animatedLogoVerticalOffset = AdvanceAnimatedLogoOffset(_animatedLogoVerticalOffset, maximumVerticalOffset, _settings.Logo.AnimationVerticalStepLines, ref _animatedLogoVerticalDirection);
+            _animatedLogoHorizontalOffset = AdvanceAnimatedLogoOffset(_animatedLogoHorizontalOffset, maximumHorizontalOffset, _settings.Logo.AnimationHorizontalStepCharacters, ref _animatedLogoHorizontalDirection);
+            _nextAnimatedLogoFrameUtc = DateTime.UtcNow.AddMilliseconds(Math.Max(50, _settings.Logo.TallLogoFrameIntervalMilliseconds));
+        }
+
+        private static int AdvanceAnimatedLogoOffset(int current, int maximum, int step, ref int direction)
+        {
+            if (maximum <= 0) { direction = 1; return 0; }
+            step = Math.Max(1, step);
+            if (!_settings.Logo.AnimationPingPong)
+            {
+                direction = 1;
+                return current >= maximum ? 0 : Math.Min(maximum, current + step);
+            }
+            if (direction >= 0)
+            {
+                var next = current + step;
+                if (next >= maximum) { direction = -1; return maximum; }
+                return next;
+            }
+            else
+            {
+                var next = current - step;
+                if (next <= 0) { direction = 1; return 0; }
+                return next;
+            }
         }
 
         private static bool TryShowSelectedEmojiInLogo()
@@ -2415,13 +2764,17 @@ namespace ConsoleClient
 
         private static void ShowAlertSettings()
         {
-            var dialog = new Dialog("Alert settings", 92, 16);
+            var dialog = new Dialog("Alert settings", 92, 20);
             var beep = new CheckBox("Beep for new incoming messages") { X = 1, Y = 1, Checked = _settings.EnableNewMessageBeep };
             var interval = new TextField(_settings.Alerts.RepeatBeepIntervalSeconds.ToString(CultureInfo.InvariantCulture)) { X = 42, Y = 2, Width = 8 };
-            var httpEnabled = new CheckBox("Enable alert HTTP GET") { X = 1, Y = 4, Checked = _settings.Alerts.EnableHttpGet };
-            var httpUrl = new TextField(_settings.Alerts.HttpGetUrl ?? "") { X = 22, Y = 5, Width = 65 };
-            var executableEnabled = new CheckBox("Enable alert shell command") { X = 1, Y = 7, Checked = _settings.Alerts.EnableExecutable };
-            var executable = new TextField(_settings.Alerts.ExecutablePath ?? "") { X = 22, Y = 8, Width = 65 };
+            var desktopNotification = new CheckBox("Show desktop notification for new messages (Windows only)") { X = 1, Y = 4, Checked = _settings.Alerts.EnableDesktopNotifications };
+            var testNotification = new Button("Test desktop notification") { X = 3, Y = 5 };
+            testNotification.Clicked += delegate { ShowDesktopNotification("Meshtastic Console Client", "Desktop notifications are working."); };
+            var blinkLogo = new CheckBox("Blink logo while unread messages exist") { X = 1, Y = 7, Checked = _settings.Alerts.BlinkLogoForUnreadMessages };
+            var httpEnabled = new CheckBox("Enable alert HTTP GET") { X = 1, Y = 9, Checked = _settings.Alerts.EnableHttpGet };
+            var httpUrl = new TextField(_settings.Alerts.HttpGetUrl ?? "") { X = 22, Y = 10, Width = 65 };
+            var executableEnabled = new CheckBox("Enable alert shell command") { X = 1, Y = 12, Checked = _settings.Alerts.EnableExecutable };
+            var executable = new TextField(_settings.Alerts.ExecutablePath ?? "") { X = 22, Y = 13, Width = 65 };
             var save = new Button("Save", true);
             save.Clicked += delegate
             {
@@ -2429,6 +2782,8 @@ namespace ConsoleClient
                 if (!Int32.TryParse(interval.Text.ToString(), out parsedInterval) || parsedInterval < 0) { MessageBox.ErrorQuery("Alert settings", "The repeat interval must be zero or a positive number of seconds.", "OK"); return; }
                 _settings.EnableNewMessageBeep = beep.Checked;
                 _settings.Alerts.RepeatBeepIntervalSeconds = parsedInterval;
+                _settings.Alerts.EnableDesktopNotifications = desktopNotification.Checked;
+                _settings.Alerts.BlinkLogoForUnreadMessages = blinkLogo.Checked;
                 _settings.Alerts.EnableHttpGet = httpEnabled.Checked;
                 _settings.Alerts.HttpGetUrl = httpUrl.Text.ToString().Trim();
                 _settings.Alerts.EnableExecutable = executableEnabled.Checked;
@@ -2439,8 +2794,10 @@ namespace ConsoleClient
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.Add(beep,
                 new Label("Repeat beep interval (seconds, 0 = off):") { X = 1, Y = 2 }, interval,
-                httpEnabled, new Label("HTTP GET URL:") { X = 1, Y = 5 }, httpUrl,
-                executableEnabled, new Label("Shell command:") { X = 1, Y = 8 }, executable);
+                desktopNotification, testNotification,
+                blinkLogo,
+                httpEnabled, new Label("HTTP GET URL:") { X = 1, Y = 10 }, httpUrl,
+                executableEnabled, new Label("Shell command:") { X = 1, Y = 13 }, executable);
             dialog.AddButton(save); dialog.AddButton(cancel);
             Application.Run(dialog);
         }
@@ -2859,12 +3216,34 @@ namespace ConsoleClient
             _lastKnownUnreadCount = unreadCount;
 
             if (message != null && _settings.EnableNewMessageBeep) PlayAlertBeep();
+            if (message != null && _settings.Alerts.EnableDesktopNotifications) ShowDesktopNotification(message);
             _nextRepeatedAlertCheckUtc = unreadCount > 0
                 ? DateTime.UtcNow.AddSeconds(Math.Max(1, _settings.Alerts.RepeatBeepIntervalSeconds))
                 : DateTime.MinValue;
 
             if (message == null && !becameFullyRead) return;
             Task.Run(async delegate { await RunAlertActionsAsync(unreadCount, message); });
+        }
+
+        private static void UpdateLogoBlink()
+        {
+            var shouldBlink = _settings != null && _settings.Alerts != null && _settings.Alerts.BlinkLogoForUnreadMessages && _lastKnownUnreadCount > 0;
+            if (shouldBlink) _logoColorsSwapped = !_logoColorsSwapped;
+            else if (_logoColorsSwapped) _logoColorsSwapped = false;
+            else return;
+            ApplyLogoTextColorScheme();
+        }
+
+        private static void ApplyLogoTextColorScheme()
+        {
+            if (_logoText == null || _settings == null || _settings.Appearance == null) return;
+            var foreground = ParseColor(_settings.Appearance.LogoTextColor, Color.BrightCyan);
+            var background = ParseColor(_settings.Appearance.BackgroundColor, Color.Black);
+            var attribute = _logoColorsSwapped
+                ? Application.Driver.MakeAttribute(background, foreground)
+                : Application.Driver.MakeAttribute(foreground, background);
+            _logoText.ColorScheme = new ColorScheme { Normal = attribute, Focus = attribute, HotNormal = attribute, HotFocus = attribute, Disabled = attribute };
+            _logoText.SetNeedsDisplay();
         }
 
         private static void CheckRepeatingAlertBeep()
@@ -3024,17 +3403,26 @@ namespace ConsoleClient
         private static void ShowAppearanceSettings()
         {
             var appearance = _settings.Appearance;
-            var propertyNames = new[] { "Background", "Frame", "Page frame", "Normal text", "Sent messages", "Received messages", "Status text", "Input background", "Input text", "Menu background", "Menu text", "Button background", "Button text", "Logo frame", "Logo text", "Emoji text", "Map nodes", "Map clusters" };
-            var values = new[] { appearance.BackgroundColor, appearance.FrameColor, appearance.PageFrameColor, appearance.TextColor, appearance.SentMessageColor, appearance.ReceivedMessageColor, appearance.StatusTextColor, appearance.InputBackgroundColor, appearance.InputTextColor, appearance.MenuBackgroundColor, appearance.MenuTextColor, appearance.ButtonBackgroundColor, appearance.ButtonTextColor, appearance.LogoFrameColor, appearance.LogoTextColor, appearance.EmojiTextColor, appearance.MapNodeColor, appearance.MapClusterColor };
+            var propertyNames = new[] { "Background", "Frame", "Page frame", "Normal text", "Selected Item", "Sent messages", "Received messages", "Status text", "Status background", "Input background", "Input text", "Menu background", "Menu text", "Button background", "Button text", "Logo frame", "Logo text", "Emoji text", "Map nodes", "Map clusters", "Map grid / crosshair", "Day separators" };
+            var values = new[] { appearance.BackgroundColor, appearance.FrameColor, appearance.PageFrameColor, appearance.TextColor, appearance.SelectedItemColor, appearance.SentMessageColor, appearance.ReceivedMessageColor, appearance.StatusTextColor, appearance.StatusBackgroundColor, appearance.InputBackgroundColor, appearance.InputTextColor, appearance.MenuBackgroundColor, appearance.MenuTextColor, appearance.ButtonBackgroundColor, appearance.ButtonTextColor, appearance.LogoFrameColor, appearance.LogoTextColor, appearance.EmojiTextColor, appearance.MapNodeColor, appearance.MapClusterColor, appearance.MapGridColor, appearance.DaySeparatorColor };
             var colorNames = new[] { "Black", "Blue", "Green", "Cyan", "Red", "Magenta", "Brown", "Gray", "DarkGray", "BrightBlue", "BrightGreen", "BrightCyan", "BrightRed", "BrightMagenta", "BrightYellow", "White" };
-            var dialog = new Dialog("Appearance", 68, 22);
-            var properties = new ListView(propertyNames) { X = 1, Y = 1, Width = 23, Height = colorNames.Length };
-            var colors = new RadioGroup(new Rect(27, 1, 28, colorNames.Length), colorNames.Select(x => (ustring)x).ToArray());
+            var dialog = new Dialog("Appearance", 82, 25);
+            var propertiesFrame = new FrameView("Properties") { X = 1, Y = 1, Width = 26, Height = 17 };
+            var propertyForeground = ParseColor(appearance.TextColor, Color.Gray);
+            var propertyBackground = ParseColor(appearance.BackgroundColor, Color.Black);
+            var propertyNormal = Application.Driver.MakeAttribute(propertyForeground, propertyBackground);
+            const int selectedItemPropertyIndex = 4;
+            var propertyInverted = Application.Driver.MakeAttribute(propertyBackground, propertyForeground);
+            var propertySelected = Application.Driver.MakeAttribute(ParseColor(values[selectedItemPropertyIndex], Color.BrightYellow), propertyBackground);
+            var properties = new ListView(propertyNames) { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(), ColorScheme = new ColorScheme { Normal = propertyNormal, Focus = propertyInverted, HotNormal = propertySelected, HotFocus = propertyInverted, Disabled = propertyNormal } };
+            propertiesFrame.Add(properties);
+            var colors = new RadioGroup(new Rect(37, 2, 28, colorNames.Length), colorNames.Select(x => (ustring)x).ToArray());
             var changingSelection = false;
             Action selectColor = delegate
             {
                 var propertyIndex = properties.SelectedItem;
                 if (propertyIndex < 0 || propertyIndex >= values.Length) return;
+                propertiesFrame.Title = "Properties " + (propertyIndex + 1).ToString(CultureInfo.InvariantCulture) + "/" + values.Length.ToString(CultureInfo.InvariantCulture);
                 var colorIndex = Array.IndexOf(colorNames, values[propertyIndex]);
                 changingSelection = true; colors.SelectedItem = colorIndex < 0 ? 0 : colorIndex; changingSelection = false;
             };
@@ -3043,15 +3431,31 @@ namespace ConsoleClient
             {
                 if (changingSelection) return;
                 var propertyIndex = properties.SelectedItem;
-                if (propertyIndex >= 0 && propertyIndex < values.Length && colors.SelectedItem >= 0 && colors.SelectedItem < colorNames.Length) values[propertyIndex] = colorNames[colors.SelectedItem];
+                if (propertyIndex >= 0 && propertyIndex < values.Length && colors.SelectedItem >= 0 && colors.SelectedItem < colorNames.Length)
+                {
+                    values[propertyIndex] = colorNames[colors.SelectedItem];
+                    if (propertyIndex == selectedItemPropertyIndex)
+                    {
+                        var selectedAttribute = Application.Driver.MakeAttribute(ParseColor(values[selectedItemPropertyIndex], Color.BrightYellow), propertyBackground);
+                        properties.ColorScheme.HotNormal = selectedAttribute;
+                        properties.SetNeedsDisplay();
+                    }
+                }
             };
             properties.SelectedItem = 0;
             selectColor();
-            dialog.Add(properties, colors);
+            dialog.Add(propertiesFrame, new Label("Colors") { X = 37, Y = 1 }, colors);
+            for (var index = 0; index < colorNames.Length; index++)
+            {
+                var previewColor = ParseColor(colorNames[index], Color.Gray);
+                var previewAttribute = Application.Driver.MakeAttribute(previewColor, previewColor);
+                var preview = new Label("  ") { X = 57, Y = 2 + index, Width = 2, Height = 1, ColorScheme = new ColorScheme { Normal = previewAttribute, Focus = previewAttribute, HotNormal = previewAttribute, HotFocus = previewAttribute, Disabled = previewAttribute } };
+                dialog.Add(new Label("[  ]") { X = 56, Y = 2 + index }, preview);
+            }
             var save = new Button("Save", true);
             save.Clicked += delegate
             {
-                appearance.BackgroundColor = values[0]; appearance.FrameColor = values[1]; appearance.PageFrameColor = values[2]; appearance.TextColor = values[3]; appearance.SentMessageColor = values[4]; appearance.ReceivedMessageColor = values[5]; appearance.StatusTextColor = values[6]; appearance.InputBackgroundColor = values[7]; appearance.InputTextColor = values[8]; appearance.MenuBackgroundColor = values[9]; appearance.MenuTextColor = values[10]; appearance.ButtonBackgroundColor = values[11]; appearance.ButtonTextColor = values[12]; appearance.LogoFrameColor = values[13]; appearance.LogoTextColor = values[14]; appearance.EmojiTextColor = values[15]; appearance.MapNodeColor = values[16]; appearance.MapClusterColor = values[17];
+                appearance.BackgroundColor = values[0]; appearance.FrameColor = values[1]; appearance.PageFrameColor = values[2]; appearance.TextColor = values[3]; appearance.SelectedItemColor = values[4]; appearance.SentMessageColor = values[5]; appearance.ReceivedMessageColor = values[6]; appearance.StatusTextColor = values[7]; appearance.StatusBackgroundColor = values[8]; appearance.InputBackgroundColor = values[9]; appearance.InputTextColor = values[10]; appearance.MenuBackgroundColor = values[11]; appearance.MenuTextColor = values[12]; appearance.ButtonBackgroundColor = values[13]; appearance.ButtonTextColor = values[14]; appearance.LogoFrameColor = values[15]; appearance.LogoTextColor = values[16]; appearance.EmojiTextColor = values[17]; appearance.MapNodeColor = values[18]; appearance.MapClusterColor = values[19]; appearance.MapGridColor = values[20]; appearance.DaySeparatorColor = values[21];
                 MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
                 ApplyAppearanceSettings();
                 Application.RequestStop();
@@ -3060,6 +3464,25 @@ namespace ConsoleClient
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save); dialog.AddButton(cancel);
             Application.Run(dialog);
+        }
+
+        private static void ApplyChatListSelectionColors()
+        {
+            if (_channelList == null || _directList == null || _settings == null || _settings.Appearance == null || Application.Driver == null) return;
+            var background = ParseColor(_settings.Appearance.BackgroundColor, Color.Black);
+            var text = ParseColor(_settings.Appearance.TextColor, Color.Gray);
+            var selectedItem = ParseColor(_settings.Appearance.SelectedItemColor, Color.BrightYellow);
+            var normal = Application.Driver.MakeAttribute(text, background);
+            var selected = Application.Driver.MakeAttribute(selectedItem, background);
+            var inverted = Application.Driver.MakeAttribute(background, text);
+            var activeScheme = new ColorScheme { Normal = normal, Focus = inverted, HotNormal = selected, HotFocus = inverted, Disabled = normal };
+            var inactiveScheme = new ColorScheme { Normal = normal, Focus = normal, HotNormal = normal, HotFocus = normal, Disabled = normal };
+            var channelActive = _selected != null && _selected.Kind == ChatKind.Channel;
+            var directActive = _selected != null && _selected.Kind == ChatKind.Direct;
+            _channelList.ColorScheme = channelActive ? activeScheme : inactiveScheme;
+            _directList.ColorScheme = directActive ? activeScheme : inactiveScheme;
+            _channelList.SetNeedsDisplay();
+            _directList.SetNeedsDisplay();
         }
 
         private static void ApplyAppearanceSettings()
@@ -3073,6 +3496,7 @@ namespace ConsoleClient
             var sent = ParseColor(appearance.SentMessageColor, Color.BrightYellow);
             var received = ParseColor(appearance.ReceivedMessageColor, Color.BrightCyan);
             var status = ParseColor(appearance.StatusTextColor, Color.White);
+            var statusBackground = ParseColor(appearance.StatusBackgroundColor, Color.Black);
             var inputBackground = ParseColor(appearance.InputBackgroundColor, Color.Black);
             var inputText = ParseColor(appearance.InputTextColor, Color.White);
             var menuBackground = ParseColor(appearance.MenuBackgroundColor, Color.Blue);
@@ -3084,9 +3508,12 @@ namespace ConsoleClient
             var emojiText = ParseColor(appearance.EmojiTextColor, Color.BrightMagenta);
             var mapNode = ParseColor(appearance.MapNodeColor, Color.BrightCyan);
             var mapCluster = ParseColor(appearance.MapClusterColor, Color.BrightMagenta);
+            var mapGrid = ParseColor(appearance.MapGridColor, Color.DarkGray);
+            var daySeparator = ParseColor(appearance.DaySeparatorColor, Color.DarkGray);
             var normal = Application.Driver.MakeAttribute(text, background);
             var focus = Application.Driver.MakeAttribute(background, frame);
-            var statusScheme = new ColorScheme { Normal = Application.Driver.MakeAttribute(status, background), Focus = normal, HotNormal = normal, HotFocus = focus, Disabled = normal };
+            var statusNormal = Application.Driver.MakeAttribute(status, statusBackground);
+            var statusScheme = new ColorScheme { Normal = statusNormal, Focus = statusNormal, HotNormal = statusNormal, HotFocus = statusNormal, Disabled = statusNormal };
             var inputScheme = new ColorScheme { Normal = Application.Driver.MakeAttribute(inputText, inputBackground), Focus = Application.Driver.MakeAttribute(inputText, inputBackground), HotNormal = normal, HotFocus = normal, Disabled = normal };
             var buttonScheme = new ColorScheme { Normal = Application.Driver.MakeAttribute(buttonText, buttonBackground), Focus = Application.Driver.MakeAttribute(buttonBackground, buttonText), HotNormal = Application.Driver.MakeAttribute(buttonText, buttonBackground), HotFocus = Application.Driver.MakeAttribute(buttonBackground, buttonText), Disabled = normal };
             Colors.Base.Normal = normal; Colors.Base.Focus = focus; Colors.Base.HotNormal = normal; Colors.Base.HotFocus = focus; Colors.Base.Disabled = normal;
@@ -3096,10 +3523,11 @@ namespace ConsoleClient
             if (_messageCharacterCounter != null) _messageCharacterCounter.ColorScheme = new ColorScheme { Normal = Application.Driver.MakeAttribute(frame, background), Focus = normal, HotNormal = normal, HotFocus = focus, Disabled = normal };
             foreach (var page in PageFrames) { page.Border.BorderBrush = pageFrame; page.Border.Background = background; page.SetNeedsDisplay(); }
             foreach (var button in MainButtons) button.ColorScheme = buttonScheme;
+            ApplyChatListSelectionColors();
             if (_logoFrame != null) { _logoFrame.Border.BorderBrush = logoFrame; _logoFrame.Border.Background = background; _logoFrame.SetNeedsDisplay(); }
-            if (_logoText != null) _logoText.ColorScheme = new ColorScheme { Normal = Application.Driver.MakeAttribute(logoText, background), Focus = normal, HotNormal = normal, HotFocus = focus, Disabled = normal };
-            _messages.BackgroundColor = background; _messages.NormalTextColor = text; _messages.OutgoingColor = sent; _messages.IncomingColor = received; _messages.EmojiTextColor = emojiText;
-            if (_nodeMap != null) { _nodeMap.NodeColor = mapNode; _nodeMap.ClusterColor = mapCluster; _nodeMap.SetNeedsDisplay(); }
+            ApplyLogoTextColorScheme();
+            _messages.BackgroundColor = background; _messages.NormalTextColor = text; _messages.OutgoingColor = sent; _messages.IncomingColor = received; _messages.EmojiTextColor = emojiText; _messages.DaySeparatorColor = daySeparator;
+            if (_nodeMap != null) { _nodeMap.NodeColor = mapNode; _nodeMap.ClusterColor = mapCluster; _nodeMap.GridColor = mapGrid; _nodeMap.SetNeedsDisplay(); }
             _input.ColorScheme = inputScheme;
             _status.ColorScheme = statusScheme;
             Application.Top.SetNeedsDisplay();

@@ -1,0 +1,80 @@
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+       [#]>                     
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+          [#]>                  
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+             [#]>               
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+                [#]>            
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+                   [#]>         
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+                      [#]>      
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+                         [#]>   
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+        [#]>                    
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+           [#]>                 
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      
+          DATA UPLOAD           
+                                
+  [SRC]                   [DST] 
+              [#]>              
+                                
+     ---------------------->    
+                                
+      SENDING MESH PACKETS      

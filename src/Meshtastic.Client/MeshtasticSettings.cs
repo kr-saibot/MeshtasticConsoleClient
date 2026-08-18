@@ -38,9 +38,11 @@ namespace Meshtastic.Client
         public string BackgroundColor { get; set; }
         public string FrameColor { get; set; }
         public string TextColor { get; set; }
+        public string SelectedItemColor { get; set; }
         public string SentMessageColor { get; set; }
         public string ReceivedMessageColor { get; set; }
         public string StatusTextColor { get; set; }
+        public string StatusBackgroundColor { get; set; }
         public string InputBackgroundColor { get; set; }
         public string InputTextColor { get; set; }
         public string MenuBackgroundColor { get; set; }
@@ -53,13 +55,15 @@ namespace Meshtastic.Client
         public string EmojiTextColor { get; set; }
         public string MapNodeColor { get; set; }
         public string MapClusterColor { get; set; }
+        public string MapGridColor { get; set; }
+        public string DaySeparatorColor { get; set; }
 
         public MeshtasticAppearanceSettings()
         {
-            BackgroundColor = "Black"; FrameColor = "Gray"; TextColor = "Gray";
-            SentMessageColor = "BrightYellow"; ReceivedMessageColor = "BrightCyan"; StatusTextColor = "White";
+            BackgroundColor = "Black"; FrameColor = "Gray"; TextColor = "Gray"; SelectedItemColor = "BrightYellow";
+            SentMessageColor = "BrightYellow"; ReceivedMessageColor = "BrightCyan"; StatusTextColor = "White"; StatusBackgroundColor = "Black";
             InputBackgroundColor = "Black"; InputTextColor = "White"; MenuBackgroundColor = "Blue"; MenuTextColor = "White";
-            ButtonBackgroundColor = "Black"; ButtonTextColor = "BrightCyan"; PageFrameColor = "Gray"; LogoFrameColor = "Gray"; LogoTextColor = "BrightCyan"; EmojiTextColor = "BrightMagenta"; MapNodeColor = "BrightCyan"; MapClusterColor = "BrightMagenta";
+            ButtonBackgroundColor = "Black"; ButtonTextColor = "BrightCyan"; PageFrameColor = "Gray"; LogoFrameColor = "Gray"; LogoTextColor = "BrightCyan"; EmojiTextColor = "BrightMagenta"; MapNodeColor = "BrightCyan"; MapClusterColor = "BrightMagenta"; MapGridColor = "DarkGray"; DaySeparatorColor = "DarkGray";
         }
     }
 
@@ -70,12 +74,17 @@ namespace Meshtastic.Client
         public bool ShowFrame { get; set; }
         public bool AutomaticRotation { get; set; }
         public bool ShowSelectedEmoji { get; set; }
+        public bool AnimateTallLogos { get; set; }
+        public bool AnimationPingPong { get; set; }
         public int RotationIntervalSeconds { get; set; }
+        public int TallLogoFrameIntervalMilliseconds { get; set; }
+        public int AnimationVerticalStepLines { get; set; }
+        public int AnimationHorizontalStepCharacters { get; set; }
         public int InnerWidth { get; set; }
         public int InnerHeight { get; set; }
         public string LastLogoFileName { get; set; }
 
-        public MeshtasticLogoSettings() { ShowLogo = true; ShowFrame = true; AutomaticRotation = true; RotationIntervalSeconds = 10; InnerWidth = 32; InnerHeight = 8; LastLogoFileName = ""; }
+        public MeshtasticLogoSettings() { ShowLogo = true; ShowFrame = true; AutomaticRotation = true; AnimateTallLogos = false; AnimationPingPong = false; RotationIntervalSeconds = 10; TallLogoFrameIntervalMilliseconds = 250; AnimationVerticalStepLines = 8; AnimationHorizontalStepCharacters = 8; InnerWidth = 32; InnerHeight = 8; LastLogoFileName = ""; }
     }
 
     /// <summary>Defines one command-triggered local chat bot.</summary>
@@ -123,6 +132,8 @@ namespace Meshtastic.Client
     /// <summary>Actions that notify the local operating system about unread incoming messages.</summary>
     public sealed class MeshtasticAlertSettings
     {
+        public bool EnableDesktopNotifications { get; set; }
+        public bool BlinkLogoForUnreadMessages { get; set; }
         public int RepeatBeepIntervalSeconds { get; set; }
         public bool EnableHttpGet { get; set; }
         public string HttpGetUrl { get; set; }
@@ -131,7 +142,7 @@ namespace Meshtastic.Client
 
         public MeshtasticAlertSettings()
         {
-            RepeatBeepIntervalSeconds = 0; HttpGetUrl = ""; ExecutablePath = "";
+            EnableDesktopNotifications = true; BlinkLogoForUnreadMessages = false; RepeatBeepIntervalSeconds = 0; HttpGetUrl = ""; ExecutablePath = "";
         }
     }
 
@@ -194,6 +205,9 @@ namespace Meshtastic.Client
                 if (settings.Alerts == null) settings.Alerts = new MeshtasticAlertSettings();
                 if (settings.Alerts.RepeatBeepIntervalSeconds < 0) settings.Alerts.RepeatBeepIntervalSeconds = 0;
                 if (settings.Logo.RotationIntervalSeconds < 1) settings.Logo.RotationIntervalSeconds = 1;
+                if (settings.Logo.TallLogoFrameIntervalMilliseconds < 50) settings.Logo.TallLogoFrameIntervalMilliseconds = 250;
+                if (settings.Logo.AnimationVerticalStepLines < 1) settings.Logo.AnimationVerticalStepLines = 8;
+                if (settings.Logo.AnimationHorizontalStepCharacters < 1) settings.Logo.AnimationHorizontalStepCharacters = 8;
                 if (settings.Logo.InnerWidth < 20) settings.Logo.InnerWidth = 20;
                 if (settings.Logo.InnerHeight < 1) settings.Logo.InnerHeight = 1;
                 if (settings.ChatBots == null) settings.ChatBots = new List<MeshtasticChatBotSettings>();
@@ -218,6 +232,9 @@ namespace Meshtastic.Client
             if (settings.Alerts == null) settings.Alerts = new MeshtasticAlertSettings();
             if (settings.Alerts.RepeatBeepIntervalSeconds < 0) settings.Alerts.RepeatBeepIntervalSeconds = 0;
             if (settings.Logo.RotationIntervalSeconds < 1) settings.Logo.RotationIntervalSeconds = 1;
+            if (settings.Logo.TallLogoFrameIntervalMilliseconds < 50) settings.Logo.TallLogoFrameIntervalMilliseconds = 250;
+            if (settings.Logo.AnimationVerticalStepLines < 1) settings.Logo.AnimationVerticalStepLines = 8;
+            if (settings.Logo.AnimationHorizontalStepCharacters < 1) settings.Logo.AnimationHorizontalStepCharacters = 8;
             if (settings.Logo.InnerWidth < 20) settings.Logo.InnerWidth = 20;
             if (settings.Logo.InnerHeight < 1) settings.Logo.InnerHeight = 1;
             if (settings.ChatBots == null) settings.ChatBots = new List<MeshtasticChatBotSettings>();
@@ -244,11 +261,15 @@ namespace Meshtastic.Client
 
         private static void NormalizeAppearance(MeshtasticAppearanceSettings appearance)
         {
+            if (String.IsNullOrWhiteSpace(appearance.SelectedItemColor)) appearance.SelectedItemColor = "BrightYellow";
+            if (String.IsNullOrWhiteSpace(appearance.StatusBackgroundColor)) appearance.StatusBackgroundColor = "Black";
             if (String.IsNullOrWhiteSpace(appearance.LogoFrameColor)) appearance.LogoFrameColor = appearance.FrameColor ?? "Gray";
             if (String.IsNullOrWhiteSpace(appearance.LogoTextColor)) appearance.LogoTextColor = "BrightCyan";
             if (String.IsNullOrWhiteSpace(appearance.EmojiTextColor)) appearance.EmojiTextColor = "BrightMagenta";
             if (String.IsNullOrWhiteSpace(appearance.MapNodeColor)) appearance.MapNodeColor = "BrightCyan";
             if (String.IsNullOrWhiteSpace(appearance.MapClusterColor)) appearance.MapClusterColor = "BrightMagenta";
+            if (String.IsNullOrWhiteSpace(appearance.MapGridColor)) appearance.MapGridColor = "DarkGray";
+            if (String.IsNullOrWhiteSpace(appearance.DaySeparatorColor)) appearance.DaySeparatorColor = "DarkGray";
         }
 
         private static void EnsureTelegramGateways(MeshtasticApplicationSettings settings)

@@ -1,0 +1,80 @@
+        RECONNECTING            
+                                
+                                
+   o*-----------------------o   
+                                
+        [#         ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o---*--------------------o   
+                                
+        [##        ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o------*-----------------o   
+                                
+        [###       ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o---------*--------------o   
+                                
+        [####      ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o------------*-----------o   
+                                
+        [#####     ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o---------------*--------o   
+                                
+        [######    ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o------------------*-----o   
+                                
+        [#######   ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o---------------------*--o   
+                                
+        [########  ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o*-----------------------o   
+                                
+        [######### ]            
+                                
+      RETRY IN PROGRESS         
+        RECONNECTING            
+                                
+                                
+   o---*--------------------o   
+                                
+        [##########]            
+                                
+      RETRY IN PROGRESS         
