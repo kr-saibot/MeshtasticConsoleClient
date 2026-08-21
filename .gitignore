@@ -2,6 +2,7 @@
 .vs/
 **/bin/
 **/obj/
+builds/
 work/.dotnet/
 *.user
 *.suo
@@ -14,6 +15,7 @@ work/.dotnet/
 *.db
 *.db-shm
 *.db-wal
+**/settings.ini
 
 # Local logs and temporary files
 *.log
@@ -22,3 +24,4 @@ work/.dotnet/
 
 # Personal logo files
 src/ConsoleClient/logo/*DM2TK*.txt
+src/ConsoleHost/tools/*.exe

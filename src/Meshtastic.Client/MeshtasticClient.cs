@@ -39,6 +39,7 @@ namespace Meshtastic.Client
         private ITransport _transport;
         private CancellationTokenSource _lifetime;
         private Task _connectionLoop;
+        private int _connectionGeneration;
         private TaskCompletionSource<bool> _configComplete;
         private uint _expectedConfigId;
         private bool _manualDisconnect;
@@ -60,6 +61,7 @@ namespace Meshtastic.Client
             ReconnectDelay = TimeSpan.FromSeconds(5);
             HeartbeatInterval = TimeSpan.FromSeconds(15);
             TransportOperationTimeout = TimeSpan.FromSeconds(10);
+            DisconnectTimeout = TimeSpan.FromSeconds(3);
             ConfigurationTimeout = TimeSpan.FromSeconds(20);
             ReceiveDebugInterval = TimeSpan.FromSeconds(30);
             MaximumMessageHistory = 200;
@@ -87,6 +89,8 @@ namespace Meshtastic.Client
         public TimeSpan HeartbeatInterval { get; set; }
         /// <summary>Maximum time a single native transport write may take before the transport is closed.</summary>
         public TimeSpan TransportOperationTimeout { get; set; }
+        /// <summary>Maximum time to wait for a native transport to close.</summary>
+        public TimeSpan DisconnectTimeout { get; set; }
         /// <summary>Maximum time to wait for ConfigComplete after RequestFullStateAsync.</summary>
         public TimeSpan ConfigurationTimeout { get; set; }
         /// <summary>Maximum consecutive connection attempts before stopping. Set to 0 for unlimited retries.</summary>
@@ -173,9 +177,10 @@ namespace Meshtastic.Client
             lock (_gate)
             {
                 if (_lifetime != null) throw new InvalidOperationException("The client is already started. Call DisconnectAsync first.");
+                var generation = ++_connectionGeneration;
                 _transportFactory = transportFactory; _manualDisconnect = false;
                 _lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                _connectionLoop = RunConnectionLoopAsync(_lifetime.Token);
+                _connectionLoop = RunConnectionLoopAsync(_lifetime.Token, generation);
             }
             return WaitUntilConnectedAsync(cancellationToken);
         }
@@ -190,13 +195,41 @@ namespace Meshtastic.Client
         public async Task DisconnectAsync()
         {
             Task loop;
+            ITransport transport;
             lock (_gate)
             {
                 _manualDisconnect = true; loop = _connectionLoop;
                 if (_lifetime != null) _lifetime.Cancel();
-                if (_transport != null) _transport.Close();
+                transport = _transport;
             }
-            if (loop != null) { try { await loop.ConfigureAwait(false); } catch (OperationCanceledException) { } }
+            if (transport != null)
+            {
+                var close = Task.Run(delegate { try { transport.Close(); } catch { } });
+                await Task.WhenAny(close, Task.Delay(DisconnectTimeout)).ConfigureAwait(false);
+            }
+            if (loop != null)
+            {
+                try
+                {
+                    await Task.WhenAny(loop, Task.Delay(DisconnectTimeout)).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) { }
+            }
+                if (!loop.IsCompleted)
+                {
+                    lock (_gate)
+                    {
+                        if (Object.ReferenceEquals(_connectionLoop, loop))
+                        {
+                            _connectionGeneration++;
+                            _connectionLoop = null;
+                            _lifetime = null;
+                            _transport = null;
+                            _nextReconnectUtc = null;
+                        }
+                    }
+                }
+            if (State != ConnectionState.Disconnected) SetState(ConnectionState.Disconnected, null);
         }
 
         public async Task RequestFullStateAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -346,7 +379,7 @@ namespace Meshtastic.Client
             finally { if (writerEntered) _writer.Release(); }
         }
 
-        private async Task RunConnectionLoopAsync(CancellationToken token)
+        private async Task RunConnectionLoopAsync(CancellationToken token, int generation)
         {
             var first = true;
             var failedAttempts = 0;
@@ -398,8 +431,11 @@ namespace Meshtastic.Client
                         Raise(TransportError, new TransportErrorEventArgs(ex));
                         lock (_gate)
                         {
-                            if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
-                            if (_transport != null) { _transport.Dispose(); _transport = null; }
+                            if (generation == _connectionGeneration)
+                            {
+                                if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
+                                if (_transport != null) { _transport.Dispose(); _transport = null; }
+                            }
                         }
                         if (_manualDisconnect || token.IsCancellationRequested) break;
                         failedAttempts++;
@@ -420,12 +456,17 @@ namespace Meshtastic.Client
             }
             finally
             {
+                var isCurrentGeneration = false;
                 lock (_gate)
                 {
-                    if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
-                    if (_transport != null) { _transport.Dispose(); _transport = null; } _nextReconnectUtc = null; _lifetime = null; _connectionLoop = null;
+                    if (generation == _connectionGeneration)
+                    {
+                        isCurrentGeneration = true;
+                        if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
+                        if (_transport != null) { _transport.Dispose(); _transport = null; } _nextReconnectUtc = null; _lifetime = null; _connectionLoop = null;
+                    }
                 }
-                SetState(ConnectionState.Disconnected, null);
+                if (isCurrentGeneration) SetState(ConnectionState.Disconnected, null);
             }
         }
 

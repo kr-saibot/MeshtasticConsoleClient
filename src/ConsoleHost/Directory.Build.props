@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <PlatformTarget>x64</PlatformTarget>
+    <ApplicationIcon>assets\meshtastic-chirp.ico</ApplicationIcon>
+  </PropertyGroup>
+</Project>

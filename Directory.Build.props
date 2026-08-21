@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' Or '$(Configuration)' == 'Linux'">
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+</Project>

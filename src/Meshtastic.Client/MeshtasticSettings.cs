@@ -60,10 +60,10 @@ namespace Meshtastic.Client
 
         public MeshtasticAppearanceSettings()
         {
-            BackgroundColor = "Black"; FrameColor = "Gray"; TextColor = "Gray"; SelectedItemColor = "BrightYellow";
+            BackgroundColor = "Black"; FrameColor = "Magenta"; TextColor = "Gray"; SelectedItemColor = "BrightYellow";
             SentMessageColor = "BrightYellow"; ReceivedMessageColor = "BrightCyan"; StatusTextColor = "White"; StatusBackgroundColor = "Black";
             InputBackgroundColor = "Black"; InputTextColor = "White"; MenuBackgroundColor = "Blue"; MenuTextColor = "White";
-            ButtonBackgroundColor = "Black"; ButtonTextColor = "BrightCyan"; PageFrameColor = "Gray"; LogoFrameColor = "Gray"; LogoTextColor = "BrightCyan"; EmojiTextColor = "BrightMagenta"; MapNodeColor = "BrightCyan"; MapClusterColor = "BrightMagenta"; MapGridColor = "DarkGray"; DaySeparatorColor = "DarkGray";
+            ButtonBackgroundColor = "Black"; ButtonTextColor = "BrightCyan"; PageFrameColor = "Magenta"; LogoFrameColor = "Magenta"; LogoTextColor = "Green"; EmojiTextColor = "BrightMagenta"; MapNodeColor = "BrightCyan"; MapClusterColor = "BrightMagenta"; MapGridColor = "DarkGray"; DaySeparatorColor = "DarkGray";
         }
     }
 
@@ -84,7 +84,7 @@ namespace Meshtastic.Client
         public int InnerHeight { get; set; }
         public string LastLogoFileName { get; set; }
 
-        public MeshtasticLogoSettings() { ShowLogo = true; ShowFrame = true; AutomaticRotation = true; AnimateTallLogos = false; AnimationPingPong = false; RotationIntervalSeconds = 10; TallLogoFrameIntervalMilliseconds = 250; AnimationVerticalStepLines = 8; AnimationHorizontalStepCharacters = 8; InnerWidth = 32; InnerHeight = 8; LastLogoFileName = ""; }
+        public MeshtasticLogoSettings() { ShowLogo = true; ShowFrame = false; AutomaticRotation = false; AnimateTallLogos = true; AnimationPingPong = false; RotationIntervalSeconds = 10; TallLogoFrameIntervalMilliseconds = 250; AnimationVerticalStepLines = 8; AnimationHorizontalStepCharacters = 8; InnerWidth = 32; InnerHeight = 8; LastLogoFileName = "107-meshtastic-animation-06.txt"; }
     }
 
     /// <summary>Defines one command-triggered local chat bot.</summary>
@@ -132,6 +132,8 @@ namespace Meshtastic.Client
     /// <summary>Actions that notify the local operating system about unread incoming messages.</summary>
     public sealed class MeshtasticAlertSettings
     {
+        public bool EnableWindowsBeep { get; set; }
+        public bool EnableTerminalBell { get; set; }
         public bool EnableDesktopNotifications { get; set; }
         public bool BlinkLogoForUnreadMessages { get; set; }
         public int RepeatBeepIntervalSeconds { get; set; }
@@ -142,7 +144,7 @@ namespace Meshtastic.Client
 
         public MeshtasticAlertSettings()
         {
-            EnableDesktopNotifications = true; BlinkLogoForUnreadMessages = false; RepeatBeepIntervalSeconds = 0; HttpGetUrl = ""; ExecutablePath = "";
+            EnableWindowsBeep = true; EnableTerminalBell = true; EnableDesktopNotifications = true; BlinkLogoForUnreadMessages = false; RepeatBeepIntervalSeconds = 0; HttpGetUrl = ""; ExecutablePath = "";
         }
     }
 

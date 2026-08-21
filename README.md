@@ -35,6 +35,39 @@ Source code and releases: https://github.com/kr-saibot/MeshtasticConsoleClient
 - Filterable and sortable node list with saved view settings
 - Optional Telegram gateways, local chat bots and HTTP bots
 - Configurable appearance, logo rotation and emoji replacement/picker support
+- Windows desktop host with ConPTY rendering, mouse support and persistent settings
+
+## Windows desktop host
+
+`MeshtasticConsoleHost.exe` provides a native Windows window for the otherwise
+unchanged terminal application. It uses Windows ConPTY and the Windows Terminal
+renderer, so keyboard navigation, Tab, cursor keys, mouse input, Unicode symbols
+and terminal colours work as they do in a modern terminal.
+
+Keep `MeshtasticConsoleHost.exe`, `ConsoleClient.exe` and all files and folders
+from the release package together. On startup, the host always uses the
+`ConsoleClient.exe` in its own directory first. If it is missing, the host uses
+a previously selected valid fallback or opens a file picker. A different client
+can also be selected manually from the window system menu.
+
+The host adds the following Windows integration:
+
+- Configurable terminal font sizes
+- Saved window size, font size, dark title bar and selected fallback client
+- Optional minimized startup and automatic startup with Windows
+- Close button minimizes the window; **Close** in the system menu and
+  **Alt+F4** terminate the application
+- Taskbar flashing when the client sends a terminal BEL alarm
+- Selectable alarm audio with a bundled default alert sound
+
+
+Host settings are stored in `settings.ini` beside `MeshtasticConsoleHost.exe`.
+The ConsoleClient continues to store `meshtastic-settings.xml` and its SQLite
+database in the ConsoleClient working directory, which is the directory that
+contains the selected `ConsoleClient.exe`.
+
+The host requires 64-bit Windows 10 version 1809 or newer. ConPTY is a Windows
+API; it is not an additional separately licensed component.
 
 ## Node map
 
@@ -72,6 +105,10 @@ dotnet build MeshtasticNet472.sln --configuration Linux
 ```
 
 The terminal client is built to `src/ConsoleClient/bin/<configuration>/net472/`.
+The Windows host project is located in `src/ConsoleHost/` and targets x64.
+Release builds do not include `.pdb` debug-symbol files. These symbols are not
+needed at runtime; use a Debug build when source-level crash diagnostics are
+required.
 On Linux it is intended to run with Mono and uses the distribution-provided
 `libsqlite3.so` library.
 

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>MeshtasticConsoleHost</AssemblyName>
+    <RootNamespace>Meshtastic.ConsoleHost</RootNamespace>
+    <Version>1.2.3</Version>
+    <AssemblyVersion>1.2.3.0</AssemblyVersion>
+    <FileVersion>1.2.3.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tools\GenerateDefaultAlertSound.cs" />
+    <None Update="assets\meshtastic-alert.wav" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EasyWindowsTerminalControl" Version="1.0.38" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+  </ItemGroup>
+
+  <Target Name="RemoveReleasePdbFiles" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <ReleasePdbFiles Include="$(TargetDir)**\*.pdb" />
+    </ItemGroup>
+    <Delete Files="@(ReleasePdbFiles)" />
+  </Target>
+</Project>

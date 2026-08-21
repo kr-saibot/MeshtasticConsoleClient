@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Meshtastic.Client;
@@ -609,6 +610,7 @@ namespace ConsoleClient
         private static Label _pleaseWaitText;
         private static ProgressBar _pleaseWaitProgress;
         private static int _connectionAttemptId;
+        private static CancellationTokenSource _connectionAttemptCancellation;
         private static Window _chatPage;
         private static Window _nodesPage;
         private static Window _mapPage;
@@ -1104,6 +1106,8 @@ namespace ConsoleClient
             if (_mesh.State != ConnectionState.Disconnected) { MessageBox.Query("Connection", "A connection is already active.", "OK"); return; }
             ApplyConnectionReconnectSettings();
             var attemptId = ++_connectionAttemptId;
+            var cancellation = new CancellationTokenSource();
+            _connectionAttemptCancellation = cancellation;
             ShowPleaseWait("Connecting to Meshtastic...");
             // Give Terminal.Gui a complete drawing cycle before the transport starts its
             // potentially expensive initial node/configuration synchronization.
@@ -1115,20 +1119,23 @@ namespace ConsoleClient
                     {
                         if (attemptId != _connectionAttemptId) return;
                         var c = _settings.Connection;
-                        if (c.Transport == MeshtasticTransportType.Serial) await _mesh.ConnectSerialAsync(c.SerialPort, c.SerialBaudRate);
-                        else await _mesh.ConnectTcpAsync(c.TcpHost, c.TcpPort);
+                        if (c.Transport == MeshtasticTransportType.Serial) await _mesh.ConnectSerialAsync(c.SerialPort, c.SerialBaudRate, cancellation.Token);
+                        else await _mesh.ConnectTcpAsync(c.TcpHost, c.TcpPort, cancellation.Token);
                         if (attemptId != _connectionAttemptId) return;
                         Ui(delegate { if (attemptId == _connectionAttemptId) ShowPleaseWait("Loading nodes and device data..."); });
-                        await _mesh.RequestFullStateAsync();
+                        await _mesh.RequestFullStateAsync(cancellation.Token);
                         if (attemptId != _connectionAttemptId) return;
-                        await _mesh.ActivatePacketStreamingAsync();
+                        await _mesh.ActivatePacketStreamingAsync(cancellation.Token);
                         if (attemptId != _connectionAttemptId) return;
                         await RestartTelegramGatewaysAsync();
+                        if (_connectionAttemptCancellation == cancellation) _connectionAttemptCancellation = null;
+                        cancellation.Dispose();
                         Ui(delegate { if (attemptId == _connectionAttemptId) { HidePleaseWait(); RefreshChats(); } });
                     }
                     catch (Exception ex)
                     {
                         try { await _mesh.DisconnectAsync(); } catch { }
+                        if (_connectionAttemptCancellation == cancellation) _connectionAttemptCancellation = null;
                         if (attemptId != _connectionAttemptId) return;
                         Ui(delegate { if (attemptId == _connectionAttemptId) { HidePleaseWait(); MessageBox.ErrorQuery("Connection", ex.Message, "OK"); } });
                     }
@@ -1186,7 +1193,25 @@ namespace ConsoleClient
         private static void CancelConnectionAttempt()
         {
             _connectionAttemptId++;
+            var cancellation = _connectionAttemptCancellation;
+            _connectionAttemptCancellation = null;
+            if (cancellation != null) cancellation.Cancel();
             HidePleaseWait();
+            DisconnectInBackground();
+        }
+
+        private static void Disconnect()
+        {
+            _connectionAttemptId++;
+            var cancellation = _connectionAttemptCancellation;
+            _connectionAttemptCancellation = null;
+            if (cancellation != null) cancellation.Cancel();
+            HidePleaseWait();
+            DisconnectInBackground();
+        }
+
+        private static void DisconnectInBackground()
+        {
             Task.Run(async delegate
             {
                 try
@@ -1198,8 +1223,6 @@ namespace ConsoleClient
                 Ui(UpdateStatus);
             });
         }
-
-        private static void Disconnect() { Task.Run(async delegate { if (_telegramGateways != null) await _telegramGateways.StopAsync(); await _mesh.DisconnectAsync(); Ui(UpdateStatus); }); }
 
         private static void ShowConnectionStatus()
         {
@@ -2764,23 +2787,26 @@ namespace ConsoleClient
 
         private static void ShowAlertSettings()
         {
-            var dialog = new Dialog("Alert settings", 92, 20);
-            var beep = new CheckBox("Beep for new incoming messages") { X = 1, Y = 1, Checked = _settings.EnableNewMessageBeep };
-            var interval = new TextField(_settings.Alerts.RepeatBeepIntervalSeconds.ToString(CultureInfo.InvariantCulture)) { X = 42, Y = 2, Width = 8 };
-            var desktopNotification = new CheckBox("Show desktop notification for new messages (Windows only)") { X = 1, Y = 4, Checked = _settings.Alerts.EnableDesktopNotifications };
-            var testNotification = new Button("Test desktop notification") { X = 3, Y = 5 };
+            var dialog = new Dialog("Alert settings", 92, 21);
+            var windowsBeep = new CheckBox("Play Windows beep for new incoming messages") { X = 1, Y = 1, Checked = _settings.Alerts.EnableWindowsBeep };
+            var terminalBell = new CheckBox("Send terminal BEL for host notification") { X = 1, Y = 2, Checked = _settings.Alerts.EnableTerminalBell };
+            var interval = new TextField(_settings.Alerts.RepeatBeepIntervalSeconds.ToString(CultureInfo.InvariantCulture)) { X = 42, Y = 3, Width = 8 };
+            var desktopNotification = new CheckBox("Show desktop notification for new messages (Windows only)") { X = 1, Y = 5, Checked = _settings.Alerts.EnableDesktopNotifications };
+            var testNotification = new Button("Test desktop notification") { X = 3, Y = 6 };
             testNotification.Clicked += delegate { ShowDesktopNotification("Meshtastic Console Client", "Desktop notifications are working."); };
-            var blinkLogo = new CheckBox("Blink logo while unread messages exist") { X = 1, Y = 7, Checked = _settings.Alerts.BlinkLogoForUnreadMessages };
-            var httpEnabled = new CheckBox("Enable alert HTTP GET") { X = 1, Y = 9, Checked = _settings.Alerts.EnableHttpGet };
-            var httpUrl = new TextField(_settings.Alerts.HttpGetUrl ?? "") { X = 22, Y = 10, Width = 65 };
-            var executableEnabled = new CheckBox("Enable alert shell command") { X = 1, Y = 12, Checked = _settings.Alerts.EnableExecutable };
-            var executable = new TextField(_settings.Alerts.ExecutablePath ?? "") { X = 22, Y = 13, Width = 65 };
+            var blinkLogo = new CheckBox("Blink logo while unread messages exist") { X = 1, Y = 8, Checked = _settings.Alerts.BlinkLogoForUnreadMessages };
+            var httpEnabled = new CheckBox("Enable alert HTTP GET") { X = 1, Y = 10, Checked = _settings.Alerts.EnableHttpGet };
+            var httpUrl = new TextField(_settings.Alerts.HttpGetUrl ?? "") { X = 22, Y = 11, Width = 65 };
+            var executableEnabled = new CheckBox("Enable alert shell command") { X = 1, Y = 13, Checked = _settings.Alerts.EnableExecutable };
+            var executable = new TextField(_settings.Alerts.ExecutablePath ?? "") { X = 22, Y = 14, Width = 65 };
             var save = new Button("Save", true);
             save.Clicked += delegate
             {
                 int parsedInterval;
                 if (!Int32.TryParse(interval.Text.ToString(), out parsedInterval) || parsedInterval < 0) { MessageBox.ErrorQuery("Alert settings", "The repeat interval must be zero or a positive number of seconds.", "OK"); return; }
-                _settings.EnableNewMessageBeep = beep.Checked;
+                _settings.Alerts.EnableWindowsBeep = windowsBeep.Checked;
+                _settings.Alerts.EnableTerminalBell = terminalBell.Checked;
+                _settings.EnableNewMessageBeep = windowsBeep.Checked || terminalBell.Checked;
                 _settings.Alerts.RepeatBeepIntervalSeconds = parsedInterval;
                 _settings.Alerts.EnableDesktopNotifications = desktopNotification.Checked;
                 _settings.Alerts.BlinkLogoForUnreadMessages = blinkLogo.Checked;
@@ -2792,12 +2818,12 @@ namespace ConsoleClient
             };
             var cancel = new Button("Cancel");
             cancel.Clicked += delegate { Application.RequestStop(); };
-            dialog.Add(beep,
-                new Label("Repeat beep interval (seconds, 0 = off):") { X = 1, Y = 2 }, interval,
+            dialog.Add(windowsBeep, terminalBell,
+                new Label("Repeat beep interval (seconds, 0 = off):") { X = 1, Y = 3 }, interval,
                 desktopNotification, testNotification,
                 blinkLogo,
-                httpEnabled, new Label("HTTP GET URL:") { X = 1, Y = 10 }, httpUrl,
-                executableEnabled, new Label("Shell command:") { X = 1, Y = 13 }, executable);
+                httpEnabled, new Label("HTTP GET URL:") { X = 1, Y = 11 }, httpUrl,
+                executableEnabled, new Label("Shell command:") { X = 1, Y = 14 }, executable);
             dialog.AddButton(save); dialog.AddButton(cancel);
             Application.Run(dialog);
         }
@@ -3215,7 +3241,7 @@ namespace ConsoleClient
             var becameFullyRead = message == null && unreadCount == 0 && _lastKnownUnreadCount > 0;
             _lastKnownUnreadCount = unreadCount;
 
-            if (message != null && _settings.EnableNewMessageBeep) PlayAlertBeep();
+            if (message != null && (_settings.Alerts.EnableWindowsBeep || _settings.Alerts.EnableTerminalBell)) PlayAlertBeep();
             if (message != null && _settings.Alerts.EnableDesktopNotifications) ShowDesktopNotification(message);
             _nextRepeatedAlertCheckUtc = unreadCount > 0
                 ? DateTime.UtcNow.AddSeconds(Math.Max(1, _settings.Alerts.RepeatBeepIntervalSeconds))
@@ -3248,7 +3274,7 @@ namespace ConsoleClient
 
         private static void CheckRepeatingAlertBeep()
         {
-            if (!_settings.EnableNewMessageBeep || _settings.Alerts.RepeatBeepIntervalSeconds <= 0) return;
+            if ((!_settings.Alerts.EnableWindowsBeep && !_settings.Alerts.EnableTerminalBell) || _settings.Alerts.RepeatBeepIntervalSeconds <= 0) return;
             var now = DateTime.UtcNow;
             if (now < _nextRepeatedAlertCheckUtc) return;
             _nextRepeatedAlertCheckUtc = now.AddSeconds(_settings.Alerts.RepeatBeepIntervalSeconds);
@@ -3262,8 +3288,16 @@ namespace ConsoleClient
         private static void PlayAlertBeep()
         {
             _lastAlertBeepUtc = DateTime.UtcNow;
-            try { Console.Beep(); }
-            catch { }
+            if (_settings.Alerts.EnableWindowsBeep)
+            {
+                try { Console.Beep(); }
+                catch { }
+            }
+            if (_settings.Alerts.EnableTerminalBell)
+            {
+                try { Console.Write('\a'); Console.Out.Flush(); }
+                catch { }
+            }
         }
 
         private static async Task RunAlertActionsAsync(int unreadCount, MeshMessage message)
@@ -3612,6 +3646,7 @@ namespace ConsoleClient
             var device = _mesh.Device;
             var position = device.Latitude.HasValue && device.Longitude.HasValue ? device.Latitude.Value.ToString("F5", CultureInfo.InvariantCulture) + ", " + device.Longitude.Value.ToString("F5", CultureInfo.InvariantCulture) : "-";
             var connectionState = _mesh.State.ToString();
+            if (_connectionAttemptCancellation != null) connectionState = "Connecting";
             if (_mesh.State == ConnectionState.Disconnected)
             {
                 connectionState = _disconnectedStatusVisible ? "Disconnected" : "            ";
@@ -3637,6 +3672,14 @@ namespace ConsoleClient
         }
         private static void Save(Action action) { Task.Run(delegate { try { action(); } catch { } }); }
         private static void Ui(Action action) { Application.MainLoop.Invoke(action); }
-        private static void RequestQuit() { if (MessageBox.Query("Exit", "Close ConsoleClient?", "Yes", "No") == 0) Application.RequestStop(); }
+        private static void RequestQuit()
+        {
+            if (MessageBox.Query("Exit", "Close ConsoleClient?", "Yes", "No") != 0) return;
+            _connectionAttemptId++;
+            var cancellation = _connectionAttemptCancellation;
+            _connectionAttemptCancellation = null;
+            if (cancellation != null) cancellation.Cancel();
+            Application.RequestStop();
+        }
     }
 }
