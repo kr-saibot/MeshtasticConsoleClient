@@ -28,11 +28,10 @@ namespace Meshtastic.Client
             _serial = new SerialPort(_port, _baudRate, Parity.None, 8, StopBits.One);
             _serial.ReadTimeout = SerialPort.InfiniteTimeout; _serial.WriteTimeout = SerialPort.InfiniteTimeout;
             _serial.Open();
-            // Native Meshtastic serial clients send this resync preamble before the first protobuf frame.
-            // It wakes sleeping devices and resets a partially parsed frame on the device side.
-            var resync = new byte[32];
-            for (var i = 0; i < resync.Length; i++) resync[i] = 0xC3;
-            _serial.BaseStream.Write(resync, 0, resync.Length);
+            // Four START1 bytes wake the device and resynchronize its stream parser
+            // before the first normally framed (0x94, 0xC3, length, protobuf) packet.
+            var wake = new byte[] { 0x94, 0x94, 0x94, 0x94 };
+            _serial.BaseStream.Write(wake, 0, wake.Length);
             _serial.BaseStream.Flush(); Thread.Sleep(100);
             return Task.FromResult(0);
         }

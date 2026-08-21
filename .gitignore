@@ -4,6 +4,7 @@
 **/obj/
 builds/
 work/.dotnet/
+.build-staging/
 *.user
 *.suo
 

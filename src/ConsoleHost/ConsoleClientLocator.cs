@@ -27,6 +27,14 @@ namespace Meshtastic.ConsoleHost
                 return local;
             }
 
+            // Keep the host dependencies separate from the client dependencies.
+            var parent = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", ClientFileName));
+            if (File.Exists(parent))
+            {
+                Remember(parent);
+                return parent;
+            }
+
             if (!String.IsNullOrWhiteSpace(AppSettings.ClientPath) && File.Exists(AppSettings.ClientPath))
                 return AppSettings.ClientPath;
 

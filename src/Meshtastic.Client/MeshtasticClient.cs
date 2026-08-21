@@ -40,6 +40,7 @@ namespace Meshtastic.Client
         private CancellationTokenSource _lifetime;
         private Task _connectionLoop;
         private int _connectionGeneration;
+        private Exception _lastConnectionError;
         private TaskCompletionSource<bool> _configComplete;
         private uint _expectedConfigId;
         private bool _manualDisconnect;
@@ -163,6 +164,9 @@ namespace Meshtastic.Client
         public Task ConnectSerialAsync(string portName, int baudRate = 115200, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (String.IsNullOrWhiteSpace(portName)) throw new ArgumentException("A serial port is required.", "portName");
+            portName = portName.Trim();
+            if (!System.IO.Ports.SerialPort.GetPortNames().Any(p => String.Equals(p, portName, StringComparison.OrdinalIgnoreCase)))
+                throw new IOException("Serial port " + portName + " is not available. Check the connection settings and whether the device is connected.");
             return StartAsync(delegate { return new SerialTransport(portName, baudRate); }, cancellationToken);
         }
 
@@ -179,6 +183,7 @@ namespace Meshtastic.Client
                 if (_lifetime != null) throw new InvalidOperationException("The client is already started. Call DisconnectAsync first.");
                 var generation = ++_connectionGeneration;
                 _transportFactory = transportFactory; _manualDisconnect = false;
+                _lastConnectionError = null;
                 _lifetime = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 _connectionLoop = RunConnectionLoopAsync(_lifetime.Token, generation);
             }
@@ -433,11 +438,19 @@ namespace Meshtastic.Client
                         {
                             if (generation == _connectionGeneration)
                             {
+                                _lastConnectionError = ex;
                                 if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
                                 if (_transport != null) { _transport.Dispose(); _transport = null; }
                             }
                         }
                         if (_manualDisconnect || token.IsCancellationRequested) break;
+                        // Retrying cannot resolve an invalid or already opened serial port.
+                        // Stop the initial connection promptly and report the original error.
+                        if (!connectedThisAttempt && (ex is UnauthorizedAccessException || ex is ArgumentException || ex is InvalidOperationException))
+                        {
+                            DebugStatus("The serial port cannot be opened; reconnecting has stopped.");
+                            break;
+                        }
                         failedAttempts++;
                         if (MaximumConnectionAttempts > 0 && failedAttempts >= MaximumConnectionAttempts)
                         {
@@ -596,7 +609,12 @@ namespace Meshtastic.Client
             {
                 token.ThrowIfCancellationRequested();
                 Task loop; lock (_gate) loop = _connectionLoop;
-                if (loop == null || loop.IsCompleted) throw new IOException("Meshtastic could not be connected.");
+                if (loop == null || loop.IsCompleted)
+                {
+                    Exception error; lock (_gate) error = _lastConnectionError;
+                    if (error != null) throw new IOException("Meshtastic could not be connected: " + error.Message, error);
+                    throw new IOException("Meshtastic could not be connected.");
+                }
                 await Task.Delay(100, token).ConfigureAwait(false);
             }
         }

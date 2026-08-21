@@ -631,6 +631,7 @@ namespace ConsoleClient
         private static bool _refreshingChatLists;
         private static bool _favoritesOnly;
         private static bool _nodeRefreshPending;
+        private static int _deviceRefreshActive;
         private static Label _nodeScrollInfo;
         private static Button _sortButton;
         private static Button _nodeSortDirectionButton;
@@ -1014,6 +1015,7 @@ namespace ConsoleClient
             InstallReadOnInteractionHandlers();
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); return true; });
             Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { RotateLogoIfDue(); return true; });
+            Application.MainLoop.AddTimeout(TimeSpan.FromMinutes(5), delegate(MainLoop loop) { RefreshNodesFromDeviceAutomatically(); return true; });
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(50), delegate(MainLoop loop) { AnimateTallLogoIfDue(); return true; });
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(200), delegate(MainLoop loop)
             {
@@ -1123,7 +1125,14 @@ namespace ConsoleClient
                         else await _mesh.ConnectTcpAsync(c.TcpHost, c.TcpPort, cancellation.Token);
                         if (attemptId != _connectionAttemptId) return;
                         Ui(delegate { if (attemptId == _connectionAttemptId) ShowPleaseWait("Loading nodes and device data..."); });
-                        await _mesh.RequestFullStateAsync(cancellation.Token);
+                        var configuration = _mesh.RequestFullStateAsync(cancellation.Token);
+                        var configurationDeadline = Task.Delay(_mesh.ConfigurationTimeout + TimeSpan.FromSeconds(2), cancellation.Token);
+                        if (await Task.WhenAny(configuration, configurationDeadline) != configuration)
+                        {
+                            cancellation.Token.ThrowIfCancellationRequested();
+                            throw new TimeoutException("The selected serial port did not respond as a Meshtastic device.");
+                        }
+                        await configuration;
                         if (attemptId != _connectionAttemptId) return;
                         await _mesh.ActivatePacketStreamingAsync(cancellation.Token);
                         if (attemptId != _connectionAttemptId) return;
@@ -2320,6 +2329,16 @@ namespace ConsoleClient
         private static void RefreshNodesFromDevice()
         {
             if (_mesh.State != ConnectionState.Connected) { MessageBox.ErrorQuery("Nodes", "Connect to a Meshtastic device first.", "OK"); return; }
+            if (!TryStartNodeRefresh(false)) MessageBox.Query("Nodes", "A device refresh is already active.", "OK");
+        }
+        private static void RefreshNodesFromDeviceAutomatically()
+        {
+            if (_mesh.State != ConnectionState.Connected || _connectionAttemptCancellation != null) return;
+            TryStartNodeRefresh(true);
+        }
+        private static bool TryStartNodeRefresh(bool automatic)
+        {
+            if (Interlocked.CompareExchange(ref _deviceRefreshActive, 1, 0) != 0) return false;
             Task.Run(async delegate
             {
                 try
@@ -2328,8 +2347,16 @@ namespace ConsoleClient
                     foreach (var node in _mesh.Nodes) _store.AddOrUpdateNode(node);
                     Ui(RefreshNodePage);
                 }
-                catch (Exception ex) { Ui(delegate { MessageBox.ErrorQuery("Nodes", ex.Message, "OK"); }); }
+                catch (Exception ex)
+                {
+                    if (!automatic) Ui(delegate { MessageBox.ErrorQuery("Nodes", ex.Message, "OK"); });
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _deviceRefreshActive, 0);
+                }
             });
+            return true;
         }
         private static void DeleteAllNodes()
         {
