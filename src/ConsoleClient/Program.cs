@@ -32,6 +32,7 @@ namespace ConsoleClient
         private readonly List<Tuple<string, bool>> _lines = new List<Tuple<string, bool>>();
         private readonly List<StoredMeshMessage> _messageItems = new List<StoredMeshMessage>();
         private const string DaySeparatorPrefix = "\u0001DAY:";
+        private const int TrailingBlankLineCount = 5;
         private int _scrollOffset;
         private int _selectedEmojiIndex = -1;
         private Guid? _selectedMessageId;
@@ -106,6 +107,11 @@ namespace ConsoleClient
                     var lineCountBefore = displayLines.Count;
                     AddWrappedLines(displayLines, _lines[itemIndex], width - 1);
                     for (var lineIndex = lineCountBefore; lineIndex < displayLines.Count; lineIndex++) messageNumbers.Add(Math.Max(1, messageNumber));
+                }
+                for (var blank = 0; blank < TrailingBlankLineCount; blank++)
+                {
+                    displayLines.Add(Tuple.Create("", false));
+                    messageNumbers.Add(Math.Max(1, messageNumber));
                 }
                 var maximumOffset = Math.Max(0, displayLines.Count - height);
                 var offset = Math.Min(_scrollOffset, maximumOffset);
@@ -190,6 +196,15 @@ namespace ConsoleClient
 
         public override bool MouseEvent(MouseEvent mouseEvent)
         {
+            if (mouseEvent.Flags.HasFlag(MouseFlags.WheeledUp) || mouseEvent.Flags.HasFlag(MouseFlags.WheeledDown))
+            {
+                if (mouseEvent.Flags.HasFlag(MouseFlags.WheeledUp)) _scrollOffset += 3;
+                else _scrollOffset = Math.Max(0, _scrollOffset - 3);
+                SetNeedsDisplay();
+                NotifyScrollPositionChanged();
+                mouseEvent.Handled = true;
+                return true;
+            }
             var isClick = mouseEvent.Flags.HasFlag(MouseFlags.Button1Clicked) || mouseEvent.Flags.HasFlag(MouseFlags.Button1Pressed) || mouseEvent.Flags.HasFlag(MouseFlags.Button1DoubleClicked);
             if (!isClick) return base.MouseEvent(mouseEvent);
             SetFocus();
@@ -232,6 +247,7 @@ namespace ConsoleClient
         {
             var displayLines = new List<Tuple<string, bool>>();
             foreach (var line in _lines) AddWrappedLines(displayLines, line, width - 1);
+            for (var blank = 0; blank < TrailingBlankLineCount; blank++) displayLines.Add(Tuple.Create("", false));
             return displayLines;
         }
 
@@ -248,6 +264,11 @@ namespace ConsoleClient
                     owners.Add(_messageItems[index]);
                     starts.Add(row == 0 && _messageItems[index] != null);
                 }
+            }
+            for (var blank = 0; blank < TrailingBlankLineCount; blank++)
+            {
+                owners.Add(null);
+                starts.Add(false);
             }
         }
         private void SelectLastEmoji()
@@ -571,6 +592,9 @@ namespace ConsoleClient
         private static MeshtasticTelegramGatewayManager _telegramGateways;
         private static readonly HttpClient HttpBotHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         private static readonly HttpClient AlertHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        private static readonly object ComLogGate = new object();
+        private const string ComLogFileName = "com.log";
+        private const int MaximumDisplayedComLogBytes = 1024 * 1024;
         private static readonly Dictionary<string, string> DefaultEmojiReplacements = new Dictionary<string, string>
         {
             { "\U0001F600", "[:grin:]" }, { "\U0001F603", "[:smile:]" }, { "\U0001F604", "[:smile:]" }, { "\U0001F60A", "[:smile:]" },
@@ -691,12 +715,13 @@ namespace ConsoleClient
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { StartConnect(); return false; });
             Application.Run();
             try { SaveMapViewState(); SaveNodeListState(); MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); } catch { }
-            if (_telegramGateways != null) _telegramGateways.StopAsync().GetAwaiter().GetResult();
-            _mesh.DisconnectAsync().GetAwaiter().GetResult();
-            _mesh.Dispose();
-            _store.Dispose();
-            if (_desktopNotificationIcon != null) { _desktopNotificationIcon.Visible = false; _desktopNotificationIcon.Dispose(); }
-            Application.Shutdown();
+            if (_telegramGateways != null) try { _telegramGateways.StopAsync().GetAwaiter().GetResult(); } catch { }
+            if (_mesh != null) try { _mesh.DisconnectAsync().GetAwaiter().GetResult(); } catch { }
+            if (_mesh != null) try { _mesh.Dispose(); } catch { }
+            if (_store != null) try { _store.Dispose(); } catch { }
+            if (_desktopNotificationIcon != null) try { _desktopNotificationIcon.Visible = false; _desktopNotificationIcon.Dispose(); } catch { }
+            try { Application.Shutdown(); } catch { }
+            RestoreUnixTerminalState();
         }
 
         private static void InitializeDesktopNotifications()
@@ -740,6 +765,39 @@ namespace ConsoleClient
 
         }
 
+        private static void RestoreUnixTerminalState()
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT) return;
+            try
+            {
+                var sttyPath = File.Exists("/bin/stty") ? "/bin/stty" : "/usr/bin/stty";
+                if (File.Exists(sttyPath))
+                {
+                    using (var stty = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = sttyPath,
+                        Arguments = "sane",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    }))
+                    {
+                        if (stty != null && !stty.WaitForExit(1000))
+                        {
+                            try { stty.Kill(); } catch { }
+                        }
+                    }
+                }
+            }
+            catch { }
+            try
+            {
+                // Disable mouse/focus/paste modes, restore attributes, cursor and
+                // wrapping, leave the alternate screen and start a clean prompt line.
+                Console.Write("\x1b[0m\x1b[?25h\x1b[?7h\x1b[?9l\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1005l\x1b[?1006l\x1b[?1015l\x1b[?2004l\x1b[?1049l\r\n");
+                Console.Out.Flush();
+            }
+            catch { }
+        }
         private static void BuildUi()
         {
             var top = Application.Top;
@@ -754,7 +812,7 @@ namespace ConsoleClient
                 new MenuBarItem("_Telemetry", new[] { new MenuItem("_Show telemetry", "", ShowAllTelemetry), new MenuItem("_Delete current node telemetry", "", DeleteCurrentNodeTelemetry), new MenuItem("_Delete all telemetry", "", DeleteAllTelemetry) }),
                 new MenuBarItem("_Connection", new[] { new MenuItem("_Connect", "", StartConnect), new MenuItem("_Disconnect", "", Disconnect), new MenuItem("Connection _status", "", ShowConnectionStatus) }),
                 new MenuBarItem("_Settings", new[] { new MenuItem("_Connection settings", "", ShowSettings), new MenuItem("_Telemetry storage", "", ShowTelemetryStorageSettings), new MenuItem("_GPS position", "", ShowPositionSettings), new MenuItem("_Use device GPS", "", UseDeviceGps), new MenuItem("_Telegram Gateways", "", ShowTelegramGateways), new MenuItem("_Alerts", "", ShowAlertSettings), new MenuItem("_Appearance", "", ShowAppearanceSettings), new MenuItem("_Logo", "", ShowLogoSettings), new MenuItem("_Chat bots", "", ShowChatBots), new MenuItem("_HTTP bots", "", ShowHttpBots) }),
-                new MenuBarItem("_Debug", new[] { new MenuItem("_Telegram gateway status", "", ShowTelegramGatewayStatus), new MenuItem("_Chat bot", "", ShowChatBotDebug), new MenuItem("_HTTP bot", "", ShowHttpBotDebug), new MenuItem("_Alert HTTP", "", ShowAlertHttpDebug), new MenuItem("Alert shell _command", "", ShowAlertProcessDebug), new MenuItem("_Delete current logo", "", DeleteCurrentLogo) }),
+                new MenuBarItem("_Debug", new[] { new MenuItem("_Telegram gateway status", "", ShowTelegramGatewayStatus), new MenuItem("_Chat bot", "", ShowChatBotDebug), new MenuItem("_HTTP bot", "", ShowHttpBotDebug), new MenuItem("_Alert HTTP", "", ShowAlertHttpDebug), new MenuItem("Alert shell _command", "", ShowAlertProcessDebug), new MenuItem("Serial _COM log", "", ShowSerialComLog), new MenuItem("_Delete current logo", "", DeleteCurrentLogo) }),
                 new MenuBarItem("_Info", new[] { new MenuItem("_About", "", ShowInfo) }),
                 new MenuBarItem("_Quit", new[] { new MenuItem("_Exit", "", RequestQuit) })
             }) { Key = Key.F10 };
@@ -1061,6 +1119,7 @@ namespace ConsoleClient
         private static void SubscribeMeshEvents()
         {
             _mesh.ConnectionStateChanged += delegate { Ui(UpdateStatus); };
+            _mesh.SerialTraffic += delegate(object sender, SerialTrafficEventArgs e) { WriteSerialComLog(e); };
             _mesh.DeviceInfoUpdated += delegate { Ui(delegate { UpdateStatus(); UpdateChatPageTitle(); UpdateMapGpsPosition(); }); };
             _mesh.NodeDiscovered += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }); };
             _mesh.NodeUpdated += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }); };
@@ -3034,6 +3093,70 @@ namespace ConsoleClient
             var channels = new List<CheckBox>(); for (var i = 0; i < 8; i++) { var check = new CheckBox("Channel " + i) { X = 1 + (i % 4) * 20, Y = 9 + i / 4, Checked = bot.ReactToChannels != null && bot.ReactToChannels.Contains(i) }; channels.Add(check); dialog.Add(check); }
             var names = new List<TextField>(); var values = new List<TextField>(); for (var i = 0; i < 5; i++) { var name = new TextField(bot.QueryParameters[i].Name) { X = 1, Y = 13 + i, Width = 20 }; var value = new TextField(bot.QueryParameters[i].Value) { X = 24, Y = 13 + i, Width = 60 }; names.Add(name); values.Add(value); dialog.Add(name, value); }
             var save = new Button("Save", true); save.Clicked += delegate { int reply, parameters; if (!Int32.TryParse(max.Text.ToString(), out reply) || !Int32.TryParse(limit.Text.ToString(), out parameters) || String.IsNullOrWhiteSpace(command.Text.ToString()) || String.IsNullOrWhiteSpace(url.Text.ToString())) { MessageBox.ErrorQuery("HTTP bot", "Command, URL and numeric limits are required.", "OK"); return; } bot.Command = command.Text.ToString(); bot.Url = url.Text.ToString(); bot.MaximumReplyLength = reply; bot.MaximumParameterCount = parameters; bot.Enabled = enabled.Checked; bot.ReactToDirectMessages = direct.Checked; bot.FavoritesOnly = favorites.Checked; bot.ReactToChannels = channels.Select((check, index) => new { check, index }).Where(item => item.check.Checked).Select(item => item.index).ToList(); for (var i = 0; i < 5; i++) { bot.QueryParameters[i].Name = names[i].Text.ToString(); bot.QueryParameters[i].Value = values[i].Text.ToString(); } Application.RequestStop(); }; var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); }; dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog);
+        }
+
+        private static void WriteSerialComLog(SerialTrafficEventArgs traffic)
+        {
+            if (traffic == null || _settings == null || !_settings.EnableSerialTrafficLog) return;
+            try
+            {
+                var timestamp = new DateTimeOffset(DateTime.SpecifyKind(traffic.TimestampUtc, DateTimeKind.Utc)).ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss.fff zzz", CultureInfo.InvariantCulture);
+                var comment = (traffic.Comment ?? "").Replace("\r", " ").Replace("\n", " ");
+                var hex = BitConverter.ToString(traffic.Data ?? new byte[0]).Replace("-", " ");
+                var line = timestamp + " " + (traffic.Direction ?? "??") + " [" + comment + "] " + hex + Environment.NewLine;
+                lock (ComLogGate) File.AppendAllText(ComLogFileName, line, new UTF8Encoding(false));
+            }
+            catch { }
+        }
+
+        private static string ReadSerialComLog()
+        {
+            lock (ComLogGate)
+            {
+                if (!File.Exists(ComLogFileName)) return "The COM log is empty.";
+                try
+                {
+                    using (var stream = new FileStream(ComLogFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    {
+                        var truncated = stream.Length > MaximumDisplayedComLogBytes;
+                        if (truncated) stream.Seek(-MaximumDisplayedComLogBytes, SeekOrigin.End);
+                        using (var reader = new StreamReader(stream, Encoding.UTF8, true))
+                        {
+                            if (truncated) reader.ReadLine();
+                            return (truncated ? "[Showing the last 1 MiB of com.log]" + Environment.NewLine : "") + reader.ReadToEnd();
+                        }
+                    }
+                }
+                catch (Exception ex) { return "Unable to read com.log: " + ex.Message; }
+            }
+        }
+
+        private static void ShowSerialComLog()
+        {
+            var dialog = new Dialog("Serial COM log", 118, 34);
+            var path = new Label("File: " + Path.GetFullPath(ComLogFileName)) { X = 1, Y = 1, Width = Dim.Fill(2) };
+            var view = new TextView { X = 1, Y = 3, Width = Dim.Fill(2), Height = Dim.Fill(4), WordWrap = false, CanFocus = true, ReadOnly = true };
+            Action refresh = delegate { view.Text = ReadSerialComLog(); view.SetNeedsDisplay(); };
+            var toggle = new Button(_settings.EnableSerialTrafficLog ? "Logging: ON" : "Logging: OFF", true);
+            toggle.Clicked += delegate
+            {
+                _settings.EnableSerialTrafficLog = !_settings.EnableSerialTrafficLog;
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+                toggle.Text = _settings.EnableSerialTrafficLog ? "Logging: ON" : "Logging: OFF";
+                toggle.SetNeedsDisplay();
+            };
+            var reload = new Button("Refresh"); reload.Clicked += delegate { refresh(); };
+            var copy = new Button("Copy log"); copy.Clicked += delegate { CopyTextWithFallback(view.Text == null ? "" : view.Text.ToString(), "COM log copied."); };
+            var delete = new Button("Delete log"); delete.Clicked += delegate
+            {
+                if (MessageBox.Query("Serial COM log", "Permanently delete com.log?", "Delete", "Cancel") != 0) return;
+                try { lock (ComLogGate) { if (File.Exists(ComLogFileName)) File.Delete(ComLogFileName); } refresh(); }
+                catch (Exception ex) { MessageBox.ErrorQuery("Serial COM log", "Unable to delete com.log:\n" + ex.Message, "OK"); }
+            };
+            var close = new Button("Close"); close.Clicked += delegate { Application.RequestStop(); };
+            dialog.Add(path, view); dialog.AddButton(toggle); dialog.AddButton(reload); dialog.AddButton(copy); dialog.AddButton(delete); dialog.AddButton(close);
+            refresh();
+            Application.Run(dialog);
         }
 
         private static void ShowChatBotDebug() { ShowBotDebug("Chat bot Debug", delegate { return _lastChatBotRequest; }, delegate { return _lastChatBotOutput; }); }

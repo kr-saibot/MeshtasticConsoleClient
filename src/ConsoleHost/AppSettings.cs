@@ -20,6 +20,7 @@ namespace Meshtastic.ConsoleHost
         public static string BellSoundPath { get; set; } = DefaultBellSoundPath;
         public static int FontSize { get; set; } = 12;
         public static bool StartMinimized { get; set; }
+        public static bool MinimizeToTray { get; set; }
         public static bool DarkMode { get; set; } = true;
         public static int WindowWidth { get; set; } = 1200;
         public static int WindowHeight { get; set; } = 760;
@@ -61,6 +62,11 @@ namespace Meshtastic.ConsoleHost
                     bool parsed;
                     if (Boolean.TryParse(value, out parsed)) StartMinimized = parsed;
                 }
+                if (values.TryGetValue("MinimizeToTray", out value))
+                {
+                    bool parsed;
+                    if (Boolean.TryParse(value, out parsed)) MinimizeToTray = parsed;
+                }
                 if (values.TryGetValue("DarkMode", out value))
                 {
                     bool parsed;
@@ -91,6 +97,7 @@ namespace Meshtastic.ConsoleHost
                     "BellSoundPath=" + (BellSoundPath ?? "<none>"),
                     "FontSize=" + FontSize,
                     "StartMinimized=" + StartMinimized,
+                    "MinimizeToTray=" + MinimizeToTray,
                     "DarkMode=" + DarkMode,
                     "WindowWidth=" + WindowWidth,
                     "WindowHeight=" + WindowHeight

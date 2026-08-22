@@ -20,6 +20,8 @@ argument. This is mainly useful while developing or testing the host.
 - Persistent font size, window size, dark title bar and fallback client path
 - Optional minimized startup and startup with Windows
 - Window Close button minimizes; system-menu **Close** and **Alt+F4** exit
+- Optional minimization to the Windows notification area
+- Alarms restore a tray-hidden window to the taskbar and make it flash
 - Terminal scrollbar hidden and mouse-wheel input forwarded to the client
 - Taskbar flashing when a BEL character is received
 - Bundled default alarm sound and selection of a custom audio file

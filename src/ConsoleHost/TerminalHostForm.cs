@@ -19,8 +19,13 @@ namespace Meshtastic.ConsoleHost
         private readonly EasyTerminalControl _terminal;
         private readonly ElementHost _terminalHost;
         private readonly System.Windows.Media.MediaPlayer _bellPlayer = new System.Windows.Media.MediaPlayer();
+        private NotifyIcon _trayIcon;
         private Timer _processExitTimer;
+        private Timer _startupTrayTimer;
         private bool _allowClose;
+        private bool _hiddenToTray;
+        private bool _suppressTrayMinimize;
+        private DateTime _suppressBellUntilUtc = DateTime.UtcNow.AddSeconds(5);
 
         public TerminalHostForm(string[] args)
         {
@@ -31,7 +36,8 @@ namespace Meshtastic.ConsoleHost
             BackColor = Color.Black;
             try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); }
             catch { }
-            if (AppSettings.StartMinimized)
+            InitializeTrayIcon();
+            if (AppSettings.StartMinimized && !AppSettings.MinimizeToTray)
                 WindowState = FormWindowState.Minimized;
 
             var executable = ConsoleClientLocator.Resolve(args, this);
@@ -64,9 +70,24 @@ namespace Meshtastic.ConsoleHost
             Shown += delegate
             {
                 TerminalPresentation.SetFontSize(_terminal, AppSettings.FontSize);
-                if (!AppSettings.StartMinimized) _terminal.Focus();
+                if (AppSettings.StartMinimized && AppSettings.MinimizeToTray)
+                {
+                    _startupTrayTimer = new Timer { Interval = 100 };
+                    _startupTrayTimer.Tick += delegate
+                    {
+                        StopStartupTrayTimer();
+                        HideToTray();
+                    };
+                    _startupTrayTimer.Start();
+                }
+                else if (!AppSettings.StartMinimized)
+                    _terminal.Focus();
             };
             FormClosing += OnFormClosing;
+            Resize += delegate
+            {
+                if (WindowState == FormWindowState.Minimized && AppSettings.MinimizeToTray && !_suppressTrayMinimize) HideToTray();
+            };
             ResizeEnd += delegate { SaveWindowSize(); };
             Activated += delegate { TaskbarNotifier.Stop(Handle); };
         }
@@ -104,6 +125,14 @@ namespace Meshtastic.ConsoleHost
                 if (TerminalSystemMenu.IsStartMinimizedCommand(message.WParam))
                 {
                     AppSettings.StartMinimized = !AppSettings.StartMinimized;
+                    AppSettings.Save();
+                    TerminalSystemMenu.Refresh(Handle);
+                    return;
+                }
+
+                if (TerminalSystemMenu.IsMinimizeToTrayCommand(message.WParam))
+                {
+                    AppSettings.MinimizeToTray = !AppSettings.MinimizeToTray;
                     AppSettings.Save();
                     TerminalSystemMenu.Refresh(Handle);
                     return;
@@ -215,6 +244,7 @@ namespace Meshtastic.ConsoleHost
 
             _terminal.StartupCommandLine = Quote(executable);
             _terminal.WorkingDirectory = Path.GetDirectoryName(executable);
+            _suppressBellUntilUtc = DateTime.UtcNow.AddSeconds(5);
             await _terminal.RestartTerm(conPty, true);
             TerminalPresentation.HideScrollBar(_terminal);
             _terminal.Focus();
@@ -229,14 +259,74 @@ namespace Meshtastic.ConsoleHost
             _processExitTimer.Dispose();
             _processExitTimer = null;
         }
+
+        private void StopStartupTrayTimer()
+        {
+            if (_startupTrayTimer == null) return;
+            _startupTrayTimer.Stop();
+            _startupTrayTimer.Dispose();
+            _startupTrayTimer = null;
+        }
+
+        private void InitializeTrayIcon()
+        {
+
+            var menu = new ContextMenuStrip();
+            menu.Items.Add("Öffnen", null, delegate { RestoreFromTray(); });
+            menu.Items.Add("Beenden", null, delegate
+            {
+                _allowClose = true;
+                Close();
+            });
+
+            _trayIcon = new NotifyIcon
+            {
+                Text = Text,
+                Icon = Icon ?? SystemIcons.Application,
+                ContextMenuStrip = menu,
+                Visible = false
+            };
+            _trayIcon.DoubleClick += delegate { RestoreFromTray(); };
+        }
+
+        private void HideToTray()
+        {
+            if (_hiddenToTray || _allowClose) return;
+            _hiddenToTray = true;
+            Hide();
+            _trayIcon.Visible = true;
+        }
+
+        private void RestoreFromTray()
+        {
+            if (!_hiddenToTray) return;
+            _trayIcon.Visible = false;
+            _hiddenToTray = false;
+            Show();
+            WindowState = FormWindowState.Normal;
+            Activate();
+            _terminal.Focus();
+        }
+
+        private void ShowAlarmInTaskbar()
+        {
+            if (!_hiddenToTray) return;
+            _suppressTrayMinimize = true;
+            _trayIcon.Visible = false;
+            _hiddenToTray = false;
+            Show();
+            WindowState = FormWindowState.Minimized;
+            BeginInvoke(new Action(delegate { _suppressTrayMinimize = false; }));
+        }
         private void HandleTerminalOutput(ref Span<char> output)
         {
-            if (output.IndexOf('\a') >= 0 && IsHandleCreated)
+            if (output.IndexOf('\a') >= 0 && IsHandleCreated && DateTime.UtcNow >= _suppressBellUntilUtc)
             {
                 try
                 {
                     BeginInvoke(new Action(delegate
                     {
+                        ShowAlarmInTaskbar();
                         TaskbarNotifier.Start(Handle);
                         PlayBellSound();
                     }));
@@ -403,6 +493,13 @@ namespace Meshtastic.ConsoleHost
             if (disposing)
             {
                 _bellPlayer.Close();
+                StopStartupTrayTimer();
+                if (_trayIcon != null)
+                {
+                    _trayIcon.Visible = false;
+                    _trayIcon.Dispose();
+                    _trayIcon = null;
+                }
                 Application.RemoveMessageFilter(this);
                 if (_processExitTimer != null)
                 {

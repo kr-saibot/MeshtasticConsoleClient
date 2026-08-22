@@ -119,6 +119,30 @@ through the Settings menu. The application writes local settings and its SQLite
 database next to the executable; these files can contain private information
 and are deliberately excluded from version control.
 
+### Linux serial-port permissions
+
+On Ubuntu and many other Linux distributions, serial devices such as
+`/dev/ttyACM0` and `/dev/ttyUSB0` are accessible only to members of the device's
+group, which is usually `dialout`. If TCP works but serial connections fail for
+both nRF and ESP32 devices, check the port and current group memberships:
+
+```bash
+ls -l /dev/ttyACM0
+ls -l /dev/ttyUSB0
+groups
+```
+
+If the port belongs to `dialout`, add the current user to that group:
+
+```bash
+sudo usermod -aG dialout "$USER"
+```
+
+Log out completely and log in again, or restart the computer, before retrying.
+Use `groups` to confirm that `dialout` is active. Do not run ConsoleClient with
+`sudo`; correct the device-group permissions instead. Also ensure that no web
+client or other application still has the selected serial port open.
+
 ## Appearance and logos
 
 The terminal colours, frames and message colours can be changed in the

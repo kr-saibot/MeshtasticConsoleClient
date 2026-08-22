@@ -23,7 +23,7 @@ namespace Meshtastic.Client
         public MeshtasticConnectionSettings()
         {
             Transport = MeshtasticTransportType.Serial;
-            SerialPort = "COM5";
+            SerialPort = Environment.OSVersion.Platform == PlatformID.Win32NT ? "COM5" : "/dev/ttyACM0";
             SerialBaudRate = 115200;
             TcpHost = "192.168.1.1";
             TcpPort = 4403;
@@ -100,7 +100,19 @@ namespace Meshtastic.Client
         public string ArgumentSuffix { get; set; }
         public bool ReactToDirectMessages { get; set; }
         public bool FavoritesOnly { get; set; }
+        [XmlIgnore]
         public List<int> ReactToChannels { get; set; }
+
+        // XmlSerializer populates List<T> properties instead of replacing lists that
+        // were initialized by the constructor. Use an array as the XML-facing value
+        // so an explicitly empty selection replaces the default list of all channels.
+        [XmlArray("ReactToChannels")]
+        [XmlArrayItem("int")]
+        public int[] SerializedReactToChannels
+        {
+            get { return ReactToChannels == null ? null : ReactToChannels.ToArray(); }
+            set { ReactToChannels = value == null ? null : value.ToList(); }
+        }
 
         public MeshtasticChatBotSettings()
         {
@@ -171,6 +183,7 @@ namespace Meshtastic.Client
         public MeshtasticConnectionSettings Connection { get; set; }
         public bool EnableNewMessageBeep { get; set; }
         public bool StoreTelemetryData { get; set; }
+        public bool EnableSerialTrafficLog { get; set; }
         public MeshtasticAlertSettings Alerts { get; set; }
         public MeshtasticAppearanceSettings Appearance { get; set; }
         public MeshtasticLogoSettings Logo { get; set; }

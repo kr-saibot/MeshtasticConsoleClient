@@ -5,6 +5,7 @@
 builds/
 work/.dotnet/
 .build-staging/
+.comparison-builds/
 *.user
 *.suo
 

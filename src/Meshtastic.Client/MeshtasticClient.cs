@@ -22,6 +22,14 @@ namespace Meshtastic.Client
     public sealed class MeshTelemetryEventArgs : EventArgs { public MeshTelemetryEventArgs(MeshTelemetry telemetry) { Telemetry = telemetry; } public MeshTelemetry Telemetry { get; private set; } }
     public sealed class PacketEventArgs : EventArgs { public PacketEventArgs(MeshPacket packet) { Packet = packet; } public MeshPacket Packet { get; private set; } }
     public sealed class TransportErrorEventArgs : EventArgs { public TransportErrorEventArgs(Exception error) { Error = error; } public Exception Error { get; private set; } }
+    public sealed class SerialTrafficEventArgs : EventArgs
+    {
+        public SerialTrafficEventArgs(DateTime timestampUtc, string direction, byte[] data, string comment) { TimestampUtc = timestampUtc; Direction = direction; Data = data; Comment = comment; }
+        public DateTime TimestampUtc { get; private set; }
+        public string Direction { get; private set; }
+        public byte[] Data { get; private set; }
+        public string Comment { get; private set; }
+    }
 
     /// <summary>Thread-safe native Meshtastic Protobuf client for Serial and TCP transports.</summary>
     public sealed class MeshtasticClient : IDisposable
@@ -81,6 +89,7 @@ namespace Meshtastic.Client
         public event EventHandler ChannelsChanged;
         public event EventHandler ConfigurationReceived;
         public event EventHandler<TransportErrorEventArgs> TransportError;
+        public event EventHandler<SerialTrafficEventArgs> SerialTraffic;
 
         public ConnectionState State { get { lock (_gate) return _state; } }
         public bool IsConnected { get { return State == ConnectionState.Connected; } }
@@ -219,7 +228,6 @@ namespace Meshtastic.Client
                     await Task.WhenAny(loop, Task.Delay(DisconnectTimeout)).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) { }
-            }
                 if (!loop.IsCompleted)
                 {
                     lock (_gate)
@@ -234,6 +242,7 @@ namespace Meshtastic.Client
                         }
                     }
                 }
+            }
             if (State != ConnectionState.Disconnected) SetState(ConnectionState.Disconnected, null);
         }
 
@@ -371,14 +380,17 @@ namespace Meshtastic.Client
             }
             try
             {
-                var write = transport.Stream.WriteAsync(frame, 0, frame.Length, cancellationToken);
+                var write = transport.UseSynchronousWrites
+                    ? Task.Run(delegate { cancellationToken.ThrowIfCancellationRequested(); transport.Write(frame, 0, frame.Length); }, cancellationToken)
+                    : transport.Stream.WriteAsync(frame, 0, frame.Length, cancellationToken);
                 if (await Task.WhenAny(write, Task.Delay(TransportOperationTimeout, cancellationToken)).ConfigureAwait(false) != write)
                 {
                     transport.Close();
                     throw new TimeoutException("Writing to the Meshtastic transport timed out.");
                 }
                 await write.ConfigureAwait(false);
-                await transport.Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                if (!transport.UseSynchronousWrites) await transport.Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+                if (String.Equals(transport.Kind, "Serial", StringComparison.OrdinalIgnoreCase)) RaiseSerialTraffic("TX", frame, DescribeToRadio(message));
                 lock (_gate) { _sentFrameCount++; _lastSentUtc = DateTime.UtcNow; }
             }
             finally { if (writerEntered) _writer.Release(); }
@@ -408,6 +420,7 @@ namespace Meshtastic.Client
                             _transportKind = transport.Kind; _transportEndpoint = transport.Endpoint; _connectedSinceUtc = DateTime.UtcNow;
                             if (!first) _reconnectCount++;
                         }
+                        if (String.Equals(transport.Kind, "Serial", StringComparison.OrdinalIgnoreCase)) RaiseSerialTraffic("TX", new byte[] { 0x94, 0x94, 0x94, 0x94 }, "serial wake/resynchronization");
                         SetState(ConnectionState.Connected, null);
                         Debug("Transport open; starting heartbeat and RX reader.");
                         using (var connectionToken = CancellationTokenSource.CreateLinkedTokenSource(token))
@@ -502,9 +515,49 @@ namespace Meshtastic.Client
                 var bytes = await ReadExactAsync(stream, length, token).ConfigureAwait(false);
                 lock (_gate) { _receivedFrameCount++; _lastReceivedUtc = DateTime.UtcNow; }
                 Debug("RX complete frame #" + _receivedFrameCount + ", parsing FromRadio.");
-                try { Handle(FromRadio.Parser.ParseFrom(bytes)); Debug("RX frame processing completed; waiting for next frame."); }
+                FromRadio radio;
+                try { radio = FromRadio.Parser.ParseFrom(bytes); }
+                catch (Exception ex)
+                {
+                    RaiseSerialTraffic("RX", CreateFrame(bytes), "invalid FromRadio: " + ex.GetType().Name);
+                    Debug("RX processing failed: " + ex.GetType().Name + ": " + ex.Message); throw;
+                }
+                RaiseSerialTraffic("RX", CreateFrame(bytes), DescribeFromRadio(radio));
+                try { Handle(radio); Debug("RX frame processing completed; waiting for next frame."); }
                 catch (Exception ex) { Debug("RX processing failed: " + ex.GetType().Name + ": " + ex.Message); throw; }
             }
+        }
+
+        private static byte[] CreateFrame(byte[] payload)
+        {
+            var frame = new byte[payload.Length + 4];
+            frame[0] = 0x94; frame[1] = 0xC3; frame[2] = (byte)(payload.Length >> 8); frame[3] = (byte)payload.Length;
+            Buffer.BlockCopy(payload, 0, frame, 4, payload.Length);
+            return frame;
+        }
+        private static string DescribeToRadio(ToRadio radio)
+        {
+            if (radio == null) return "unknown ToRadio";
+            return radio.PayloadVariantCase == ToRadio.PayloadVariantOneofCase.Packet ? "packet " + DescribeMeshPacket(radio.Packet) : radio.PayloadVariantCase.ToString();
+        }
+        private static string DescribeFromRadio(FromRadio radio)
+        {
+            if (radio == null) return "unknown FromRadio";
+            return radio.PayloadVariantCase == FromRadio.PayloadVariantOneofCase.Packet ? "packet " + DescribeMeshPacket(radio.Packet) : radio.PayloadVariantCase.ToString();
+        }
+        private static string DescribeMeshPacket(MeshPacket packet)
+        {
+            if (packet == null) return "(empty)";
+            var description = "id=" + packet.Id.ToString("X8") + " from=!" + packet.From.ToString("X8") + " to=!" + packet.To.ToString("X8");
+            if (packet.PayloadVariantCase == MeshPacket.PayloadVariantOneofCase.Decoded && packet.Decoded != null) description += " " + packet.Decoded.Portnum;
+            else description += " " + packet.PayloadVariantCase;
+            return description;
+        }
+        private void RaiseSerialTraffic(string direction, byte[] data, string comment)
+        {
+            string kind; lock (_gate) kind = _transportKind;
+            if (!String.Equals(kind, "Serial", StringComparison.OrdinalIgnoreCase)) return;
+            Raise(SerialTraffic, new SerialTrafficEventArgs(DateTime.UtcNow, direction, data == null ? new byte[0] : (byte[])data.Clone(), comment ?? ""));
         }
 
         private void Handle(FromRadio radio)

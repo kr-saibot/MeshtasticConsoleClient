@@ -10,7 +10,8 @@ namespace Meshtastic.ConsoleHost
         private const int SelectClient = 0x1E00, Font9 = 0x1E08, Font10 = 0x1E10,
             Font12 = 0x1E20, Font14 = 0x1E30, Font16 = 0x1E40, Font18 = 0x1E50,
             StartMinimized = 0x1E60, StartWithWindows = 0x1E70, DarkMode = 0x1E80,
-            SelectBellSound = 0x1E90, ClearBellSound = 0x1EA0;
+            SelectBellSound = 0x1E90, ClearBellSound = 0x1EA0,
+            MinimizeToTray = 0x1EB0;
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetSystemMenu(IntPtr window, bool revert);
@@ -35,6 +36,7 @@ namespace Meshtastic.ConsoleHost
             AddChecked(menu, Font18, "Schriftgröße 18", AppSettings.FontSize == 18);
             AppendMenu(menu, MfSeparator, UIntPtr.Zero, null);
             AddChecked(menu, StartMinimized, "Minimiert starten", AppSettings.StartMinimized);
+            AddChecked(menu, MinimizeToTray, "Beim Minimieren in den Infobereich", AppSettings.MinimizeToTray);
             AddChecked(menu, StartWithWindows, "Mit Windows starten", AppSettings.StartsWithWindows);
             AddChecked(menu, DarkMode, "Dunkle Titelleiste", AppSettings.DarkMode);
         }
@@ -45,6 +47,7 @@ namespace Meshtastic.ConsoleHost
 
         public static bool IsSelectClientCommand(IntPtr command) { return command.ToInt32() == SelectClient; }
         public static bool IsStartMinimizedCommand(IntPtr command) { return command.ToInt32() == StartMinimized; }
+        public static bool IsMinimizeToTrayCommand(IntPtr command) { return command.ToInt32() == MinimizeToTray; }
         public static bool IsStartWithWindowsCommand(IntPtr command) { return command.ToInt32() == StartWithWindows; }
         public static bool IsDarkModeCommand(IntPtr command) { return command.ToInt32() == DarkMode; }
 
