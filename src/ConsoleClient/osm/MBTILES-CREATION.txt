@@ -1,0 +1,171 @@
+Creating offline OSM maps for Meshtastic ConsoleClient
+=======================================================
+
+1. What ConsoleClient expects
+-----------------------------
+
+The map file must have the .mbtiles extension and must be placed in this "osm"
+directory. At startup, ConsoleClient opens the first *.mbtiles file in
+alphabetical order. For an unambiguous test, keep only one such file in this
+directory. Alternatively, name the preferred file something such as
+"00-upper-bavaria.mbtiles".
+
+Supported formats:
+
+  * Vector MBTiles containing Mapbox Vector Tiles (PBF), preferably using the
+    OpenMapTiles schema. GZIP-compressed PBF tiles are supported.
+  * Raster MBTiles containing PNG or JPEG tiles.
+
+The MBTiles file must be an SQLite database with the standard "metadata" and
+"tiles" tables. The "tiles" table must contain at least these columns:
+
+  zoom_level, tile_column, tile_row, tile_data
+
+tile_row must use the TMS row order required by the MBTiles specification. For
+vector data, the metadata table should contain at least:
+
+  format   = pbf
+  minzoom  = lowest included zoom level
+  maxzoom  = highest included zoom level
+  bounds   = West,South,East,North
+  json     = vector_layers description (recommended)
+
+The built-in lightweight vector renderer recognizes these layer names:
+
+  transportation, transportation_name, road, railway, boundary,
+  building, waterway, water, landcover, landuse, park
+
+A file using another vector schema may be a technically valid MBTiles file but
+still produce a black background if none of its layer names are recognized.
+
+
+2. Download OSM source data
+---------------------------
+
+Regional *.osm.pbf extracts can be downloaded from providers such as Geofabrik:
+
+  https://download.geofabrik.de/europe/germany.html
+
+For initial tests, use a small administrative district or county rather than
+all of Germany. In the examples below, the source file is named
+"upper-bavaria-latest.osm.pbf".
+
+OpenStreetMap data is licensed under the ODbL. When distributing a map, retain
+the required attribution, normally "(c) OpenStreetMap contributors". See:
+
+  https://www.openstreetmap.org/copyright
+
+
+3. Create vector MBTiles with tilemaker
+---------------------------------------
+
+Extract the complete tilemaker package. In addition to tilemaker.exe, the
+"resources" directory containing a JSON configuration and a Lua processing
+file is required. Copying the EXE by itself is not sufficient.
+
+Open PowerShell in the tilemaker directory and inspect the available files:
+
+  Get-ChildItem .\resources\*.json
+  Get-ChildItem .\resources\*.lua
+
+For packages containing config-example.json and process-example.lua, use:
+
+  .\tilemaker.exe `
+    --input ".\upper-bavaria-latest.osm.pbf" `
+    --output ".\upper-bavaria.mbtiles" `
+    --config ".\resources\config-example.json" `
+    --process ".\resources\process-example.lua" `
+    --verbose
+
+If the package instead contains files with "openmaptiles" in their names, use
+the exact names present in that package, for example:
+
+  .\tilemaker.exe `
+    --input ".\upper-bavaria-latest.osm.pbf" `
+    --output ".\upper-bavaria.mbtiles" `
+    --config ".\resources\config-openmaptiles.json" `
+    --process ".\resources\process-openmaptiles.lua" `
+    --verbose
+
+If available memory is insufficient, a temporary data store can help:
+
+  New-Item -ItemType Directory -Force ".\tilemaker-store"
+
+Then add this argument to the tilemaker command:
+
+  --store ".\tilemaker-store"
+
+The output directory must be writable. An existing upper-bavaria.mbtiles file
+must not be open in another application. If tilemaker only prints the bounding
+box and immediately exits without creating a file, the run was not successful.
+Check its exit code with:
+
+  $LASTEXITCODE
+
+If it crashed, try a current tilemaker release or its Linux/Docker build. Some
+older native Windows builds can crash while processing larger PBF extracts.
+
+
+4. Zoom levels and file size
+----------------------------
+
+For a terminal map, zoom levels through 14 are normally a good starting point.
+Buildings and small roads must remain enabled in the JSON configuration through
+the required maxzoom. Zoom 15 or 16 provides more local detail but increases
+both processing time and output size considerably.
+
+A complete map of Germany with genuine detail down to approximately one metre
+per image pixel would be extremely large. Because terminal cells are coarse,
+ConsoleClient normally does not need raster data at that resolution. A regional
+vector map through zoom 14 to 16 is a more practical compromise.
+
+When modifying the tilemaker configuration, remember:
+
+  * Each layer's "minzoom" and "maxzoom" determine when it is visible.
+  * Water, roads, buildings and land use must be written to the recognized
+    layers listed in section 1.
+  * Raising only the global maxzoom is not sufficient when an individual layer
+    ends at a lower zoom level.
+
+
+5. Verify and install the result
+--------------------------------
+
+After a successful run, the output file must be larger than zero bytes:
+
+  Get-Item ".\upper-bavaria.mbtiles"
+
+If sqlite3 is installed, the structure can be checked with:
+
+  sqlite3 ".\upper-bavaria.mbtiles" "SELECT name,value FROM metadata;"
+  sqlite3 ".\upper-bavaria.mbtiles" "SELECT zoom_level,COUNT(*) FROM tiles GROUP BY zoom_level ORDER BY zoom_level;"
+
+Copy the completed file into the build's osm directory, for example:
+
+  Copy-Item ".\upper-bavaria.mbtiles" `
+    "C:\Users\Tobias\Documents\ConsoleClientBuilds\Windows\osm\00-upper-bavaria.mbtiles"
+
+For the Linux build, copy it to:
+
+  ConsoleClientBuilds/Linux/osm/00-upper-bavaria.mbtiles
+
+Restart ConsoleClient afterwards. On the node map, key 8 toggles the background
+map. If the background remains black, check the following:
+
+  * Is the current map position within the metadata "bounds"?
+  * Is this really the first .mbtiles file alphabetically?
+  * Does a vector file contain "format=pbf" in its metadata?
+  * Does it use one or more recognized OpenMapTiles layer names?
+  * Does it contain tiles for the zoom level currently being used?
+
+
+6. Raster MBTiles
+-----------------
+
+As an alternative, a GIS or map-rendering application can export a rendered
+map as PNG/JPEG MBTiles. Its metadata should contain "format=png",
+"format=jpg" or "format=jpeg", plus correct minzoom, maxzoom and bounds values.
+ConsoleClient automatically reduces image colours to its terminal palette.
+
+High-zoom raster tiles consume substantially more storage than vector tiles.
+For large areas, export only the zoom levels that are actually required.

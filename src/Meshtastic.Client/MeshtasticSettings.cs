@@ -174,7 +174,15 @@ namespace Meshtastic.Client
         public double? CenterLongitude { get; set; }
         public double MetersPerRow { get; set; }
         public List<string> ActiveOverlayFiles { get; set; }
-        public MeshtasticMapSettings() { MetersPerRow = 1000d; }
+        public bool ShowKnownNodes { get; set; }
+        public bool ShowBackgroundMap { get; set; }
+        public uint? PositionTrackNodeNumber { get; set; }
+        public bool PositionTrackVisible { get; set; }
+        public int PositionTrackFromHoursAgo { get; set; }
+        public int PositionTrackToHoursAgo { get; set; }
+        public string PositionTrackColor { get; set; }
+        public string PositionTrackSymbol { get; set; }
+        public MeshtasticMapSettings() { MetersPerRow = 1000d; ShowKnownNodes = true; ShowBackgroundMap = true; PositionTrackVisible = true; PositionTrackFromHoursAgo = 0; PositionTrackToHoursAgo = 24; PositionTrackColor = "BrightYellow"; PositionTrackSymbol = "O"; }
     }
     /// <summary>Root object for a readable, application-owned settings file.</summary>
     [XmlRoot("MeshtasticApplicationSettings")]
@@ -183,6 +191,9 @@ namespace Meshtastic.Client
         public MeshtasticConnectionSettings Connection { get; set; }
         public bool EnableNewMessageBeep { get; set; }
         public bool StoreTelemetryData { get; set; }
+        public bool StoreTelemetryFavoritesOnly { get; set; }
+        public bool StorePositionData { get; set; }
+        public bool StorePositionFavoritesOnly { get; set; }
         public bool EnableSerialTrafficLog { get; set; }
         public MeshtasticAlertSettings Alerts { get; set; }
         public MeshtasticAppearanceSettings Appearance { get; set; }
@@ -195,7 +206,7 @@ namespace Meshtastic.Client
 
         public MeshtasticApplicationSettings()
         {
-            Connection = new MeshtasticConnectionSettings(); Appearance = new MeshtasticAppearanceSettings(); Logo = new MeshtasticLogoSettings(); Map = new MeshtasticMapSettings(); Nodes = new MeshtasticNodeListSettings(); Alerts = new MeshtasticAlertSettings(); ChatBots = new List<MeshtasticChatBotSettings>(); HttpBots = new List<MeshtasticHttpBotSettings>(); TelegramGateways = new List<TelegramGatewaySettings>(); EnableNewMessageBeep = true; StoreTelemetryData = true;
+            Connection = new MeshtasticConnectionSettings(); Appearance = new MeshtasticAppearanceSettings(); Logo = new MeshtasticLogoSettings(); Map = new MeshtasticMapSettings(); Nodes = new MeshtasticNodeListSettings(); Alerts = new MeshtasticAlertSettings(); ChatBots = new List<MeshtasticChatBotSettings>(); HttpBots = new List<MeshtasticHttpBotSettings>(); TelegramGateways = new List<TelegramGatewaySettings>(); EnableNewMessageBeep = true; StoreTelemetryData = true; StorePositionData = true;
             for (var channel = 0; channel < 8; channel++) TelegramGateways.Add(new TelegramGatewaySettings { ChannelIndex = channel });
         }
     }
@@ -216,6 +227,10 @@ namespace Meshtastic.Client
                 NormalizeAppearance(settings.Appearance);
                 if (settings.Logo == null) settings.Logo = new MeshtasticLogoSettings();
                 if (settings.Map == null) settings.Map = new MeshtasticMapSettings();
+                if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackColor)) settings.Map.PositionTrackColor = "BrightYellow";
+                if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackSymbol)) settings.Map.PositionTrackSymbol = "O";
+                if (settings.Map.PositionTrackFromHoursAgo < 0) settings.Map.PositionTrackFromHoursAgo = 0;
+                if (settings.Map.PositionTrackToHoursAgo <= settings.Map.PositionTrackFromHoursAgo) settings.Map.PositionTrackToHoursAgo = settings.Map.PositionTrackFromHoursAgo + 24;
                 if (settings.Nodes == null) settings.Nodes = new MeshtasticNodeListSettings();
                 if (settings.Alerts == null) settings.Alerts = new MeshtasticAlertSettings();
                 if (settings.Alerts.RepeatBeepIntervalSeconds < 0) settings.Alerts.RepeatBeepIntervalSeconds = 0;
@@ -243,6 +258,10 @@ namespace Meshtastic.Client
             NormalizeAppearance(settings.Appearance);
             if (settings.Logo == null) settings.Logo = new MeshtasticLogoSettings();
             if (settings.Map == null) settings.Map = new MeshtasticMapSettings();
+            if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackColor)) settings.Map.PositionTrackColor = "BrightYellow";
+            if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackSymbol)) settings.Map.PositionTrackSymbol = "O";
+            if (settings.Map.PositionTrackFromHoursAgo < 0) settings.Map.PositionTrackFromHoursAgo = 0;
+            if (settings.Map.PositionTrackToHoursAgo <= settings.Map.PositionTrackFromHoursAgo) settings.Map.PositionTrackToHoursAgo = settings.Map.PositionTrackFromHoursAgo + 24;
             if (settings.Nodes == null) settings.Nodes = new MeshtasticNodeListSettings();
             if (settings.Alerts == null) settings.Alerts = new MeshtasticAlertSettings();
             if (settings.Alerts.RepeatBeepIntervalSeconds < 0) settings.Alerts.RepeatBeepIntervalSeconds = 0;

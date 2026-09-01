@@ -31,7 +31,10 @@ Source code and releases: https://github.com/kr-saibot/MeshtasticConsoleClient
 - Node, channel, text-message, position and telemetry handling
 - SQLite message, node and telemetry storage
 - Terminal chat interface with direct chats, channels, node details and telemetry
-- Interactive node map with clustering, pan/zoom, GPS centring and XML overlays
+- Interactive node map with clustering, pan/zoom, GPS centring, XML overlays and
+  optional offline raster or OpenMapTiles-compatible vector MBTiles backgrounds
+- Selectable OSM roads, buildings and map features with English-name preference
+- Stored node-position history with an automatic latest-available 24-hour window
 - Filterable and sortable node list with saved view settings
 - Optional Telegram gateways, local chat bots and HTTP bots
 - Configurable appearance, logo rotation and emoji replacement/picker support
@@ -77,6 +80,38 @@ clustering, a coordinate crosshair, distance scale and configurable colours.
 Additional places and boundary data can be loaded from XML overlay files. Active
 overlays and their rendering priority are managed through **Map > Overlays** and
 are restored on the next start.
+
+An offline background map can be placed in the `osm` directory beside the
+application. Raster MBTiles containing PNG/JPEG tiles and vector MBTiles using
+Mapbox PBF tiles are supported. The lightweight vector renderer is designed for
+OpenMapTiles-compatible layers including roads, railways, boundaries, buildings,
+water and land use. If several `.mbtiles` files are present, the first one in
+alphabetical order is opened. Press **8** on the map to enable or disable it.
+Detailed creation and validation instructions are included in
+`osm/MBTILES-CREATION.txt` and `osm/MBTILES-ERSTELLEN.txt`.
+
+Map colours are cached for the current viewport and vector features use a spatial
+index, keeping redraws responsive even with detailed extracts. Grid, crosshair,
+scale, nodes, overlays and position-history markers retain the underlying map
+colour. Selected foreground markers are displayed with inverted foreground and
+background colours. A left click on an unoccupied map position displays the OSM
+feature in **Selected Item**. English names are preferred, followed by the
+default/local name, German name and road reference. After panning or centring,
+the visible node, overlay or history point beneath the crosshair is selected;
+otherwise the corresponding OSM feature or the offline map itself is shown.
+
+Keys **1** through **7** toggle configured XML overlays, **8** toggles the
+offline background, **9** toggles position history and **0** toggles known nodes.
+Position history opened from a node automatically covers the 24 hours ending at
+the newest stored position, even when that position is older than one day. Brief
+map and layer notifications remain visible for up to four seconds and close
+immediately when any key is pressed.
+
+Incoming text messages use the Meshtastic packet `rx_time` as their displayed
+receive time when firmware supplies it, with the PC receive time used only as a
+fallback. During shutdown, the status line reports whether the client is waiting
+for the mesh connection, Telegram gateways or queued database writes. This makes
+slow Linux shutdowns easier to diagnose.
 
 ## Emoji picker
 

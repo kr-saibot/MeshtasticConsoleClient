@@ -62,7 +62,10 @@ namespace Meshtastic.Client
     {
         internal MeshMessage(MeshPacket packet, string text)
         {
-            Packet = packet; Text = text; ReceivedAtUtc = DateTime.UtcNow;
+            Packet = packet; Text = text;
+            ReceivedAtUtc = packet != null && packet.HasRxTime && packet.RxTime != 0
+                ? new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(packet.RxTime)
+                : DateTime.UtcNow;
         }
         public MeshPacket Packet { get; private set; }
         public string Text { get; private set; }

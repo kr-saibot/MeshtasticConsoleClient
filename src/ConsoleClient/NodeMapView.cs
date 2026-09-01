@@ -22,15 +22,27 @@ namespace ConsoleClient
         private readonly List<StoredMeshNode> _nodes = new List<StoredMeshNode>();
         private readonly List<MapOverlayPoint> _overlayPoints = new List<MapOverlayPoint>();
         private readonly List<Marker> _markers = new List<Marker>();
+        private readonly OfflineMapProvider _offlineMap = OfflineMapProvider.TryOpenDefault();
         private double? _ownLatitude, _ownLongitude;
         private double _centerLatitude, _centerLongitude, _metersPerRow = 1000d;
         private string _selectedKey;
+        private bool _selectionSuppressed;
+        private bool _selectCrosshairAfterViewChange;
+        private Color[,] _backgroundColors;
+        private int _backgroundWidth, _backgroundHeight;
+        private double _backgroundLatitude, _backgroundLongitude, _backgroundMetersPerRow;
 
         public Action<StoredMeshNode> NodeActivated { get; set; }
         public Action<StoredMeshNode> SelectionChanged { get; set; }
         public Action<MapOverlayPoint> OverlaySelectionChanged { get; set; }
         public Action<MapOverlayPoint> OverlayActivated { get; set; }
+        public Action<string> MapFeatureSelectionChanged { get; set; }
         public Action ViewChanged { get; set; }
+        public Action HelpRequested { get; set; }
+        public Action<int> OverlayToggleRequested { get; set; }
+        public Action BackgroundMapToggleRequested { get; set; }
+        public Action PositionHistoryToggleRequested { get; set; }
+        public Action KnownNodesToggleRequested { get; set; }
         public Action<double, double> NewOverlayPointRequested { get; set; }
         public double CenterLatitude { get { return _centerLatitude; } }
         public double CenterLongitude { get { return _centerLongitude; } }
@@ -38,6 +50,9 @@ namespace ConsoleClient
         public Color NodeColor { get; set; } = Color.BrightCyan;
         public Color ClusterColor { get; set; } = Color.BrightMagenta;
         public Color GridColor { get; set; } = Color.DarkGray;
+        public bool ShowKnownNodes { get; set; } = true;
+        public bool ShowBackgroundMap { get; set; } = true;
+        public bool HasBackgroundMap { get { return _offlineMap != null; } }
         public NodeMapView() { CanFocus = true; }
 
         public void SetData(IEnumerable<StoredMeshNode> source, double? latitude, double? longitude)
@@ -46,7 +61,7 @@ namespace ConsoleClient
             _nodes.AddRange(source.Where(HasPosition));
             _ownLatitude = ValidLatitude(latitude) ? latitude : null;
             _ownLongitude = ValidLongitude(longitude) ? longitude : null;
-            Center();
+            Center(false);
         }
 
         public void SetOverlayPoints(IEnumerable<MapOverlayPoint> points)
@@ -55,7 +70,8 @@ namespace ConsoleClient
             if (points != null) _overlayPoints.AddRange(points.Where(point => point != null && ValidLatitude(point.Latitude) && ValidLongitude(point.Longitude)));
             SetNeedsDisplay();
         }
-        public void Center()
+        public void Center() { Center(true); }
+        private void Center(bool updateCrosshairSelection)
         {
             if (_ownLatitude.HasValue && _ownLongitude.HasValue)
             {
@@ -67,6 +83,7 @@ namespace ConsoleClient
                 _centerLatitude = _nodes.Average(node => node.Latitude.Value);
                 _centerLongitude = _nodes.Average(node => node.Longitude.Value);
             }
+            if (updateCrosshairSelection) ClearSelectionAndShowCrosshair();
             NotifyViewChanged();
             SetNeedsDisplay();
         }
@@ -78,6 +95,13 @@ namespace ConsoleClient
             if (e.Key == (Key)'c' || e.Key == (Key)'C') { Center(); return true; }
             if (e.Key == Key.Enter) { ActivateSelection(); return true; }
             if (e.Key == (Key)'n' || e.Key == (Key)'N') { if (NewOverlayPointRequested != null) NewOverlayPointRequested(_centerLatitude, _centerLongitude); return true; }
+            if (e.Key == (Key)'h' || e.Key == (Key)'H') { if (HelpRequested != null) HelpRequested(); return true; }
+            if (e.Key >= (Key)'1' && e.Key <= (Key)'7') { if (OverlayToggleRequested != null) OverlayToggleRequested((int)e.Key - (int)(Key)'1'); return true; }
+            if (e.Key == (Key)'8') { if (BackgroundMapToggleRequested != null) BackgroundMapToggleRequested(); return true; }
+            if (e.Key == (Key)'9') { if (PositionHistoryToggleRequested != null) PositionHistoryToggleRequested(); return true; }
+            if (e.Key == (Key)'0') { if (KnownNodesToggleRequested != null) KnownNodesToggleRequested(); return true; }
+            if (e.Key == (Key)'f' || e.Key == (Key)'F') return SelectAdjacentTelemetryPosition(1) || base.ProcessKey(e);
+            if (e.Key == (Key)'r' || e.Key == (Key)'R') return SelectAdjacentTelemetryPosition(-1) || base.ProcessKey(e);
 
             // Plain letter controls are transported consistently by SSH clients.
             // Upper-case letters use the larger step.
@@ -108,7 +132,14 @@ namespace ConsoleClient
             }
             if (!e.Flags.HasFlag(MouseFlags.Button1Clicked) && !e.Flags.HasFlag(MouseFlags.Button1DoubleClicked)) return base.MouseEvent(e);
             var marker = _markers.Where(item => item.Overlay == null || item.Overlay.Selectable).OrderBy(item => Math.Abs(item.X - e.X) + Math.Abs(item.Y - e.Y) * 2).FirstOrDefault();
-            if (marker == null || Math.Abs(marker.Y - e.Y) > 1 || Math.Abs(marker.X - e.X) > Math.Max(2, marker.Label.Length)) return true;
+            if (marker == null || Math.Abs(marker.Y - e.Y) > 1 || Math.Abs(marker.X - e.X) > Math.Max(2, marker.Label.Length))
+            {
+                double latitude, longitude;
+                Unproject(e.X, e.Y, Bounds.Width, Bounds.Height, out latitude, out longitude);
+                SelectMapFeature(latitude, longitude, "Offline map");
+                SetFocus();
+                return true;
+            }
             SetSelection(marker);
             SetFocus();
             SetNeedsDisplay();
@@ -121,23 +152,23 @@ namespace ConsoleClient
             base.Redraw(bounds);
             var width = Bounds.Width;
             var height = Bounds.Height;
-            Application.Driver.SetAttribute(Application.Driver.MakeAttribute(Color.Gray, Color.Black));
-            for (var y = 0; y < height; y++) { Move(0, y); Application.Driver.AddStr(new string(' ', width)); }
+            DrawBackground(width, height);
             if (width < 8 || height < 4) return;
 
-            Application.Driver.SetAttribute(Application.Driver.MakeAttribute(GridColor, Color.Black));
             for (var y = height / 2 % 5; y < height; y += 5)
-                for (var x = width / 2 % 10; x < width; x += 10) { Move(x, y); Application.Driver.AddRune('.'); }
+                for (var x = width / 2 % 10; x < width; x += 10) Draw(x, y, ".", GridColor, Color.Black, width);
 
             DrawCenterCrosshair(width, height);
             BuildVisibleMarkers(width, height);
             AddOverlayMarkers(width, height);
+            if (_selectCrosshairAfterViewChange) SelectCrosshairItem(width, height);
             EnsureVisibleSelection(width, height);
             foreach (var marker in _markers)
             {
                 var selected = marker.Key == _selectedKey;
                 var markerColor = marker.Overlay != null ? marker.Color : marker.Nodes.Count > 1 ? ClusterColor : NodeColor;
-                Draw(marker.X, marker.Y, marker.Label, selected ? Color.Black : markerColor, selected ? markerColor : Color.Black, width);
+                if (selected) DrawSelected(marker.X, marker.Y, marker.Label, markerColor, Color.Black, width);
+                else Draw(marker.X, marker.Y, marker.Label, markerColor, Color.Black, width);
             }
 
             if (_ownLatitude.HasValue && _ownLongitude.HasValue)
@@ -158,6 +189,42 @@ namespace ConsoleClient
             Draw(scaleLeft + scaleText.Length / 2, height - 1, scaleText, Color.Gray, Color.Black, width);
         }
 
+        private void DrawBackground(int width, int height)
+        {
+            if (!ShowBackgroundMap || _offlineMap == null)
+            {
+                Application.Driver.SetAttribute(Application.Driver.MakeAttribute(Color.Gray, Color.Black));
+                for (var y = 0; y < height; y++) { Move(0, y); Application.Driver.AddStr(new string(' ', width)); }
+                return;
+            }
+            EnsureBackgroundCache(width, height);
+            for (var y = 0; y < height; y++)
+            {
+                Move(0, y);
+                for (var x = 0; x < width; x++)
+                {
+                    Application.Driver.SetAttribute(Application.Driver.MakeAttribute(Color.Gray, _backgroundColors[x, y]));
+                    Application.Driver.AddRune(' ');
+                }
+            }
+        }
+
+        private void EnsureBackgroundCache(int width, int height)
+        {
+            if (_backgroundColors != null && _backgroundWidth == width && _backgroundHeight == height &&
+                _backgroundLatitude == _centerLatitude && _backgroundLongitude == _centerLongitude && _backgroundMetersPerRow == _metersPerRow) return;
+            var colors = new Color[width, height];
+            for (var y = 0; y < height; y++)
+                for (var x = 0; x < width; x++)
+                {
+                    double latitude, longitude;
+                    Unproject(x, y, width, height, out latitude, out longitude);
+                    colors[x, y] = _offlineMap.GetBackground(latitude, longitude, _metersPerRow);
+                }
+            _backgroundColors = colors; _backgroundWidth = width; _backgroundHeight = height;
+            _backgroundLatitude = _centerLatitude; _backgroundLongitude = _centerLongitude; _backgroundMetersPerRow = _metersPerRow;
+        }
+
         private void AddOverlayMarkers(int width, int height)
         {
             var occupied = new HashSet<string>();
@@ -175,11 +242,12 @@ namespace ConsoleClient
                 for (var row = y - 1; row <= y + 1 && !collision; row++)
                     for (var column = left - 1; column <= left + label.Length; column++)
                         if (occupied.Contains(row + ":" + column)) { collision = true; break; }
-                if (collision) { index++; continue; }
+                if (collision && (!point.IsTelemetryPosition || !point.TelemetryReceivedAtUtc.HasValue || TelemetryPositionKey(point) != _selectedKey)) { index++; continue; }
                 for (var column = left - 1; column <= left + label.Length; column++) occupied.Add(y + ":" + column);
                 Color color;
                 if (!Enum.TryParse(point.Color ?? "Green", true, out color)) color = Color.Green;
-                _markers.Add(new Marker { X = x, Y = y, Latitude = point.Latitude, Longitude = point.Longitude, Label = label, Key = "o:" + index, Overlay = point, Color = color });
+                var key = point.IsTelemetryPosition && point.TelemetryReceivedAtUtc.HasValue ? TelemetryPositionKey(point) : "o:" + index;
+                _markers.Add(new Marker { X = x, Y = y, Latitude = point.Latitude, Longitude = point.Longitude, Label = label, Key = key, Overlay = point, Color = color });
                 index++;
             }
         }
@@ -194,6 +262,8 @@ namespace ConsoleClient
         }
         private void BuildVisibleMarkers(int width, int height)
         {
+            _markers.Clear();
+            if (!ShowKnownNodes) return;
             var points = new List<Marker>();
             foreach (var node in _nodes)
             {
@@ -205,7 +275,6 @@ namespace ConsoleClient
                 points.Add(marker);
             }
 
-            _markers.Clear();
             while (points.Count > 0)
             {
                 var seed = points[0];
@@ -235,6 +304,7 @@ namespace ConsoleClient
 
         private void EnsureVisibleSelection(int width, int height)
         {
+            if (_selectionSuppressed) return;
             var selectableMarkers = _markers.Where(marker => marker.Overlay == null || marker.Overlay.Selectable).ToList();
             if (selectableMarkers.Any(marker => marker.Key == _selectedKey)) return;
             var centerX = width / 2;
@@ -262,6 +332,28 @@ namespace ConsoleClient
             if (best != null) { SetSelection(best); SetNeedsDisplay(); }
         }
 
+        private bool SelectAdjacentTelemetryPosition(int direction)
+        {
+            var positions = _overlayPoints.Where(point => point.IsTelemetryPosition && point.TelemetryReceivedAtUtc.HasValue).OrderBy(point => point.TelemetryReceivedAtUtc.Value).ToList();
+            if (positions.Count == 0) return false;
+            var currentIndex = positions.FindIndex(point => TelemetryPositionKey(point) == _selectedKey);
+            var nextIndex = currentIndex < 0 ? (direction > 0 ? 0 : positions.Count - 1) : (currentIndex + direction + positions.Count) % positions.Count;
+            var selected = positions[nextIndex];
+            _centerLatitude = selected.Latitude;
+            _centerLongitude = selected.Longitude;
+            _selectionSuppressed = false;
+            _selectedKey = TelemetryPositionKey(selected);
+            NotifySelection(null);
+            if (OverlaySelectionChanged != null) OverlaySelectionChanged(selected);
+            NotifyViewChanged();
+            SetNeedsDisplay();
+            return true;
+        }
+        private static string TelemetryPositionKey(MapOverlayPoint point)
+        {
+            return "t:" + point.TelemetryNodeNumber + ":" + point.TelemetryReceivedAtUtc.Value.Ticks;
+        }
+
         private void ActivateSelection()
         {
             var marker = _markers.FirstOrDefault(item => item.Key == _selectedKey);
@@ -280,6 +372,7 @@ namespace ConsoleClient
 
         private void SetSelection(Marker marker)
         {
+            _selectionSuppressed = false;
             _selectedKey = marker.Key;
             if (marker.Overlay != null)
             {
@@ -307,7 +400,7 @@ namespace ConsoleClient
         public void CenterOn(double latitude, double longitude)
         {
             if (!ValidLatitude(latitude) || !ValidLongitude(longitude)) return;
-            _centerLatitude = latitude; _centerLongitude = longitude; NotifyViewChanged(); SetNeedsDisplay();
+            _centerLatitude = latitude; _centerLongitude = longitude; ClearSelectionAndShowCrosshair(); NotifyViewChanged(); SetNeedsDisplay();
         }
         public void RestoreView(double latitude, double longitude, double metersPerRow)
         {
@@ -320,8 +413,32 @@ namespace ConsoleClient
         {
             _centerLatitude -= dy * _metersPerRow * verticalCells / 111320d;
             _centerLongitude += dx * _metersPerRow * .5d * horizontalCells / (111320d * Math.Max(.01d, Math.Cos(_centerLatitude * Math.PI / 180d)));
+            ClearSelectionAndShowCrosshair();
             NotifyViewChanged();
             SetNeedsDisplay();
+        }
+
+        private void ClearSelectionAndShowCrosshair()
+        {
+            _selectedKey = null; _selectionSuppressed = true; _selectCrosshairAfterViewChange = true;
+        }
+
+        private void SelectCrosshairItem(int width, int height)
+        {
+            _selectCrosshairAfterViewChange = false;
+            var centerX = width / 2; var centerY = height / 2;
+            var marker = _markers.Where(item => item.Overlay == null || item.Overlay.Selectable)
+                .LastOrDefault(item => item.Y == centerY && centerX >= item.X - item.Label.Length / 2 && centerX < item.X - item.Label.Length / 2 + item.Label.Length);
+            if (marker != null) { SetSelection(marker); return; }
+            SelectMapFeature(_centerLatitude, _centerLongitude, "Offline map", false);
+        }
+
+        private void SelectMapFeature(double latitude, double longitude, string emptyText, bool redraw = true)
+        {
+            _selectedKey = null; _selectionSuppressed = true;
+            var description = ShowBackgroundMap && _offlineMap != null ? _offlineMap.GetFeatureDescription(latitude, longitude, _metersPerRow) : null;
+            if (MapFeatureSelectionChanged != null) MapFeatureSelectionChanged(String.IsNullOrWhiteSpace(description) ? emptyText : description);
+            if (redraw) SetNeedsDisplay();
         }
 
         public string GetMapText()
@@ -367,9 +484,60 @@ namespace ConsoleClient
             if (y < 0 || y >= Bounds.Height || x >= width) return;
             if (x < 0) { if (-x >= text.Length) return; text = text.Substring(-x); x = 0; }
             if (x + text.Length > width) text = text.Substring(0, width - x);
-            Move(x, y);
-            Application.Driver.SetAttribute(Application.Driver.MakeAttribute(foreground, background));
-            Application.Driver.AddStr(text);
+            if (!ShowBackgroundMap || _offlineMap == null)
+            {
+                Move(x, y);
+                Application.Driver.SetAttribute(Application.Driver.MakeAttribute(foreground, background));
+                Application.Driver.AddStr(text);
+                return;
+            }
+            for (var index = 0; index < text.Length; index++)
+            {
+                EnsureBackgroundCache(Bounds.Width, Bounds.Height);
+                var mapBackground = _backgroundColors[x + index, y];
+                var visibleForeground = foreground == mapBackground ? InvertColor(foreground) : foreground;
+                Move(x + index, y);
+                Application.Driver.SetAttribute(Application.Driver.MakeAttribute(visibleForeground, mapBackground));
+                Application.Driver.AddRune(text[index]);
+            }
+        }
+
+        private void DrawSelected(int x, int y, string text, Color normalForeground, Color normalBackground, int width)
+        {
+            x -= text.Length / 2;
+            if (y < 0 || y >= Bounds.Height || x >= width) return;
+            if (x < 0) { if (-x >= text.Length) return; text = text.Substring(-x); x = 0; }
+            if (x + text.Length > width) text = text.Substring(0, width - x);
+            if (!ShowBackgroundMap || _offlineMap == null)
+            {
+                var selectedForeground = normalBackground == normalForeground ? InvertColor(normalForeground) : normalBackground;
+                Move(x, y);
+                Application.Driver.SetAttribute(Application.Driver.MakeAttribute(selectedForeground, normalForeground));
+                Application.Driver.AddStr(text);
+                return;
+            }
+            EnsureBackgroundCache(Bounds.Width, Bounds.Height);
+            for (var index = 0; index < text.Length; index++)
+            {
+                var mapBackground = _backgroundColors[x + index, y];
+                var visibleNormalForeground = normalForeground == mapBackground ? InvertColor(normalForeground) : normalForeground;
+                Move(x + index, y);
+                Application.Driver.SetAttribute(Application.Driver.MakeAttribute(mapBackground, visibleNormalForeground));
+                Application.Driver.AddRune(text[index]);
+            }
+        }
+
+        private static Color InvertColor(Color color)
+        {
+            if (color == Color.Black) return Color.White;
+            if (color == Color.White) return Color.Black;
+            if (color == Color.Blue || color == Color.BrightBlue) return Color.BrightYellow;
+            if (color == Color.BrightYellow || color == Color.Brown) return Color.Blue;
+            if (color == Color.Green || color == Color.BrightGreen) return Color.BrightMagenta;
+            if (color == Color.Magenta || color == Color.BrightMagenta) return Color.BrightGreen;
+            if (color == Color.Cyan || color == Color.BrightCyan) return Color.BrightRed;
+            if (color == Color.Red || color == Color.BrightRed) return Color.BrightCyan;
+            return color == Color.Gray ? Color.Black : Color.White;
         }
 
         private static string SafeLabel(string text)

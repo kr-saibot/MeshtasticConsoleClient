@@ -22,11 +22,20 @@ namespace Meshtastic.Client
     {
         private readonly string _port; private readonly int _baudRate; private SerialPort _serial;
         public SerialTransport(string port, int baudRate) { _port = port; _baudRate = baudRate; }
-        public Stream Stream { get { return _serial == null ? null : _serial.BaseStream; } }
+        public Stream Stream
+        {
+            get { var serial = Volatile.Read(ref _serial); return serial == null ? null : serial.BaseStream; }
+        }
         public string Kind { get { return "Serial"; } }
         public string Endpoint { get { return _port + " @ " + _baudRate + " baud"; } }
         public bool UseSynchronousWrites { get { return Environment.OSVersion.Platform != PlatformID.Win32NT; } }
-        public void Write(byte[] buffer, int offset, int count) { _serial.Write(buffer, offset, count); _serial.BaseStream.Flush(); }
+        public void Write(byte[] buffer, int offset, int count)
+        {
+            var serial = Volatile.Read(ref _serial);
+            if (serial == null) throw new IOException("The serial transport is closed.");
+            serial.Write(buffer, offset, count);
+            serial.BaseStream.Flush();
+        }
         public Task OpenAsync(CancellationToken cancellationToken)
         {
             _serial = new SerialPort(_port, _baudRate, Parity.None, 8, StopBits.One);
@@ -47,9 +56,10 @@ namespace Meshtastic.Client
         }
         public void Close()
         {
-            if (_serial == null) return;
-            try { try { _serial.BaseStream.Close(); } catch { } _serial.Close(); }
-            finally { _serial.Dispose(); _serial = null; }
+            var serial = Interlocked.Exchange(ref _serial, null);
+            if (serial == null) return;
+            try { try { serial.BaseStream.Close(); } catch { } serial.Close(); }
+            finally { serial.Dispose(); }
         }
         public void Dispose() { Close(); }
     }
@@ -58,7 +68,10 @@ namespace Meshtastic.Client
     {
         private readonly string _host; private readonly int _port; private TcpClient _client;
         public TcpTransport(string host, int port) { _host = host; _port = port; }
-        public Stream Stream { get { return _client == null ? null : _client.GetStream(); } }
+        public Stream Stream
+        {
+            get { var client = Volatile.Read(ref _client); return client == null ? null : client.GetStream(); }
+        }
         public string Kind { get { return "TCP"; } }
         public string Endpoint { get { return _host + ":" + _port; } }
         public bool UseSynchronousWrites { get { return false; } }
@@ -69,7 +82,7 @@ namespace Meshtastic.Client
             using (cancellationToken.Register(delegate { try { _client.Close(); } catch { } }))
                 await _client.ConnectAsync(_host, _port).ConfigureAwait(false);
         }
-        public void Close() { if (_client != null) { _client.Close(); _client = null; } }
+        public void Close() { var client = Interlocked.Exchange(ref _client, null); if (client != null) client.Close(); }
         public void Dispose() { Close(); }
     }
 }

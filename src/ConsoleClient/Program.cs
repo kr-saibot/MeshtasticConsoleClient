@@ -588,12 +588,15 @@ namespace ConsoleClient
     {
         private static MeshtasticClient _mesh;
         private static MeshtasticMessageStore _store;
+        private static DatabaseWriteQueue _databaseWrites;
         private static MeshtasticApplicationSettings _settings;
         private static MeshtasticTelegramGatewayManager _telegramGateways;
         private static readonly HttpClient HttpBotHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         private static readonly HttpClient AlertHttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
         private static readonly object ComLogGate = new object();
+        private static readonly object TerminalGuiErrorLogGate = new object();
         private const string ComLogFileName = "com.log";
+        private const string TerminalGuiErrorLogFileName = "terminal-gui-errors.log";
         private const int MaximumDisplayedComLogBytes = 1024 * 1024;
         private static readonly Dictionary<string, string> DefaultEmojiReplacements = new Dictionary<string, string>
         {
@@ -633,8 +636,11 @@ namespace ConsoleClient
         private static Dialog _pleaseWait;
         private static Label _pleaseWaitText;
         private static ProgressBar _pleaseWaitProgress;
+        private static int _pleaseWaitPulseGeneration;
         private static int _connectionAttemptId;
         private static CancellationTokenSource _connectionAttemptCancellation;
+        private static int _shutdownStarted;
+        private static Task _shutdownTask;
         private static Window _chatPage;
         private static Window _nodesPage;
         private static Window _mapPage;
@@ -676,7 +682,7 @@ namespace ConsoleClient
         private static int _animatedLogoHorizontalOffset;
         private static int _animatedLogoVerticalDirection = 1;
         private static int _animatedLogoHorizontalDirection = 1;
-        private static DateTime _nextAnimatedLogoFrameUtc;
+        private static int _animatedLogoScheduleGeneration;
         private static readonly List<ChatItem> Chats = new List<ChatItem>();
         private static ChatItem _selected;
         private static readonly List<FrameView> Frames = new List<FrameView>();
@@ -703,6 +709,7 @@ namespace ConsoleClient
             MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
             _store = MeshtasticMessageStore.CreateSqlite("meshtastic-messages.db");
             _store.Initialize();
+            _databaseWrites = new DatabaseWriteQueue();
             _lastKnownUnreadCount = _store.CountNewMessages();
             _mesh = new MeshtasticClient();
             ApplyConnectionReconnectSettings();
@@ -713,15 +720,51 @@ namespace ConsoleClient
             BuildUi();
             // Start only after the first UI cycle so the waiting window can be drawn first.
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { StartConnect(); return false; });
-            Application.Run();
+            Application.Run(HandleTerminalGuiException);
             try { SaveMapViewState(); SaveNodeListState(); MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); } catch { }
-            if (_telegramGateways != null) try { _telegramGateways.StopAsync().GetAwaiter().GetResult(); } catch { }
-            if (_mesh != null) try { _mesh.DisconnectAsync().GetAwaiter().GetResult(); } catch { }
-            if (_mesh != null) try { _mesh.Dispose(); } catch { }
+            EnsureShutdownCompleted();
+            if (_mesh != null && Environment.OSVersion.Platform == PlatformID.Win32NT) try { _mesh.Dispose(); } catch { }
+            if (_databaseWrites != null) try { _databaseWrites.Dispose(); } catch { }
             if (_store != null) try { _store.Dispose(); } catch { }
             if (_desktopNotificationIcon != null) try { _desktopNotificationIcon.Visible = false; _desktopNotificationIcon.Dispose(); } catch { }
             try { Application.Shutdown(); } catch { }
             RestoreUnixTerminalState();
+            // Mono can keep native SerialPort/HttpClient helper threads alive for about a minute.
+            // All application data has already been flushed above, so end the Unix process explicitly.
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT) Environment.Exit(0);
+        }
+
+        private static bool HandleTerminalGuiException(Exception error)
+        {
+            var recoverable = IsRecoverableCursesInputException(error);
+            try
+            {
+                lock (TerminalGuiErrorLogGate)
+                {
+                    File.AppendAllText(
+                        TerminalGuiErrorLogFileName,
+                        DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)
+                        + " | " + (recoverable ? "RECOVERED" : "FATAL")
+                        + " | Platform: " + Environment.OSVersion.Platform
+                        + " | TERM: " + (Environment.GetEnvironmentVariable("TERM") ?? "")
+                        + Environment.NewLine + error + Environment.NewLine + Environment.NewLine);
+                }
+            }
+            catch { }
+
+            return recoverable;
+        }
+
+        private static bool IsRecoverableCursesInputException(Exception error)
+        {
+            for (var current = error; current != null; current = current.InnerException)
+            {
+                var stackTrace = current.StackTrace ?? "";
+                if (stackTrace.IndexOf("Terminal.Gui.CursesDriver.ProcessInput", StringComparison.Ordinal) >= 0)
+                    return true;
+            }
+
+            return false;
         }
 
         private static void InitializeDesktopNotifications()
@@ -1026,14 +1069,20 @@ namespace ConsoleClient
             _nodesPage.Add(nodeListFrame, favoriteFilter, _sortButton, _nodeSortDirectionButton, searchLabel, _nodeSearch, _nodeScrollInfo);
             top.Add(_nodesPage);
 
-            _mapPage = new Window("Node map [F9]  +/- zoom | arrows select | WASD pan | WASD uppercase 2 grids | C center | N new point | Enter activate") { X = 0, Y = 1, Width = Dim.Fill(), Height = Dim.Fill(1), Visible = false };
+            _mapPage = new Window("Node map [F9] Help [H]") { X = 0, Y = 1, Width = Dim.Fill(), Height = Dim.Fill(1), Visible = false };
             PageFrames.Add(_mapPage);
             _nodeMap = new NodeMapView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(3) };
             _nodeMap.NodeActivated = ShowNodeDetails;
             _nodeMap.SelectionChanged = UpdateMapInfo;
             _nodeMap.OverlaySelectionChanged = UpdateMapOverlayInfo;
+            _nodeMap.MapFeatureSelectionChanged = delegate(string description) { if (_mapInfo != null) _mapInfo.Text = description; };
             _nodeMap.OverlayActivated = ShowMapOverlayDetails;
             _nodeMap.NewOverlayPointRequested = CreateMapOverlayPoint;
+            _nodeMap.HelpRequested = ShowMapHelp;
+            _nodeMap.OverlayToggleRequested = ToggleMapOverlayByNumber;
+            _nodeMap.BackgroundMapToggleRequested = ToggleBackgroundMapFromMap;
+            _nodeMap.PositionHistoryToggleRequested = TogglePositionHistoryFromMap;
+            _nodeMap.KnownNodesToggleRequested = delegate { ToggleKnownNodesFromMap(true); };
             _nodeMap.ViewChanged = SaveMapViewState;
             var mapInfoFrame = new FrameView("Selected Item") { X = 0, Y = Pos.AnchorEnd(3), Width = Dim.Fill(), Height = 3 };
             Frames.Add(mapInfoFrame);
@@ -1071,19 +1120,8 @@ namespace ConsoleClient
             ApplyAppearanceSettings();
             ApplyLogoSettings();
             InstallReadOnInteractionHandlers();
-            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); return true; });
-            Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { RotateLogoIfDue(); return true; });
+            Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); RotateLogoIfDue(); return true; });
             Application.MainLoop.AddTimeout(TimeSpan.FromMinutes(5), delegate(MainLoop loop) { RefreshNodesFromDeviceAutomatically(); return true; });
-            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(50), delegate(MainLoop loop) { AnimateTallLogoIfDue(); return true; });
-            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(200), delegate(MainLoop loop)
-            {
-                if (_pleaseWait != null)
-                {
-                    _pleaseWaitProgress.Pulse();
-                    _pleaseWaitProgress.SetNeedsDisplay();
-                }
-                return true;
-            });
         }
 
         private static void InstallReadOnInteractionHandlers()
@@ -1121,8 +1159,8 @@ namespace ConsoleClient
             _mesh.ConnectionStateChanged += delegate { Ui(UpdateStatus); };
             _mesh.SerialTraffic += delegate(object sender, SerialTrafficEventArgs e) { WriteSerialComLog(e); };
             _mesh.DeviceInfoUpdated += delegate { Ui(delegate { UpdateStatus(); UpdateChatPageTitle(); UpdateMapGpsPosition(); }); };
-            _mesh.NodeDiscovered += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }); };
-            _mesh.NodeUpdated += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }); };
+            _mesh.NodeDiscovered += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }, "node:" + e.Node.Number.ToString(CultureInfo.InvariantCulture)); };
+            _mesh.NodeUpdated += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }, "node:" + e.Node.Number.ToString(CultureInfo.InvariantCulture)); };
             _mesh.MessageReceived += delegate(object sender, MeshMessageEventArgs e)
             {
                 var node = _mesh.Nodes.FirstOrDefault(n => n.Number == e.Message.From);
@@ -1142,10 +1180,40 @@ namespace ConsoleClient
             _mesh.TelemetryReceived += delegate(object sender, MeshTelemetryEventArgs e)
             {
                 if (!_settings.StoreTelemetryData) return;
-                Save(delegate { _store.AddTelemetry(e.Telemetry); Ui(delegate { if (_telemetryPage != null && _telemetryPage.Visible) RefreshTelemetryPage(); if (_chatPage != null && _chatPage.Visible && _selected != null && _selected.Kind == ChatKind.Direct && _selected.Id == e.Telemetry.From) ShowSelectedChat(); }); });
+                Save(delegate
+                {
+                    if (_settings.StoreTelemetryFavoritesOnly && !IsFavoriteNode(e.Telemetry.From)) return;
+                    _store.AddTelemetry(e.Telemetry);
+                    RefreshTelemetryViews(e.Telemetry.From);
+                });
+            };
+            _mesh.PacketReceived += delegate(object sender, PacketEventArgs e)
+            {
+                if (!_settings.StorePositionData || e.Packet.PayloadVariantCase != Meshtastic.Protobufs.MeshPacket.PayloadVariantOneofCase.Decoded || e.Packet.Decoded.Portnum != Meshtastic.Protobufs.PortNum.PositionApp) return;
+                var receivedAtUtc = DateTime.UtcNow;
+                Save(delegate
+                {
+                    if (_settings.StorePositionFavoritesOnly && !IsFavoriteNode(e.Packet.From)) return;
+                    var position = Meshtastic.Protobufs.Position.Parser.ParseFrom(e.Packet.Decoded.Payload);
+                    _store.AddPosition(e.Packet.From, position, receivedAtUtc);
+                    RefreshTelemetryViews(e.Packet.From, true);
+                });
             };
         }
 
+        private static bool IsFavoriteNode(uint nodeNumber)
+        {
+            return _store.GetNodes(StoredNodeSort.NodeId).Any(node => node.NodeNumber == nodeNumber && node.IsFavorite);
+        }
+        private static void RefreshTelemetryViews(uint nodeNumber, bool positionChanged = false)
+        {
+            Ui(delegate
+            {
+                if (_telemetryPage != null && _telemetryPage.Visible) RefreshTelemetryPage();
+                if (positionChanged && _mapPage != null && _mapPage.Visible && _settings.Map != null && _settings.Map.PositionTrackVisible && _settings.Map.PositionTrackNodeNumber == nodeNumber) RefreshMapOverlays();
+                if (_chatPage != null && _chatPage.Visible && _selected != null && _selected.Kind == ChatKind.Direct && _selected.Id == nodeNumber) ShowSelectedChat();
+            });
+        }
         private static void UpdateChatPageTitle()
         {
             if (_chatPage == null) return;
@@ -1226,9 +1294,21 @@ namespace ConsoleClient
                 // leaves a stale Unix event descriptor under Mono and can busy-spin at 100% CPU.
                 Application.Top.Add(_pleaseWait);
                 _pleaseWait.SetFocus();
+                SchedulePleaseWaitPulse(++_pleaseWaitPulseGeneration);
             }
             _pleaseWaitText.Text = text;
             _pleaseWait.SetNeedsDisplay();
+        }
+        private static void SchedulePleaseWaitPulse(int generation)
+        {
+            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(200), delegate(MainLoop loop)
+            {
+                if (generation != _pleaseWaitPulseGeneration || _pleaseWait == null || Volatile.Read(ref _shutdownStarted) != 0) return false;
+                _pleaseWaitProgress.Pulse();
+                _pleaseWaitProgress.SetNeedsDisplay();
+                SchedulePleaseWaitPulse(generation);
+                return false;
+            });
         }
         private static void UpdateNodeLoadingProgress()
         {
@@ -1250,6 +1330,7 @@ namespace ConsoleClient
         }
         private static void HidePleaseWait()
         {
+            _pleaseWaitPulseGeneration++;
             if (_pleaseWait == null) return;
             var waitDialog = _pleaseWait;
             _pleaseWait = null;
@@ -1319,7 +1400,7 @@ namespace ConsoleClient
             var close = new Button("Close", true) { X = 1, Y = Pos.AnchorEnd(2) };
             close.Clicked += delegate { Application.RequestStop(); };
             dialog.Add(details, close);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static string FormatConnectionTime(DateTime? value)
@@ -1599,7 +1680,7 @@ namespace ConsoleClient
             dialog.Add(categoryLabel, categoryList, searchLabel, search, list, previewFrame, description);
             dialog.AddButton(insertButton);
             dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
             _input.SetFocus();
         }
 
@@ -1662,7 +1743,7 @@ namespace ConsoleClient
             dialog.AddButton(copyChat);
             dialog.AddButton(delete);
             dialog.AddButton(close);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
             if (deleted)
             {
                 NotifyAlertStateChanged(null);
@@ -1740,7 +1821,7 @@ namespace ConsoleClient
             close.Clicked += delegate { Application.RequestStop(); };
             dialog.Add(frame, description);
             dialog.AddButton(close);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
             if (_messages != null) _messages.SetFocus();
         }
         private static void LoadEmojiBlocks(string fileName, Dictionary<string, EmojiBlockEntry> target)
@@ -1831,12 +1912,43 @@ namespace ConsoleClient
             _nodesPage.Visible = true;
             _nodesPage.SetFocus();
         }
+        private static void ShowMapHelp()
+        {
+            var text = "Keyboard" +
+                "\nF9          Open the map" +
+                "\nH           Show this help" +
+                "\n+ / -       Zoom in / out" +
+                "\nArrow keys  Select visible items" +
+                "\nW A S D     Pan the map" +
+                "\nShift+WASD  Pan by a larger step" +
+                "\nC           Center the map" +
+                "\nN           Create a new overlay point" +
+                "\nEnter       Activate the selected item" +
+                "\nF           Next/newer stored position" +
+                "\nR           Previous/older stored position" +
+                "\n1-7         Toggle overlays 1 through 7" +
+                "\n8           Toggle offline background map" +
+                "\n9           Toggle position history" +
+                "\n0           Toggle known nodes" +
+                "\n\nMouse" +
+                "\nWheel       Zoom in / out" +
+                "\nLeft click  Select an item" +
+                "\nDouble click Activate the selected item" +
+                "\nRight click Center the map at the pointer";
+            var dialog = new Dialog("Map help", 68, 25);
+            var help = new TextView { X = 1, Y = 1, Width = Dim.Fill(1), Height = Dim.Fill(2), ReadOnly = true, WordWrap = false, Text = text };
+            var close = new Button("Close", true); close.Clicked += delegate { Application.RequestStop(); };
+            dialog.Add(help); dialog.AddButton(close); Application.Run(dialog, HandleTerminalGuiException);
+            if (_nodeMap != null) _nodeMap.SetFocus();
+        }
         private static void ShowMapPage()
         {
             if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
             var savedLatitude = _settings.Map.CenterLatitude;
             var savedLongitude = _settings.Map.CenterLongitude;
             var savedScale = _settings.Map.MetersPerRow;
+            _nodeMap.ShowKnownNodes = _settings.Map.ShowKnownNodes;
+            _nodeMap.ShowBackgroundMap = _settings.Map.ShowBackgroundMap;
             _nodeMap.SetData(_store.GetNodes(StoredNodeSort.Name), _mesh.Device.Latitude, _mesh.Device.Longitude);
             RefreshMapOverlays();
             if (savedLatitude.HasValue && savedLongitude.HasValue) _nodeMap.RestoreView(savedLatitude.Value, savedLongitude.Value, savedScale);
@@ -1855,13 +1967,166 @@ namespace ConsoleClient
             followGps = new MenuItem("_Follow GPS position", "", delegate { _mapFollowGps = !_mapFollowGps; followGps.Checked = _mapFollowGps; UpdateMapGpsPosition(); });
             followGps.CheckType = MenuItemCheckStyle.Checked;
             followGps.Checked = _mapFollowGps;
+            MenuItem showKnownNodes = null;
+            showKnownNodes = new MenuItem("Show _known nodes", "", delegate
+            {
+                ToggleKnownNodesFromMap(false);
+                showKnownNodes.Checked = _settings.Map.ShowKnownNodes;
+            });
+            showKnownNodes.CheckType = MenuItemCheckStyle.Checked;
+            showKnownNodes.Checked = _settings.Map == null || _settings.Map.ShowKnownNodes;
+            MenuItem showBackgroundMap = null;
+            showBackgroundMap = new MenuItem("Show _offline background map", "8", delegate
+            {
+                ToggleBackgroundMapFromMap();
+                showBackgroundMap.Checked = _settings.Map.ShowBackgroundMap;
+            });
+            showBackgroundMap.CheckType = MenuItemCheckStyle.Checked;
+            showBackgroundMap.Checked = _settings.Map == null || _settings.Map.ShowBackgroundMap;
             return new[]
             {
                 new MenuItem("_Show map", "", ShowMapPage),
                 followGps,
+                showKnownNodes,
+                showBackgroundMap,
+                new MenuItem("_Position history", "", ShowPositionTrackSettings),
                 new MenuItem("_Overlays", "", ShowMapOverlayOrderPopup),
                 new MenuItem("_Copy current map", "", CopyMapToClipboard)
             };
+        }
+
+        private static void ToggleBackgroundMapFromMap()
+        {
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            if (_nodeMap == null || !_nodeMap.HasBackgroundMap)
+            {
+                ShowBriefMapPopup("No offline map found in the osm directory.");
+                return;
+            }
+            _settings.Map.ShowBackgroundMap = !_settings.Map.ShowBackgroundMap;
+            _nodeMap.ShowBackgroundMap = _settings.Map.ShowBackgroundMap;
+            _nodeMap.SetNeedsDisplay();
+            MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+            if (_mapMenu != null) _mapMenu.Children = BuildMapMenuItems();
+            ShowBriefMapPopup("Offline background map " + (_settings.Map.ShowBackgroundMap ? "enabled" : "disabled"));
+        }
+
+        private static void ToggleMapOverlayByNumber(int index)
+        {
+            if (index < 0 || index >= 8) return;
+            if (index >= MapOverlayFiles.Count)
+            {
+                ShowBriefMapPopup("Overlay " + (index + 1).ToString(CultureInfo.InvariantCulture) + " is not configured.");
+                return;
+            }
+            var overlay = MapOverlayFiles[index];
+            overlay.Enabled = !overlay.Enabled;
+            SaveMapOverlayState();
+            MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+            RefreshMapOverlays();
+            ShowBriefMapPopup("Overlay " + (index + 1).ToString(CultureInfo.InvariantCulture) + " - " + overlay.DisplayName + " " + (overlay.Enabled ? "enabled" : "disabled"));
+        }
+        private static void TogglePositionHistoryFromMap()
+        {
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            if (!_settings.Map.PositionTrackNodeNumber.HasValue)
+            {
+                ShowBriefMapPopup("Position history is not configured.");
+                return;
+            }
+            _settings.Map.PositionTrackVisible = !_settings.Map.PositionTrackVisible;
+            if (_settings.Map.PositionTrackVisible) SetPositionTrackToLatest24Hours(_settings.Map.PositionTrackNodeNumber.Value);
+            MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+            RefreshMapOverlays();
+            ShowBriefMapPopup("Position history " + (_settings.Map.PositionTrackVisible
+                ? "enabled | latest available 24h: -" + _settings.Map.PositionTrackFromHoursAgo.ToString(CultureInfo.InvariantCulture) + "h to -" + _settings.Map.PositionTrackToHoursAgo.ToString(CultureInfo.InvariantCulture) + "h"
+                : "disabled"));
+        }
+        private static void ToggleKnownNodesFromMap(bool showNotification)
+        {
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            _settings.Map.ShowKnownNodes = !_settings.Map.ShowKnownNodes;
+            if (_nodeMap != null) { _nodeMap.ShowKnownNodes = _settings.Map.ShowKnownNodes; _nodeMap.SetNeedsDisplay(); }
+            MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+            if (_mapMenu != null) _mapMenu.Children = BuildMapMenuItems();
+            if (showNotification) ShowBriefMapPopup("Known nodes " + (_settings.Map.ShowKnownNodes ? "enabled" : "disabled"));
+        }
+        private static void ShowBriefMapPopup(string message)
+        {
+            var width = Math.Max(36, Math.Min(78, (message ?? "").Length + 6));
+            var dialog = new Dialog("Map", width, 7);
+            object timeoutToken = null;
+            dialog.KeyPress += e =>
+            {
+                e.Handled = true;
+                if (timeoutToken != null) Application.MainLoop.RemoveTimeout(timeoutToken);
+                Application.RequestStop();
+            };
+            dialog.Add(new Label(message ?? "") { X = 1, Y = 1, Width = Dim.Fill(1) });
+            timeoutToken = Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(4), delegate(MainLoop loop) { Application.RequestStop(); return false; });
+            Application.Run(dialog, HandleTerminalGuiException);
+            if (_nodeMap != null) _nodeMap.SetFocus();
+        }
+        private static void ShowPositionTrackSettings()
+        {
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            var nodeNumbers = _store.GetPositionNodeNumbers().ToList();
+            var storedNodes = _store.GetNodes(StoredNodeSort.Name).ToDictionary(node => node.NodeNumber);
+            var nodeLabels = nodeNumbers.Select(number =>
+            {
+                StoredMeshNode node;
+                var label = storedNodes.TryGetValue(number, out node)
+                    ? (String.IsNullOrWhiteSpace(node.LongName) ? node.NodeId ?? "!" + number.ToString("x8") : node.LongName) + " (!" + number.ToString("x8") + ")"
+                    : "!" + number.ToString("x8");
+                return ReplaceGraphicalSymbols(label);
+            }).ToList();
+            var dialog = new Dialog("Node position history", 88, 27);
+            var enabled = new CheckBox("Show stored positions for the selected node") { X = 1, Y = 1, Checked = _settings.Map.PositionTrackVisible && _settings.Map.PositionTrackNodeNumber.HasValue };
+            var nodeFrame = new FrameView("Nodes") { X = 1, Y = 3, Width = 44, Height = 17 };
+            var mapBackground = ParseColor(_settings.Appearance.BackgroundColor, Color.Black);
+            var mapText = ParseColor(_settings.Appearance.TextColor, Color.Gray);
+            var mapSelected = ParseColor(_settings.Appearance.SelectedItemColor, Color.BrightYellow);
+            var nodeNormal = Application.Driver.MakeAttribute(mapText, mapBackground);
+            var nodeFocus = Application.Driver.MakeAttribute(mapBackground, mapText);
+            var nodeSelected = Application.Driver.MakeAttribute(mapSelected, mapBackground);
+            var nodes = new ListView(nodeLabels) { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(), ColorScheme = new ColorScheme { Normal = nodeNormal, Focus = nodeFocus, HotNormal = nodeSelected, HotFocus = nodeFocus, Disabled = nodeNormal } };
+            nodeFrame.Add(nodes);
+            var updateNodeFrameTitle = new Action(delegate { nodeFrame.Title = nodeNumbers.Count == 0 ? "Nodes - no stored positions" : "Nodes " + Math.Min(nodeNumbers.Count, nodes.SelectedItem + 1) + "/" + nodeNumbers.Count; nodeFrame.SetNeedsDisplay(); });
+            nodes.SelectedItemChanged += delegate { updateNodeFrameTitle(); };
+            var selectedNodeIndex = _settings.Map.PositionTrackNodeNumber.HasValue ? nodeNumbers.IndexOf(_settings.Map.PositionTrackNodeNumber.Value) : -1;
+            if (selectedNodeIndex >= 0) nodes.SelectedItem = selectedNodeIndex;
+            updateNodeFrameTitle();
+            var colorNames = new[] { "Black", "Blue", "Green", "Cyan", "Red", "Magenta", "Brown", "Gray", "DarkGray", "BrightBlue", "BrightGreen", "BrightCyan", "BrightRed", "BrightMagenta", "BrightYellow", "White" };
+            var colors = new RadioGroup(new Rect(51, 3, 25, colorNames.Length), colorNames.Select(value => (ustring)value).ToArray());
+            var selectedColorIndex = Array.FindIndex(colorNames, value => String.Equals(value, _settings.Map.PositionTrackColor, StringComparison.OrdinalIgnoreCase));
+            colors.SelectedItem = selectedColorIndex >= 0 ? selectedColorIndex : Array.IndexOf(colorNames, "BrightYellow");
+            var symbol = new TextField(String.IsNullOrWhiteSpace(_settings.Map.PositionTrackSymbol) ? "O" : _settings.Map.PositionTrackSymbol) { X = 12, Y = 2, Width = 8 };
+            var fromHours = new TextField(_settings.Map.PositionTrackFromHoursAgo.ToString(CultureInfo.InvariantCulture)) { X = 24, Y = 20, Width = 6 };
+            var toHours = new TextField(_settings.Map.PositionTrackToHoursAgo.ToString(CultureInfo.InvariantCulture)) { X = 47, Y = 20, Width = 6 };
+            dialog.Add(enabled, new Label("Symbol:") { X = 1, Y = 2 }, symbol, nodeFrame, new Label("Color:") { X = 51, Y = 2 }, colors,
+                new Label("Period: from -") { X = 1, Y = 20 }, fromHours, new Label("hours to -") { X = 33, Y = 20 }, toHours, new Label("hours") { X = 56, Y = 20 },
+                new Label("Map keys: F = next/newer position, R = previous/older position") { X = 1, Y = 21 });
+            var save = new Button("Save", true);
+            save.Clicked += delegate
+            {
+                var enteredSymbol = symbol.Text.ToString().Trim();
+                int parsedFromHours, parsedToHours;
+                if (enabled.Checked && (nodes.SelectedItem < 0 || nodes.SelectedItem >= nodeNumbers.Count)) { MessageBox.ErrorQuery("Node position history", "Select a node with stored position data.", "OK"); return; }
+                if (String.IsNullOrWhiteSpace(enteredSymbol) || enteredSymbol.Length > 3) { MessageBox.ErrorQuery("Node position history", "Enter a symbol containing one to three characters.", "OK"); return; }
+                if (!Int32.TryParse(fromHours.Text.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out parsedFromHours) || !Int32.TryParse(toHours.Text.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out parsedToHours) || parsedFromHours < 0 || parsedToHours <= parsedFromHours || parsedToHours > 87600) { MessageBox.ErrorQuery("Node position history", "Enter a valid period. The second hour value must be greater than the first.", "OK"); return; }
+                if (nodes.SelectedItem >= 0 && nodes.SelectedItem < nodeNumbers.Count) _settings.Map.PositionTrackNodeNumber = nodeNumbers[nodes.SelectedItem];
+                _settings.Map.PositionTrackVisible = enabled.Checked;
+                _settings.Map.PositionTrackFromHoursAgo = parsedFromHours;
+                _settings.Map.PositionTrackToHoursAgo = parsedToHours;
+                _settings.Map.PositionTrackColor = colors.SelectedItem >= 0 && colors.SelectedItem < colorNames.Length ? colorNames[colors.SelectedItem] : "BrightYellow";
+                _settings.Map.PositionTrackSymbol = enteredSymbol;
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+                RefreshMapOverlays();
+                Application.RequestStop();
+            };
+            var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
+            if (_mapPage != null && _mapPage.Visible) _nodeMap.SetFocus();
         }
 
         private static void RefreshMapMenuFiles()
@@ -1904,7 +2169,7 @@ namespace ConsoleClient
                 catch (Exception ex) { MessageBox.ErrorQuery("Create map XML", ex.Message, "OK"); }
             };
             var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
-            dialog.AddButton(create); dialog.AddButton(cancel); Application.Run(dialog);
+            dialog.AddButton(create); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void CreateMapOverlayPoint(double latitudeValue, double longitudeValue)
@@ -1950,7 +2215,7 @@ namespace ConsoleClient
                 catch (Exception ex) { MessageBox.ErrorQuery("New map point", ex.Message, "OK"); }
             };
             var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
-            dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog); _nodeMap.SetFocus();
+            dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException); _nodeMap.SetFocus();
         }
         private static void ChangeMapOverlayProtection()
         {
@@ -1968,7 +2233,7 @@ namespace ConsoleClient
                 catch (Exception ex) { MessageBox.ErrorQuery("Map XML protection", ex.Message, "OK"); }
             };
             var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
-            dialog.AddButton(change); dialog.AddButton(cancel); Application.Run(dialog);
+            dialog.AddButton(change); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
         }
         private static void DeleteMapOverlayFile()
         {
@@ -1988,7 +2253,7 @@ namespace ConsoleClient
                 catch (Exception ex) { MessageBox.ErrorQuery("Delete map XML", ex.Message, "OK"); }
             };
             var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
-            dialog.AddButton(delete); dialog.AddButton(cancel); Application.Run(dialog);
+            dialog.AddButton(delete); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
         }
         private static void LoadMapOverlayFiles()
         {
@@ -2058,7 +2323,7 @@ namespace ConsoleClient
             dialog.AddButton(toggle); dialog.AddButton(up); dialog.AddButton(down); dialog.AddButton(create); dialog.AddButton(protection); dialog.AddButton(delete); dialog.AddButton(close);
             RefreshMapOverlayOrderBox();
             _mapOverlayOrderList.SetFocus();
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
             _mapOverlayOrderList = null;
             if (_mapPage != null && _mapPage.Visible && _nodeMap != null) _nodeMap.SetFocus();
         }
@@ -2105,8 +2370,36 @@ namespace ConsoleClient
 
         private static void RefreshMapOverlays()
         {
-            if (_nodeMap != null) _nodeMap.SetOverlayPoints(MapOverlayFiles.Where(file => file.Enabled && file.Data != null && file.Data.Places != null).SelectMany(file => file.Data.Places));
+            if (_nodeMap != null)
+            {
+                var points = MapOverlayFiles.Where(file => file.Enabled && file.Data != null && file.Data.Places != null).SelectMany(file => file.Data.Places).ToList();
+                points.AddRange(BuildPositionTrackPoints());
+                _nodeMap.SetOverlayPoints(points);
+            }
             RefreshMapOverlayOrderBox();
+        }
+        private static IEnumerable<MapOverlayPoint> BuildPositionTrackPoints()
+        {
+            if (_settings.Map == null || !_settings.Map.PositionTrackVisible || !_settings.Map.PositionTrackNodeNumber.HasValue) return Enumerable.Empty<MapOverlayPoint>();
+            var nodeNumber = _settings.Map.PositionTrackNodeNumber.Value;
+            var symbol = String.IsNullOrWhiteSpace(_settings.Map.PositionTrackSymbol) ? "O" : _settings.Map.PositionTrackSymbol.Trim();
+            var color = String.IsNullOrWhiteSpace(_settings.Map.PositionTrackColor) ? "BrightYellow" : _settings.Map.PositionTrackColor;
+            var nowUtc = DateTime.UtcNow;
+            var newestUtc = nowUtc.AddHours(-_settings.Map.PositionTrackFromHoursAgo);
+            var oldestUtc = nowUtc.AddHours(-_settings.Map.PositionTrackToHoursAgo);
+            return _store.GetPositions(nodeNumber, oldestUtc, newestUtc, 5000).Select(position => new MapOverlayPoint
+            {
+                Latitude = position.Latitude.Value,
+                Longitude = position.Longitude.Value,
+                ShortName = symbol,
+                Color = color,
+                Selectable = true,
+                IsTelemetryPosition = true,
+                TelemetryNodeNumber = nodeNumber,
+                TelemetryReceivedAtUtc = position.ReceivedAtUtc,
+                TelemetryAltitude = position.Altitude,
+                OverlayName = "Node position history"
+            }).ToList();
         }
         private static void SaveMapOverlayState()
         {
@@ -2136,15 +2429,67 @@ namespace ConsoleClient
         private static void UpdateMapOverlayInfo(MapOverlayPoint point)
         {
             if (_mapInfo == null || point == null) return;
+            if (point.IsTelemetryPosition)
+            {
+                _mapInfo.Text = "Position history | " + DisplayNodeName(point.TelemetryNodeNumber) + " | " + (point.TelemetryReceivedAtUtc.HasValue ? point.TelemetryReceivedAtUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") : "-") + " | " + FormatPositionAge(point.TelemetryReceivedAtUtc) + " | " + point.Latitude.ToString("F6", CultureInfo.InvariantCulture) + ", " + point.Longitude.ToString("F6", CultureInfo.InvariantCulture) + (point.TelemetryAltitude.HasValue ? " | " + point.TelemetryAltitude.Value.ToString(CultureInfo.InvariantCulture) + " m" : "");
+                return;
+            }
             var distance = MeshtasticClient.GetDistanceMeters(_mesh.Device.Latitude, _mesh.Device.Longitude, point.Latitude, point.Longitude);
             var bearing = MeshtasticClient.GetInitialBearingDegrees(_mesh.Device.Latitude, _mesh.Device.Longitude, point.Latitude, point.Longitude);
             var distanceText = !distance.HasValue ? "-" : distance.Value < 1000d ? Math.Round(distance.Value) + " m" : (distance.Value / 1000d).ToString("F1", CultureInfo.InvariantCulture) + " km";
             var directionText = bearing.HasValue ? Math.Round(bearing.Value) + "° " + MeshtasticClient.GetCompassDirection(bearing.Value) : "-";
             _mapInfo.Text = "Map overlay | " + Path.GetFileName(point.SourceFile ?? "-") + " | Direction " + directionText + " | Distance " + distanceText + " | Description " + (String.IsNullOrWhiteSpace(point.Description) ? point.ShortName ?? "?" : point.Description);
         }
+        private static string FormatPositionAge(DateTime? receivedAtUtc)
+        {
+            if (!receivedAtUtc.HasValue) return "age unavailable";
+            var age = DateTime.UtcNow - receivedAtUtc.Value.ToUniversalTime();
+            if (age < TimeSpan.Zero) age = TimeSpan.Zero;
+            if (age.TotalDays >= 1d) return ((int)age.TotalDays).ToString(CultureInfo.InvariantCulture) + "d " + age.Hours.ToString(CultureInfo.InvariantCulture) + "h ago";
+            if (age.TotalHours >= 1d) return ((int)age.TotalHours).ToString(CultureInfo.InvariantCulture) + "h " + age.Minutes.ToString(CultureInfo.InvariantCulture) + "m ago";
+            if (age.TotalMinutes >= 1d) return ((int)age.TotalMinutes).ToString(CultureInfo.InvariantCulture) + "m " + age.Seconds.ToString(CultureInfo.InvariantCulture) + "s ago";
+            return Math.Max(0, (int)age.TotalSeconds).ToString(CultureInfo.InvariantCulture) + "s ago";
+        }
+        private static void CopyPositionHistoryPoint(MapOverlayPoint point)
+        {
+            var header = "ReceivedUtc\tLatitude\tLongitude\tAltitudeMeters";
+            var row = (point.TelemetryReceivedAtUtc.HasValue ? point.TelemetryReceivedAtUtc.Value.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture) : "") + "\t" +
+                point.Latitude.ToString("F7", CultureInfo.InvariantCulture) + "\t" + point.Longitude.ToString("F7", CultureInfo.InvariantCulture) + "\t" +
+                (point.TelemetryAltitude.HasValue ? point.TelemetryAltitude.Value.ToString(CultureInfo.InvariantCulture) : "");
+            CopyTextWithFallback(header + Environment.NewLine + row, "Position and timestamp copied.", "Node position");
+        }
+        private static void CopyAllPositionHistory(uint nodeNumber)
+        {
+            var positions = _store.GetPositions(nodeNumber, Int32.MaxValue);
+            var rows = new List<string> { "ReceivedUtc\tLatitude\tLongitude\tAltitudeMeters" };
+            rows.AddRange(positions.Select(position => position.ReceivedAtUtc.ToUniversalTime().ToString("o", CultureInfo.InvariantCulture) + "\t" +
+                position.Latitude.Value.ToString("F7", CultureInfo.InvariantCulture) + "\t" + position.Longitude.Value.ToString("F7", CultureInfo.InvariantCulture) + "\t" +
+                (position.Altitude.HasValue ? position.Altitude.Value.ToString(CultureInfo.InvariantCulture) : "")));
+            CopyTextWithFallback(String.Join(Environment.NewLine, rows), positions.Count + " stored positions copied with timestamps.", "Node position history");
+        }
         private static void ShowMapOverlayDetails(MapOverlayPoint point)
         {
             if (point == null) return;
+            if (point.IsTelemetryPosition)
+            {
+                var distance = MeshtasticClient.GetDistanceMeters(_mesh.Device.Latitude, _mesh.Device.Longitude, point.Latitude, point.Longitude);
+                var bearing = MeshtasticClient.GetInitialBearingDegrees(_mesh.Device.Latitude, _mesh.Device.Longitude, point.Latitude, point.Longitude);
+                var distanceText = !distance.HasValue ? "-" : distance.Value < 1000d ? Math.Round(distance.Value) + " m" : (distance.Value / 1000d).ToString("F1", CultureInfo.InvariantCulture) + " km";
+                var directionText = bearing.HasValue ? Math.Round(bearing.Value) + "° " + MeshtasticClient.GetCompassDirection(bearing.Value) : "-";
+                var positionText = "Type: Stored node position" +
+                    "\nNode: " + DisplayNodeName(point.TelemetryNodeNumber) + " (!" + point.TelemetryNodeNumber.ToString("x8") + ")" +
+                    "\nReceived: " + (point.TelemetryReceivedAtUtc.HasValue ? point.TelemetryReceivedAtUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") : "-") +
+                    "\nAge: " + FormatPositionAge(point.TelemetryReceivedAtUtc) +
+                    "\nPosition: " + point.Latitude.ToString("F6", CultureInfo.InvariantCulture) + ", " + point.Longitude.ToString("F6", CultureInfo.InvariantCulture) +
+                    "\nAltitude: " + (point.TelemetryAltitude.HasValue ? point.TelemetryAltitude.Value.ToString(CultureInfo.InvariantCulture) + " m" : "-") +
+                    "\nDirection: " + directionText +
+                    "\nDistance: " + distanceText;
+                var positionChoice = MessageBox.Query("Node position", positionText, "Center", "Copy position", "Copy all", "Close");
+                if (positionChoice == 0) _nodeMap.CenterOn(point.Latitude, point.Longitude);
+                else if (positionChoice == 1) CopyPositionHistoryPoint(point);
+                else if (positionChoice == 2) CopyAllPositionHistory(point.TelemetryNodeNumber);
+                return;
+            }
             var source = MapOverlayFiles.FirstOrDefault(file => String.Equals(file.FileName, point.SourceFile, StringComparison.OrdinalIgnoreCase));
             var text = "Type: Map overlay" +
                 "\nOverlay: " + (point.OverlayName ?? "-") +
@@ -2235,6 +2580,9 @@ namespace ConsoleClient
             if (telemetry.Temperature.HasValue) values.Add("Temperature: " + telemetry.Temperature.Value.ToString("F1", CultureInfo.InvariantCulture) + " °C");
             if (telemetry.RelativeHumidity.HasValue) values.Add("Humidity: " + telemetry.RelativeHumidity.Value.ToString("F1", CultureInfo.InvariantCulture) + "%");
             if (telemetry.BarometricPressure.HasValue) values.Add("Pressure: " + telemetry.BarometricPressure.Value.ToString("F1", CultureInfo.InvariantCulture) + " hPa");
+            if (telemetry.Latitude.HasValue) values.Add("Latitude: " + telemetry.Latitude.Value.ToString("F6", CultureInfo.InvariantCulture));
+            if (telemetry.Longitude.HasValue) values.Add("Longitude: " + telemetry.Longitude.Value.ToString("F6", CultureInfo.InvariantCulture));
+            if (telemetry.Altitude.HasValue) values.Add("Altitude: " + telemetry.Altitude.Value.ToString(CultureInfo.InvariantCulture) + " m");
             return telemetry.ReceivedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") +
                 (includeNode ? " | " + DisplayNodeName(telemetry.NodeNumber) : "") +
                 " | " + (values.Count == 0 ? telemetry.Type : String.Join(" | ", values));
@@ -2253,6 +2601,9 @@ namespace ConsoleClient
             if (telemetry.Temperature.HasValue) values.Add("Temperature: " + telemetry.Temperature.Value.ToString("F1", CultureInfo.InvariantCulture) + " °C");
             if (telemetry.RelativeHumidity.HasValue) values.Add("Humidity: " + telemetry.RelativeHumidity.Value.ToString("F1", CultureInfo.InvariantCulture) + "%");
             if (telemetry.BarometricPressure.HasValue) values.Add("Pressure: " + telemetry.BarometricPressure.Value.ToString("F1", CultureInfo.InvariantCulture) + " hPa");
+            if (telemetry.Latitude.HasValue) values.Add("Latitude: " + telemetry.Latitude.Value.ToString("F6", CultureInfo.InvariantCulture));
+            if (telemetry.Longitude.HasValue) values.Add("Longitude: " + telemetry.Longitude.Value.ToString("F6", CultureInfo.InvariantCulture));
+            if (telemetry.Altitude.HasValue) values.Add("Altitude: " + telemetry.Altitude.Value.ToString(CultureInfo.InvariantCulture) + " m");
             var text = "Node: " + DisplayNodeName(telemetry.NodeNumber) + " (!" + telemetry.NodeNumber.ToString("x8") + ")" +
                 "\nReceived: " + telemetry.ReceivedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") +
                 "\nMeasurement time: " + (telemetry.TelemetryTimeUtc.HasValue ? telemetry.TelemetryTimeUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") : "-") +
@@ -2270,13 +2621,14 @@ namespace ConsoleClient
                 var fields = new[]
                 {
                     telemetry.ReceivedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"),
-                    NullableText(telemetry.BatteryLevel), NullableText(telemetry.Voltage, excelFormat), NullableText(telemetry.ChannelUtilization, excelFormat), NullableText(telemetry.AirUtilTx, excelFormat), NullableText(telemetry.UptimeSeconds), NullableText(telemetry.Temperature, excelFormat), NullableText(telemetry.RelativeHumidity, excelFormat), NullableText(telemetry.BarometricPressure, excelFormat)
+                    NullableText(telemetry.BatteryLevel), NullableText(telemetry.Voltage, excelFormat), NullableText(telemetry.ChannelUtilization, excelFormat), NullableText(telemetry.AirUtilTx, excelFormat), NullableText(telemetry.UptimeSeconds), NullableText(telemetry.Temperature, excelFormat), NullableText(telemetry.RelativeHumidity, excelFormat), NullableText(telemetry.BarometricPressure, excelFormat), NullableText(telemetry.Latitude, excelFormat), NullableText(telemetry.Longitude, excelFormat), NullableText(telemetry.Altitude)
                 };
                 rows.Add(String.Join(separator, fields.Select(value => ClipboardField(value, excelFormat))));
             }
             CopyTextWithFallback(String.Join(Environment.NewLine, rows), excelFormat ? "Telemetry was copied in spreadsheet format." : "Telemetry was copied as CSV.");
         }
         private static string NullableText(uint? value) { return value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : ""; }
+        private static string NullableText(int? value) { return value.HasValue ? value.Value.ToString(CultureInfo.InvariantCulture) : ""; }
         private static string NullableText(double? value, bool useLocalDecimalSeparator) { return value.HasValue ? value.Value.ToString(useLocalDecimalSeparator ? CultureInfo.CurrentCulture : CultureInfo.InvariantCulture) : ""; }
         private static string ClipboardField(string value, bool excelFormat)
         {
@@ -2383,7 +2735,7 @@ namespace ConsoleClient
             var cancel = new Button("Cancel");
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save); dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
         private static void RefreshNodesFromDevice()
         {
@@ -2474,12 +2826,44 @@ namespace ConsoleClient
                 "\nDirection: " + direction +
                 "\nBattery: " + (node.BatteryLevel.HasValue ? node.BatteryLevel.Value + "%" : "not available") +
                 "\nHops: " + (node.HopsAway.HasValue ? node.HopsAway.Value.ToString() : "not available");
-            var selectedButton = MessageBox.Query("Node details", text, "Start chat", "Telemetry", node.IsFavorite ? "Remove favorite" : "Add favorite", "Copy GPS", "Delete", "Close");
+            var selectedButton = MessageBox.Query("Node details", text, "Start chat", "Telemetry", "Position history", node.IsFavorite ? "Remove favorite" : "Add favorite", "Copy GPS", "Delete", "Close");
             if (selectedButton == 0) StartChatForNode(node);
             else if (selectedButton == 1) ShowTelemetryPage(node.NodeNumber);
-            else if (selectedButton == 2) { _store.SetNodeFavorite(node.NodeNumber, !node.IsFavorite); RefreshNodePage(); }
-            else if (selectedButton == 3) CopyNodePositionToClipboard(node);
-            else if (selectedButton == 4 && MessageBox.Query("Delete node", "Delete this node from the database?", "Delete", "Cancel") == 0) { _store.DeleteNode(node.NodeNumber); RefreshNodePage(); }
+            else if (selectedButton == 2) ShowNodePositionHistory(node);
+            else if (selectedButton == 3) { _store.SetNodeFavorite(node.NodeNumber, !node.IsFavorite); RefreshNodePage(); }
+            else if (selectedButton == 4) CopyNodePositionToClipboard(node);
+            else if (selectedButton == 5 && MessageBox.Query("Delete node", "Delete this node from the database?", "Delete", "Cancel") == 0) { _store.DeleteNode(node.NodeNumber); RefreshNodePage(); }
+        }
+        private static void ShowNodePositionHistory(StoredMeshNode node)
+        {
+            var latestPosition = _store.GetPositions(node.NodeNumber, 1).FirstOrDefault();
+            if (latestPosition == null)
+            {
+                MessageBox.Query("Position history", "No stored position history is available for this node.", "OK");
+                return;
+            }
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            _settings.Map.PositionTrackNodeNumber = node.NodeNumber;
+            _settings.Map.PositionTrackVisible = true;
+            SetPositionTrackToLatest24Hours(node.NodeNumber);
+            if (String.IsNullOrWhiteSpace(_settings.Map.PositionTrackColor)) _settings.Map.PositionTrackColor = "BrightYellow";
+            if (String.IsNullOrWhiteSpace(_settings.Map.PositionTrackSymbol)) _settings.Map.PositionTrackSymbol = "O";
+            MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+            ShowMapPage();
+            if (latestPosition.Latitude.HasValue && latestPosition.Longitude.HasValue) _nodeMap.CenterOn(latestPosition.Latitude.Value, latestPosition.Longitude.Value);
+            ShowBriefMapPopup("Position history enabled | latest available 24h: -" + _settings.Map.PositionTrackFromHoursAgo.ToString(CultureInfo.InvariantCulture) + "h to -" + _settings.Map.PositionTrackToHoursAgo.ToString(CultureInfo.InvariantCulture) + "h");
+        }
+
+        private static void SetPositionTrackToLatest24Hours(uint nodeNumber)
+        {
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            var latest = _store.GetPositions(nodeNumber, 1).FirstOrDefault();
+            if (latest == null) { _settings.Map.PositionTrackFromHoursAgo = 0; _settings.Map.PositionTrackToHoursAgo = 24; return; }
+            var ageHours = Math.Max(0d, (DateTime.UtcNow - latest.ReceivedAtUtc.ToUniversalTime()).TotalHours);
+            var fromHours = Math.Max(0, (int)Math.Floor(ageHours));
+            var toHours = Math.Max(fromHours + 1, (int)Math.Ceiling(ageHours + 24d));
+            _settings.Map.PositionTrackFromHoursAgo = fromHours;
+            _settings.Map.PositionTrackToHoursAgo = Math.Min(87600, toHours);
         }
         private static void CopyNodePositionToClipboard(StoredMeshNode node)
         {
@@ -2611,7 +2995,7 @@ namespace ConsoleClient
             var cancel = new Button("Cancel");
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save); dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ApplyLogoSettings()
@@ -2761,18 +3145,25 @@ namespace ConsoleClient
 
         private static void ClearAnimatedLogo()
         {
+            _animatedLogoScheduleGeneration++;
             _animatedLogoLines = null;
             _animatedLogoVerticalOffset = 0;
             _animatedLogoHorizontalOffset = 0;
             _animatedLogoVerticalDirection = 1;
             _animatedLogoHorizontalDirection = 1;
-            _nextAnimatedLogoFrameUtc = DateTime.MinValue;
         }
 
-        private static void AnimateTallLogoIfDue()
+        private static void ScheduleAnimatedLogoFrame()
         {
-            if (_animatedLogoLines == null || _animatedLogoLines.Length == 0 || _settings == null || _settings.Logo == null || !_settings.Logo.AnimateTallLogos || DateTime.UtcNow < _nextAnimatedLogoFrameUtc) return;
-            ShowAnimatedLogoFrame();
+            if (_animatedLogoLines == null || _animatedLogoLines.Length == 0 || _settings == null || _settings.Logo == null || !_settings.Logo.AnimateTallLogos) return;
+            var generation = _animatedLogoScheduleGeneration;
+            var interval = Math.Max(50, _settings.Logo.TallLogoFrameIntervalMilliseconds);
+            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(interval), delegate(MainLoop loop)
+            {
+                if (generation != _animatedLogoScheduleGeneration || _animatedLogoLines == null || Volatile.Read(ref _shutdownStarted) != 0) return false;
+                ShowAnimatedLogoFrame();
+                return false;
+            });
         }
 
         private static void ShowAnimatedLogoFrame()
@@ -2798,7 +3189,7 @@ namespace ConsoleClient
             _logoText.SetNeedsDisplay();
             _animatedLogoVerticalOffset = AdvanceAnimatedLogoOffset(_animatedLogoVerticalOffset, maximumVerticalOffset, _settings.Logo.AnimationVerticalStepLines, ref _animatedLogoVerticalDirection);
             _animatedLogoHorizontalOffset = AdvanceAnimatedLogoOffset(_animatedLogoHorizontalOffset, maximumHorizontalOffset, _settings.Logo.AnimationHorizontalStepCharacters, ref _animatedLogoHorizontalDirection);
-            _nextAnimatedLogoFrameUtc = DateTime.UtcNow.AddMilliseconds(Math.Max(50, _settings.Logo.TallLogoFrameIntervalMilliseconds));
+            ScheduleAnimatedLogoFrame();
         }
 
         private static int AdvanceAnimatedLogoOffset(int current, int maximum, int step, ref int direction)
@@ -2868,7 +3259,7 @@ namespace ConsoleClient
                 try { MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); Application.RequestStop(); } catch (Exception ex) { MessageBox.ErrorQuery("Settings", ex.Message, "OK"); }
             };
             var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
-            dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog);
+            dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ShowAlertSettings()
@@ -2911,20 +3302,32 @@ namespace ConsoleClient
                 httpEnabled, new Label("HTTP GET URL:") { X = 1, Y = 11 }, httpUrl,
                 executableEnabled, new Label("Shell command:") { X = 1, Y = 14 }, executable);
             dialog.AddButton(save); dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ShowTelemetryStorageSettings()
         {
-            var dialog = new Dialog("Telemetry storage", 62, 10);
-            var enabled = new CheckBox("Store received telemetry data in the database") { X = 1, Y = 1, Checked = _settings.StoreTelemetryData };
-            dialog.Add(enabled, new Label("Existing telemetry records are not deleted when disabled.") { X = 1, Y = 3 });
+            var dialog = new Dialog("Telemetry storage", 72, 15);
+            var telemetryEnabled = new CheckBox("Store received telemetry data in the database") { X = 1, Y = 1, Checked = _settings.StoreTelemetryData };
+            var telemetryFavoritesOnly = new CheckBox("Store telemetry data for favorite nodes only") { X = 4, Y = 2, Checked = _settings.StoreTelemetryFavoritesOnly };
+            var positionEnabled = new CheckBox("Store received node positions in the telemetry database") { X = 1, Y = 5, Checked = _settings.StorePositionData };
+            var positionFavoritesOnly = new CheckBox("Store positions for favorite nodes only") { X = 4, Y = 6, Checked = _settings.StorePositionFavoritesOnly };
+            dialog.Add(telemetryEnabled, telemetryFavoritesOnly, positionEnabled, positionFavoritesOnly,
+                new Label("Existing telemetry and position records are not deleted when disabled.") { X = 1, Y = 9 });
             var save = new Button("Save", true);
-            save.Clicked += delegate { _settings.StoreTelemetryData = enabled.Checked; MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); Application.RequestStop(); };
+            save.Clicked += delegate
+            {
+                _settings.StoreTelemetryData = telemetryEnabled.Checked;
+                _settings.StoreTelemetryFavoritesOnly = telemetryFavoritesOnly.Checked;
+                _settings.StorePositionData = positionEnabled.Checked;
+                _settings.StorePositionFavoritesOnly = positionFavoritesOnly.Checked;
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+                Application.RequestStop();
+            };
             var cancel = new Button("Cancel");
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save); dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ShowTelegramGateways()
@@ -2985,7 +3388,7 @@ namespace ConsoleClient
             close.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(saveButton); dialog.AddButton(restart); dialog.AddButton(status); dialog.AddButton(close);
             refresh(); if (gateways.Count > 0) { list.SelectedItem = 0; load(); }
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static string FormatTelegramGateway(TelegramGatewaySettings gateway)
@@ -3027,7 +3430,7 @@ namespace ConsoleClient
             refreshButton.Clicked += delegate { refresh(); };
             var close = new Button("Close") { X = Pos.Right(refreshButton) + 2, Y = Pos.AnchorEnd(2) };
             close.Clicked += delegate { Application.RequestStop(); };
-            dialog.Add(list, feedbackFrame); dialog.AddButton(refreshButton); dialog.AddButton(close); refresh(); Application.Run(dialog);
+            dialog.Add(list, feedbackFrame); dialog.AddButton(refreshButton); dialog.AddButton(close); refresh(); Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static string FormatTelegramGatewayStatus(TelegramGatewaySettings gateway, TelegramGatewayStatus status)
@@ -3075,7 +3478,7 @@ namespace ConsoleClient
             var close = new Button("Close") { X = Pos.Right(delete) + 2, Y = Pos.AnchorEnd(2) };
             close.Clicked += delegate { Application.RequestStop(); };
             dialog.Add(list, add, edit, toggle, delete, close);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ShowHttpBots()
@@ -3084,7 +3487,7 @@ namespace ConsoleClient
             Action refresh = delegate { list.SetSource(_settings.HttpBots.Select(bot => (bot.Enabled ? "[on] " : "[off] ") + bot.Command + " | " + bot.Url).ToList()); };
             var add = new Button("Add") { X = 1, Y = Pos.AnchorEnd(2) }; add.Clicked += delegate { var bot = new MeshtasticHttpBotSettings(); EditHttpBot(bot); _settings.HttpBots.Add(bot); MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); refresh(); };
             var edit = new Button("Edit") { X = Pos.Right(add) + 2, Y = Pos.AnchorEnd(2) }; edit.Clicked += delegate { if (list.SelectedItem >= 0 && list.SelectedItem < _settings.HttpBots.Count) { EditHttpBot(_settings.HttpBots[list.SelectedItem]); MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); refresh(); } };
-            var close = new Button("Close") { X = Pos.Right(edit) + 2, Y = Pos.AnchorEnd(2) }; close.Clicked += delegate { Application.RequestStop(); }; dialog.Add(list, add, edit, close); refresh(); Application.Run(dialog);
+            var close = new Button("Close") { X = Pos.Right(edit) + 2, Y = Pos.AnchorEnd(2) }; close.Clicked += delegate { Application.RequestStop(); }; dialog.Add(list, add, edit, close); refresh(); Application.Run(dialog, HandleTerminalGuiException);
         }
         private static void EditHttpBot(MeshtasticHttpBotSettings bot)
         {
@@ -3092,7 +3495,7 @@ namespace ConsoleClient
             dialog.Add(new Label("Command:") { X = 1, Y = 1 }, command, new Label("GET URL:") { X = 1, Y = 2 }, url, new Label("Max reply:") { X = 1, Y = 3 }, max, new Label("Max params:") { X = 1, Y = 4 }, limit, enabled, direct, favorites, new Label("React to channels:") { X = 1, Y = 8 }, new Label("Custom GET parameters (variables allowed):") { X = 1, Y = 12 });
             var channels = new List<CheckBox>(); for (var i = 0; i < 8; i++) { var check = new CheckBox("Channel " + i) { X = 1 + (i % 4) * 20, Y = 9 + i / 4, Checked = bot.ReactToChannels != null && bot.ReactToChannels.Contains(i) }; channels.Add(check); dialog.Add(check); }
             var names = new List<TextField>(); var values = new List<TextField>(); for (var i = 0; i < 5; i++) { var name = new TextField(bot.QueryParameters[i].Name) { X = 1, Y = 13 + i, Width = 20 }; var value = new TextField(bot.QueryParameters[i].Value) { X = 24, Y = 13 + i, Width = 60 }; names.Add(name); values.Add(value); dialog.Add(name, value); }
-            var save = new Button("Save", true); save.Clicked += delegate { int reply, parameters; if (!Int32.TryParse(max.Text.ToString(), out reply) || !Int32.TryParse(limit.Text.ToString(), out parameters) || String.IsNullOrWhiteSpace(command.Text.ToString()) || String.IsNullOrWhiteSpace(url.Text.ToString())) { MessageBox.ErrorQuery("HTTP bot", "Command, URL and numeric limits are required.", "OK"); return; } bot.Command = command.Text.ToString(); bot.Url = url.Text.ToString(); bot.MaximumReplyLength = reply; bot.MaximumParameterCount = parameters; bot.Enabled = enabled.Checked; bot.ReactToDirectMessages = direct.Checked; bot.FavoritesOnly = favorites.Checked; bot.ReactToChannels = channels.Select((check, index) => new { check, index }).Where(item => item.check.Checked).Select(item => item.index).ToList(); for (var i = 0; i < 5; i++) { bot.QueryParameters[i].Name = names[i].Text.ToString(); bot.QueryParameters[i].Value = values[i].Text.ToString(); } Application.RequestStop(); }; var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); }; dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog);
+            var save = new Button("Save", true); save.Clicked += delegate { int reply, parameters; if (!Int32.TryParse(max.Text.ToString(), out reply) || !Int32.TryParse(limit.Text.ToString(), out parameters) || String.IsNullOrWhiteSpace(command.Text.ToString()) || String.IsNullOrWhiteSpace(url.Text.ToString())) { MessageBox.ErrorQuery("HTTP bot", "Command, URL and numeric limits are required.", "OK"); return; } bot.Command = command.Text.ToString(); bot.Url = url.Text.ToString(); bot.MaximumReplyLength = reply; bot.MaximumParameterCount = parameters; bot.Enabled = enabled.Checked; bot.ReactToDirectMessages = direct.Checked; bot.FavoritesOnly = favorites.Checked; bot.ReactToChannels = channels.Select((check, index) => new { check, index }).Where(item => item.check.Checked).Select(item => item.index).ToList(); for (var i = 0; i < 5; i++) { bot.QueryParameters[i].Name = names[i].Text.ToString(); bot.QueryParameters[i].Value = values[i].Text.ToString(); } Application.RequestStop(); }; var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); }; dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void WriteSerialComLog(SerialTrafficEventArgs traffic)
@@ -3156,7 +3559,7 @@ namespace ConsoleClient
             var close = new Button("Close"); close.Clicked += delegate { Application.RequestStop(); };
             dialog.Add(path, view); dialog.AddButton(toggle); dialog.AddButton(reload); dialog.AddButton(copy); dialog.AddButton(delete); dialog.AddButton(close);
             refresh();
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ShowChatBotDebug() { ShowBotDebug("Chat bot Debug", delegate { return _lastChatBotRequest; }, delegate { return _lastChatBotOutput; }); }
@@ -3176,7 +3579,7 @@ namespace ConsoleClient
             var copyRequest = new Button("Copy request"); copyRequest.Clicked += delegate { CopyDebugText(requestView.Text.ToString()); };
             var copyOutput = new Button("Copy output"); copyOutput.Clicked += delegate { CopyDebugText(outputView.Text.ToString()); };
             var close = new Button("Close"); close.Clicked += delegate { Application.RequestStop(); };
-            dialog.Add(requestFrame, outputFrame); dialog.AddButton(refresh); dialog.AddButton(copyRequest); dialog.AddButton(copyOutput); dialog.AddButton(close); Application.Run(dialog);
+            dialog.Add(requestFrame, outputFrame); dialog.AddButton(refresh); dialog.AddButton(copyRequest); dialog.AddButton(copyOutput); dialog.AddButton(close); Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void CopyDebugText(string text)
@@ -3252,7 +3655,7 @@ namespace ConsoleClient
             var cancel = new Button("Cancel");
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save); dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ShowChatBotVariableHelp()
@@ -3647,7 +4050,7 @@ namespace ConsoleClient
             var cancel = new Button("Cancel");
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save); dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static void ApplyChatListSelectionColors()
@@ -3763,7 +4166,7 @@ namespace ConsoleClient
             cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save);
             dialog.AddButton(cancel);
-            Application.Run(dialog);
+            Application.Run(dialog, HandleTerminalGuiException);
         }
 
         private static bool TryParseCoordinate(string text, out double result)
@@ -3791,6 +4194,7 @@ namespace ConsoleClient
 
         private static void UpdateStatus()
         {
+            if (Volatile.Read(ref _shutdownStarted) != 0) return;
             UpdateMessageCharacterCounter();
             var info = _mesh.ConnectionInfo;
             var device = _mesh.Device;
@@ -3820,16 +4224,117 @@ namespace ConsoleClient
             var stored = _store.GetNodes(StoredNodeSort.Name).FirstOrDefault(x => x.NodeNumber == number);
             return stored == null ? "!" + number.ToString("x8") : (String.IsNullOrEmpty(stored.LongName) ? stored.NodeId : stored.LongName);
         }
-        private static void Save(Action action) { Task.Run(delegate { try { action(); } catch { } }); }
-        private static void Ui(Action action) { Application.MainLoop.Invoke(action); }
+        private static void Save(Action action, string coalesceKey = null)
+        {
+            var writes = _databaseWrites;
+            if (writes == null || Volatile.Read(ref _shutdownStarted) != 0) return;
+            writes.Enqueue(action, coalesceKey);
+        }
+        private static void Ui(Action action)
+        {
+            if (Volatile.Read(ref _shutdownStarted) != 0) return;
+            Application.MainLoop.Invoke(action);
+        }
         private static void RequestQuit()
         {
             if (MessageBox.Query("Exit", "Close ConsoleClient?", "Yes", "No") != 0) return;
+            if (Interlocked.CompareExchange(ref _shutdownStarted, 1, 0) != 0) return;
             _connectionAttemptId++;
             var cancellation = _connectionAttemptCancellation;
             _connectionAttemptCancellation = null;
             if (cancellation != null) cancellation.Cancel();
-            Application.RequestStop();
+            if (_status != null) { _status.Text = " Closing ConsoleClient..."; _status.SetNeedsDisplay(); }
+            var completion = new TaskCompletionSource<object>();
+            _shutdownTask = completion.Task;
+            var shutdownThread = new Thread(new ThreadStart(delegate
+            {
+                var elapsed = Stopwatch.StartNew();
+                try
+                {
+                    UpdateShutdownStatus("starting shutdown", elapsed);
+                    StopExternalServicesWithProgress(TimeSpan.FromSeconds(6), elapsed);
+                    CompleteDatabaseWritesWithProgress(TimeSpan.FromSeconds(5), elapsed);
+                    UpdateShutdownStatus("closing terminal interface", elapsed);
+                    try { Application.MainLoop.Invoke(delegate { Application.RequestStop(); }); } catch { }
+                }
+                finally { completion.TrySetResult(null); }
+            })) { IsBackground = true, Name = "ConsoleClient shutdown" };
+            shutdownThread.Start();
+        }
+
+        private static void StopExternalServicesWithTimeout(TimeSpan timeout)
+        {
+            var stops = new List<Task>();
+            if (_telegramGateways != null) stops.Add(StartStop(delegate { return _telegramGateways.StopAsync(); }));
+            if (_mesh != null) stops.Add(StartStop(delegate { return _mesh.DisconnectAsync(); }));
+            if (stops.Count == 0) return;
+            try { Task.WaitAll(stops.ToArray(), timeout); } catch { }
+        }
+
+        private static void StopExternalServicesWithProgress(TimeSpan timeout, Stopwatch elapsed)
+        {
+            var stops = new List<KeyValuePair<string, Task>>();
+            if (_telegramGateways != null) stops.Add(new KeyValuePair<string, Task>("Telegram gateways", Task.Run(async delegate { await StartStop(delegate { return _telegramGateways.StopAsync(); }).ConfigureAwait(false); })));
+            if (_mesh != null) stops.Add(new KeyValuePair<string, Task>("mesh connection", Task.Run(async delegate { await StartStop(delegate { return _mesh.DisconnectAsync(); }).ConfigureAwait(false); })));
+            if (stops.Count == 0) { UpdateShutdownStatus("no external services to stop", elapsed); return; }
+            var deadline = DateTime.UtcNow + timeout;
+            while (stops.Any(item => !item.Value.IsCompleted) && DateTime.UtcNow < deadline)
+            {
+                var pending = String.Join(", ", stops.Where(item => !item.Value.IsCompleted).Select(item => item.Key));
+                UpdateShutdownStatus("waiting for " + pending, elapsed);
+                try { Task.WaitAny(stops.Select(item => item.Value).ToArray(), TimeSpan.FromMilliseconds(250)); } catch { }
+            }
+            var unfinished = stops.Where(item => !item.Value.IsCompleted).Select(item => item.Key).ToList();
+            UpdateShutdownStatus(unfinished.Count == 0 ? "external services stopped" : "timeout while stopping " + String.Join(", ", unfinished), elapsed);
+        }
+
+        private static void CompleteDatabaseWritesWithProgress(TimeSpan timeout, Stopwatch elapsed)
+        {
+            if (_databaseWrites == null) { UpdateShutdownStatus("no database queue", elapsed); return; }
+            var deadline = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < deadline)
+            {
+                var pending = _databaseWrites.PendingCount;
+                UpdateShutdownStatus("flushing database queue (" + pending.ToString(CultureInfo.InvariantCulture) + " pending)", elapsed);
+                if (_databaseWrites.CompleteAndWait(TimeSpan.FromMilliseconds(250)))
+                {
+                    UpdateShutdownStatus("database queue flushed", elapsed);
+                    return;
+                }
+            }
+            UpdateShutdownStatus("database flush timeout (" + _databaseWrites.PendingCount.ToString(CultureInfo.InvariantCulture) + " pending)", elapsed);
+        }
+
+        private static void UpdateShutdownStatus(string detail, Stopwatch elapsed)
+        {
+            try
+            {
+                Application.MainLoop.Invoke(delegate
+                {
+                    if (_status == null) return;
+                    _status.Text = " Closing | " + elapsed.Elapsed.TotalSeconds.ToString("F1", CultureInfo.InvariantCulture) + "s | " + detail;
+                    _status.SetNeedsDisplay();
+                });
+            }
+            catch { }
+        }
+
+        private static Task StartStop(Func<Task> stop)
+        {
+            try { return stop() ?? Task.FromResult(0); }
+            catch { return Task.FromResult(0); }
+        }
+
+        private static void EnsureShutdownCompleted()
+        {
+            if (Interlocked.CompareExchange(ref _shutdownStarted, 1, 0) == 0)
+            {
+                StopExternalServicesWithTimeout(TimeSpan.FromSeconds(6));
+                if (_databaseWrites != null) _databaseWrites.CompleteAndWait(TimeSpan.FromSeconds(5));
+                return;
+            }
+            var shutdown = _shutdownTask;
+            if (shutdown != null) try { shutdown.Wait(TimeSpan.FromSeconds(1)); } catch { }
         }
     }
 }

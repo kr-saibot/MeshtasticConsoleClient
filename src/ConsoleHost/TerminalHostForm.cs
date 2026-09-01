@@ -22,6 +22,7 @@ namespace Meshtastic.ConsoleHost
         private NotifyIcon _trayIcon;
         private Timer _processExitTimer;
         private Timer _startupTrayTimer;
+        private Timer _screenshotTimer;
         private bool _allowClose;
         private bool _hiddenToTray;
         private bool _suppressTrayMinimize;
@@ -61,6 +62,7 @@ namespace Meshtastic.ConsoleHost
             TerminalPresentation.HideScrollBar(_terminal);
             if (_terminal.Terminal != null)
                 _terminal.Terminal.Loaded += delegate { TerminalPresentation.HideScrollBar(_terminal); };
+
 
             if (_terminal.Terminal != null)
                 _terminal.Terminal.PreviewMouseWheel += OnPreviewMouseWheel;
@@ -121,6 +123,13 @@ namespace Meshtastic.ConsoleHost
                     SelectAndRestartConsoleClient();
                     return;
                 }
+
+                if (TerminalSystemMenu.IsCopyScreenshotCommand(message.WParam))
+                {
+                    QueueTerminalScreenshot();
+                    return;
+                }
+
 
                 if (TerminalSystemMenu.IsStartMinimizedCommand(message.WParam))
                 {
@@ -273,6 +282,12 @@ namespace Meshtastic.ConsoleHost
 
             var menu = new ContextMenuStrip();
             menu.Items.Add("Öffnen", null, delegate { RestoreFromTray(); });
+            menu.Items.Add("Screenshot in Zwischenablage", null, delegate
+            {
+                RestoreFromTray();
+                QueueTerminalScreenshot();
+            });
+            menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add("Beenden", null, delegate
             {
                 _allowClose = true;
@@ -289,6 +304,62 @@ namespace Meshtastic.ConsoleHost
             _trayIcon.DoubleClick += delegate { RestoreFromTray(); };
         }
 
+        private void QueueTerminalScreenshot()
+        {
+            if (_hiddenToTray) RestoreFromTray();
+            if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+            Activate();
+            if (_screenshotTimer != null)
+            {
+                _screenshotTimer.Stop();
+                _screenshotTimer.Dispose();
+            }
+            // Let the native system menu and its shadow disappear before reading screen pixels.
+            _screenshotTimer = new Timer { Interval = 250 };
+            _screenshotTimer.Tick += delegate
+            {
+                _screenshotTimer.Stop();
+                _screenshotTimer.Dispose();
+                _screenshotTimer = null;
+                CopyTerminalScreenshotToClipboard();
+            };
+            _screenshotTimer.Start();
+        }
+
+        private void CopyTerminalScreenshotToClipboard()
+        {
+            try
+            {
+                Update();
+                var bounds = _terminalHost.RectangleToScreen(_terminalHost.ClientRectangle);
+                if (bounds.Width < 1 || bounds.Height < 1) throw new InvalidOperationException("Der Terminalbereich besitzt keine erfassbare Größe.");
+                using (var screenshot = new Bitmap(bounds.Width, bounds.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                using (var graphics = Graphics.FromImage(screenshot))
+                {
+                    graphics.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size, CopyPixelOperation.SourceCopy);
+                    Clipboard.SetImage(screenshot);
+                }
+                ShowTemporaryTitleMessage("Terminal-Screenshot wurde in die Zwischenablage kopiert");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Der Screenshot konnte nicht in die Zwischenablage kopiert werden.\n\n" + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void ShowTemporaryTitleMessage(string message)
+        {
+            const string originalTitle = "Meshtastic Console Client";
+            Text = message;
+            var timer = new Timer { Interval = 1800 };
+            timer.Tick += delegate
+            {
+                timer.Stop();
+                timer.Dispose();
+                if (!IsDisposed) Text = originalTitle;
+            };
+            timer.Start();
+        }
         private void HideToTray()
         {
             if (_hiddenToTray || _allowClose) return;
@@ -494,6 +565,12 @@ namespace Meshtastic.ConsoleHost
             {
                 _bellPlayer.Close();
                 StopStartupTrayTimer();
+                if (_screenshotTimer != null)
+                {
+                    _screenshotTimer.Stop();
+                    _screenshotTimer.Dispose();
+                    _screenshotTimer = null;
+                }
                 if (_trayIcon != null)
                 {
                     _trayIcon.Visible = false;

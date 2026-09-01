@@ -216,11 +216,7 @@ namespace Meshtastic.Client
                 if (_lifetime != null) _lifetime.Cancel();
                 transport = _transport;
             }
-            if (transport != null)
-            {
-                var close = Task.Run(delegate { try { transport.Close(); } catch { } });
-                await Task.WhenAny(close, Task.Delay(DisconnectTimeout)).ConfigureAwait(false);
-            }
+            if (transport != null) await CloseTransportWithTimeoutAsync(transport).ConfigureAwait(false);
             if (loop != null)
             {
                 try
@@ -246,6 +242,18 @@ namespace Meshtastic.Client
             if (State != ConnectionState.Disconnected) SetState(ConnectionState.Disconnected, null);
         }
 
+        private async Task CloseTransportWithTimeoutAsync(ITransport transport)
+        {
+            var completion = new TaskCompletionSource<object>();
+            var closer = new Thread(new ThreadStart(delegate
+            {
+                try { transport.Close(); }
+                catch { }
+                finally { completion.TrySetResult(null); }
+            })) { IsBackground = true, Name = "Meshtastic transport closer" };
+            closer.Start();
+            await Task.WhenAny(completion.Task, Task.Delay(DisconnectTimeout)).ConfigureAwait(false);
+        }
         public async Task RequestFullStateAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
             var nonce = NextUInt();
@@ -447,15 +455,18 @@ namespace Meshtastic.Client
                     {
                         Debug("Connection loop error: " + ex.GetType().Name + ": " + ex.Message);
                         Raise(TransportError, new TransportErrorEventArgs(ex));
+                        ITransport failedTransport = null;
                         lock (_gate)
                         {
                             if (generation == _connectionGeneration)
                             {
                                 _lastConnectionError = ex;
                                 if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
-                                if (_transport != null) { _transport.Dispose(); _transport = null; }
+                                failedTransport = _transport;
+                                _transport = null;
                             }
                         }
+                        if (failedTransport != null) await CloseTransportWithTimeoutAsync(failedTransport).ConfigureAwait(false);
                         if (_manualDisconnect || token.IsCancellationRequested) break;
                         // Retrying cannot resolve an invalid or already opened serial port.
                         // Stop the initial connection promptly and report the original error.
@@ -483,15 +494,19 @@ namespace Meshtastic.Client
             finally
             {
                 var isCurrentGeneration = false;
+                ITransport finalTransport = null;
                 lock (_gate)
                 {
                     if (generation == _connectionGeneration)
                     {
                         isCurrentGeneration = true;
                         if (_connectedSinceUtc.HasValue) { _totalConnectedDuration += DateTime.UtcNow - _connectedSinceUtc.Value; _connectedSinceUtc = null; }
-                        if (_transport != null) { _transport.Dispose(); _transport = null; } _nextReconnectUtc = null; _lifetime = null; _connectionLoop = null;
+                        finalTransport = _transport;
+                        _transport = null;
+                        _nextReconnectUtc = null; _lifetime = null; _connectionLoop = null;
                     }
                 }
+                if (finalTransport != null) await CloseTransportWithTimeoutAsync(finalTransport).ConfigureAwait(false);
                 if (isCurrentGeneration) SetState(ConnectionState.Disconnected, null);
             }
         }

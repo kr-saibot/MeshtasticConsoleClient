@@ -27,7 +27,22 @@ function Reset-StagingDirectory([string] $Path) {
 
 function Copy-BuildFiles([string] $Source, [string] $Destination) {
     New-Item -ItemType Directory -Path $Destination -Force | Out-Null
-    Copy-Item -Path (Join-Path $Source "*") -Destination $Destination -Recurse -Force
+    $sourceRoot = [IO.Path]::GetFullPath($Source).TrimEnd('\')
+    foreach ($sourceFile in Get-ChildItem -LiteralPath $sourceRoot -Recurse -File) {
+        $relativePath = $sourceFile.FullName.Substring($sourceRoot.Length).TrimStart('\')
+        $destinationFile = Join-Path $Destination $relativePath
+        $destinationDirectory = Split-Path -Parent $destinationFile
+        New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
+        if (Test-Path -LiteralPath $destinationFile) {
+            $existing = Get-Item -LiteralPath $destinationFile
+            if ($existing.Length -eq $sourceFile.Length -and
+                (Get-FileHash -LiteralPath $existing.FullName -Algorithm SHA256).Hash -eq
+                (Get-FileHash -LiteralPath $sourceFile.FullName -Algorithm SHA256).Hash) {
+                continue
+            }
+        }
+        Copy-Item -LiteralPath $sourceFile.FullName -Destination $destinationFile -Force
+    }
 }
 
 Push-Location $RepositoryRoot

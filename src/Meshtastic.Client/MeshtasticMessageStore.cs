@@ -40,6 +40,9 @@ namespace Meshtastic.Client
         public double? Temperature { get; internal set; }
         public double? RelativeHumidity { get; internal set; }
         public double? BarometricPressure { get; internal set; }
+        public double? Latitude { get; internal set; }
+        public double? Longitude { get; internal set; }
+        public int? Altitude { get; internal set; }
         public string RawTelemetry { get; internal set; }
     }
 
@@ -129,10 +132,14 @@ namespace Meshtastic.Client
             Execute(_sqlite ? "ALTER TABLE MeshtasticNodes ADD COLUMN HopsAway INTEGER NULL" : "ALTER TABLE MeshtasticNodes ADD HopsAway INT NULL", null, ignoreFailure: true);
             Execute("CREATE INDEX " + (_sqlite ? "IF NOT EXISTS " : "") + "IX_MeshtasticNodes_LastReceived ON MeshtasticNodes(LastReceivedUtc)", null, ignoreFailure: !_sqlite);
             var telemetrySql = _sqlite
-                ? "CREATE TABLE IF NOT EXISTS MeshtasticTelemetry (Id TEXT PRIMARY KEY, NodeNumber INTEGER NOT NULL, ReceivedAtUtc TEXT NOT NULL, TelemetryTimeUtc TEXT NULL, Type TEXT NOT NULL, BatteryLevel INTEGER NULL, Voltage REAL NULL, ChannelUtilization REAL NULL, AirUtilTx REAL NULL, UptimeSeconds INTEGER NULL, Temperature REAL NULL, RelativeHumidity REAL NULL, BarometricPressure REAL NULL, RawTelemetry TEXT NOT NULL)"
-                : "IF OBJECT_ID('MeshtasticTelemetry','U') IS NULL CREATE TABLE MeshtasticTelemetry (Id UNIQUEIDENTIFIER PRIMARY KEY, NodeNumber BIGINT NOT NULL, ReceivedAtUtc DATETIME2 NOT NULL, TelemetryTimeUtc DATETIME2 NULL, Type NVARCHAR(64) NOT NULL, BatteryLevel INT NULL, Voltage FLOAT NULL, ChannelUtilization FLOAT NULL, AirUtilTx FLOAT NULL, UptimeSeconds BIGINT NULL, Temperature FLOAT NULL, RelativeHumidity FLOAT NULL, BarometricPressure FLOAT NULL, RawTelemetry NVARCHAR(MAX) NOT NULL)";
+                ? "CREATE TABLE IF NOT EXISTS MeshtasticTelemetry (Id TEXT PRIMARY KEY, NodeNumber INTEGER NOT NULL, ReceivedAtUtc TEXT NOT NULL, TelemetryTimeUtc TEXT NULL, Type TEXT NOT NULL, BatteryLevel INTEGER NULL, Voltage REAL NULL, ChannelUtilization REAL NULL, AirUtilTx REAL NULL, UptimeSeconds INTEGER NULL, Temperature REAL NULL, RelativeHumidity REAL NULL, BarometricPressure REAL NULL, Latitude REAL NULL, Longitude REAL NULL, Altitude INTEGER NULL, RawTelemetry TEXT NOT NULL)"
+                : "IF OBJECT_ID('MeshtasticTelemetry','U') IS NULL CREATE TABLE MeshtasticTelemetry (Id UNIQUEIDENTIFIER PRIMARY KEY, NodeNumber BIGINT NOT NULL, ReceivedAtUtc DATETIME2 NOT NULL, TelemetryTimeUtc DATETIME2 NULL, Type NVARCHAR(64) NOT NULL, BatteryLevel INT NULL, Voltage FLOAT NULL, ChannelUtilization FLOAT NULL, AirUtilTx FLOAT NULL, UptimeSeconds BIGINT NULL, Temperature FLOAT NULL, RelativeHumidity FLOAT NULL, BarometricPressure FLOAT NULL, Latitude FLOAT NULL, Longitude FLOAT NULL, Altitude INT NULL, RawTelemetry NVARCHAR(MAX) NOT NULL)";
             Execute(telemetrySql, null);
+            Execute(_sqlite ? "ALTER TABLE MeshtasticTelemetry ADD COLUMN Latitude REAL NULL" : "ALTER TABLE MeshtasticTelemetry ADD Latitude FLOAT NULL", null, ignoreFailure: true);
+            Execute(_sqlite ? "ALTER TABLE MeshtasticTelemetry ADD COLUMN Longitude REAL NULL" : "ALTER TABLE MeshtasticTelemetry ADD Longitude FLOAT NULL", null, ignoreFailure: true);
+            Execute(_sqlite ? "ALTER TABLE MeshtasticTelemetry ADD COLUMN Altitude INTEGER NULL" : "ALTER TABLE MeshtasticTelemetry ADD Altitude INT NULL", null, ignoreFailure: true);
             Execute("CREATE INDEX " + (_sqlite ? "IF NOT EXISTS " : "") + "IX_MeshtasticTelemetry_NodeTime ON MeshtasticTelemetry(NodeNumber,ReceivedAtUtc)", null, ignoreFailure: !_sqlite);
+            Execute("CREATE INDEX " + (_sqlite ? "IF NOT EXISTS " : "") + "IX_MeshtasticTelemetry_PositionNodeTime ON MeshtasticTelemetry(NodeNumber,ReceivedAtUtc) WHERE Latitude IS NOT NULL AND Longitude IS NOT NULL", null, ignoreFailure: !_sqlite);
         }
 
         public Guid AddIncoming(MeshMessage message, double? latitude = null, double? longitude = null, bool isNew = true)
@@ -188,25 +195,26 @@ namespace Meshtastic.Client
             return QueryChannelStatistics(sql);
         }
 
-        /// <summary>Inserts a node or updates its latest received data. The favorite flag is preserved.</summary>
+        /// <summary>Inserts a node or updates its latest device-reported data. The favorite flag is preserved.</summary>
         public void AddOrUpdateNode(MeshNode node)
         {
             if (node == null) throw new ArgumentNullException("node");
-            var timestamp = DateTime.UtcNow;
+            var timestamp = node.LastHeardUtc ?? DateTime.UtcNow;
+            var hasLastHeard = node.LastHeardUtc.HasValue;
             lock (_sync)
             {
                 if (_sqlite)
                 {
-                    const string upsert = "INSERT INTO MeshtasticNodes (NodeNumber,NodeId,LongName,ShortName,LastReceivedUtc,IsFavorite,Latitude,Longitude,BatteryLevel,HopsAway) VALUES (@number,@id,@longName,@shortName,@lastReceived,0,@lat,@lon,@battery,@hops) ON CONFLICT(NodeNumber) DO UPDATE SET NodeId=excluded.NodeId,LongName=excluded.LongName,ShortName=excluded.ShortName,LastReceivedUtc=excluded.LastReceivedUtc,Latitude=excluded.Latitude,Longitude=excluded.Longitude,BatteryLevel=excluded.BatteryLevel,HopsAway=excluded.HopsAway";
-                    Execute(upsert, delegate(DbCommand c) { AddNodeParameters(c, node, timestamp); });
+                    const string upsert = "INSERT INTO MeshtasticNodes (NodeNumber,NodeId,LongName,ShortName,LastReceivedUtc,IsFavorite,Latitude,Longitude,BatteryLevel,HopsAway) VALUES (@number,@id,@longName,@shortName,@lastReceived,0,@lat,@lon,@battery,@hops) ON CONFLICT(NodeNumber) DO UPDATE SET NodeId=excluded.NodeId,LongName=excluded.LongName,ShortName=excluded.ShortName,LastReceivedUtc=CASE WHEN @hasLastHeard=1 THEN excluded.LastReceivedUtc ELSE MeshtasticNodes.LastReceivedUtc END,Latitude=excluded.Latitude,Longitude=excluded.Longitude,BatteryLevel=excluded.BatteryLevel,HopsAway=excluded.HopsAway";
+                    Execute(upsert, delegate(DbCommand c) { AddNodeParameters(c, node, timestamp, hasLastHeard); });
                     return;
                 }
-                var update = "UPDATE MeshtasticNodes SET NodeId=@id, LongName=@longName, ShortName=@shortName, LastReceivedUtc=@lastReceived, Latitude=@lat, Longitude=@lon, BatteryLevel=@battery, HopsAway=@hops WHERE NodeNumber=@number";
-                var affected = ExecuteNonQuery(update, delegate(DbCommand c) { AddNodeParameters(c, node, timestamp); });
+                var update = "UPDATE MeshtasticNodes SET NodeId=@id, LongName=@longName, ShortName=@shortName, LastReceivedUtc=CASE WHEN @hasLastHeard=1 THEN @lastReceived ELSE LastReceivedUtc END, Latitude=@lat, Longitude=@lon, BatteryLevel=@battery, HopsAway=@hops WHERE NodeNumber=@number";
+                var affected = ExecuteNonQuery(update, delegate(DbCommand c) { AddNodeParameters(c, node, timestamp, hasLastHeard); });
                 if (affected == 0)
                 {
                     const string insert = "INSERT INTO MeshtasticNodes (NodeNumber,NodeId,LongName,ShortName,LastReceivedUtc,IsFavorite,Latitude,Longitude,BatteryLevel,HopsAway) VALUES (@number,@id,@longName,@shortName,@lastReceived,@favorite,@lat,@lon,@battery,@hops)";
-                    Execute(insert, delegate(DbCommand c) { AddNodeParameters(c, node, timestamp); Add(c, "@favorite", _sqlite ? (object)0 : false); });
+                    Execute(insert, delegate(DbCommand c) { AddNodeParameters(c, node, timestamp, hasLastHeard); Add(c, "@favorite", _sqlite ? (object)0 : false); });
                 }
             }
         }
@@ -260,6 +268,19 @@ namespace Meshtastic.Client
             });
             return id;
         }
+        public Guid AddPosition(uint nodeNumber, Meshtastic.Protobufs.Position position, DateTime receivedAtUtc)
+        {
+            if (position == null) throw new ArgumentNullException("position");
+            var id = Guid.NewGuid();
+            DateTime? positionTimeUtc = position.Timestamp != 0 ? UnixTime(position.Timestamp) : (position.Time != 0 ? UnixTime(position.Time) : (DateTime?)null);
+            const string sql = "INSERT INTO MeshtasticTelemetry (Id,NodeNumber,ReceivedAtUtc,TelemetryTimeUtc,Type,Latitude,Longitude,Altitude,RawTelemetry) VALUES (@id,@node,@received,@positionTime,@type,@lat,@lon,@altitude,@raw)";
+            Execute(sql, delegate(DbCommand c)
+            {
+                Add(c, "@id", IdValue(id)); Add(c, "@node", (long)nodeNumber); Add(c, "@received", TimeValue(receivedAtUtc)); Add(c, "@positionTime", positionTimeUtc.HasValue ? TimeValue(positionTimeUtc.Value) : null); Add(c, "@type", "Position");
+                Add(c, "@lat", position.HasLatitudeI ? (object)(position.LatitudeI / 10000000d) : null); Add(c, "@lon", position.HasLongitudeI ? (object)(position.LongitudeI / 10000000d) : null); Add(c, "@altitude", position.HasAltitude ? (object)position.Altitude : null); Add(c, "@raw", position.ToString());
+            });
+            return id;
+        }
         public IList<StoredTelemetry> GetTelemetry(uint nodeNumber, int maximumCount = 100)
         {
             if (maximumCount <= 0) throw new ArgumentOutOfRangeException("maximumCount");
@@ -269,6 +290,29 @@ namespace Meshtastic.Client
         {
             if (maximumCount <= 0) throw new ArgumentOutOfRangeException("maximumCount");
             return QueryTelemetry("SELECT * FROM MeshtasticTelemetry ORDER BY ReceivedAtUtc DESC", null, maximumCount);
+        }
+        public IList<StoredTelemetry> GetPositions(uint nodeNumber, int maximumCount = 5000)
+        {
+            if (maximumCount <= 0) throw new ArgumentOutOfRangeException("maximumCount");
+            return QueryTelemetry("SELECT * FROM MeshtasticTelemetry WHERE NodeNumber=@node AND Latitude IS NOT NULL AND Longitude IS NOT NULL ORDER BY ReceivedAtUtc DESC", delegate(DbCommand c) { Add(c, "@node", (long)nodeNumber); }, maximumCount);
+        }
+        public IList<StoredTelemetry> GetPositions(uint nodeNumber, DateTime oldestUtc, DateTime newestUtc, int maximumCount = 5000)
+        {
+            if (maximumCount <= 0) throw new ArgumentOutOfRangeException("maximumCount");
+            if (newestUtc < oldestUtc) throw new ArgumentException("The newest position time must not be earlier than the oldest position time.", "newestUtc");
+            return QueryTelemetry("SELECT * FROM MeshtasticTelemetry WHERE NodeNumber=@node AND Latitude IS NOT NULL AND Longitude IS NOT NULL AND ReceivedAtUtc>=@oldest AND ReceivedAtUtc<=@newest ORDER BY ReceivedAtUtc DESC", delegate(DbCommand c) { Add(c, "@node", (long)nodeNumber); Add(c, "@oldest", TimeValue(oldestUtc)); Add(c, "@newest", TimeValue(newestUtc)); }, maximumCount);
+        }        public IList<uint> GetPositionNodeNumbers()
+        {
+            lock (_sync) using (var connection = Open()) using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT DISTINCT NodeNumber FROM MeshtasticTelemetry WHERE Latitude IS NOT NULL AND Longitude IS NOT NULL ORDER BY NodeNumber";
+                using (var reader = command.ExecuteReader())
+                {
+                    var result = new List<uint>();
+                    while (reader.Read()) result.Add(Convert.ToUInt32(reader["NodeNumber"]));
+                    return result;
+                }
+            }
         }
         public void DeleteTelemetry(uint nodeNumber)
         {
@@ -361,20 +405,34 @@ namespace Meshtastic.Client
                     {
                         result.Add(new StoredTelemetry
                         {
-                            Id = Guid.Parse(Convert.ToString(reader["Id"])), NodeNumber = Convert.ToUInt32(reader["NodeNumber"]), ReceivedAtUtc = ReadTime(reader["ReceivedAtUtc"]), TelemetryTimeUtc = reader["TelemetryTimeUtc"] == DBNull.Value ? (DateTime?)null : ReadTime(reader["TelemetryTimeUtc"]), Type = Convert.ToString(reader["Type"]), BatteryLevel = reader["BatteryLevel"] == DBNull.Value ? (uint?)null : Convert.ToUInt32(reader["BatteryLevel"]), Voltage = reader["Voltage"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["Voltage"]), ChannelUtilization = reader["ChannelUtilization"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["ChannelUtilization"]), AirUtilTx = reader["AirUtilTx"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["AirUtilTx"]), UptimeSeconds = reader["UptimeSeconds"] == DBNull.Value ? (uint?)null : Convert.ToUInt32(reader["UptimeSeconds"]), Temperature = reader["Temperature"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["Temperature"]), RelativeHumidity = reader["RelativeHumidity"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["RelativeHumidity"]), BarometricPressure = reader["BarometricPressure"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["BarometricPressure"]), RawTelemetry = Convert.ToString(reader["RawTelemetry"])
+                            Id = Guid.Parse(Convert.ToString(reader["Id"])), NodeNumber = Convert.ToUInt32(reader["NodeNumber"]), ReceivedAtUtc = ReadTime(reader["ReceivedAtUtc"]), TelemetryTimeUtc = reader["TelemetryTimeUtc"] == DBNull.Value ? (DateTime?)null : ReadTime(reader["TelemetryTimeUtc"]), Type = Convert.ToString(reader["Type"]), BatteryLevel = reader["BatteryLevel"] == DBNull.Value ? (uint?)null : Convert.ToUInt32(reader["BatteryLevel"]), Voltage = reader["Voltage"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["Voltage"]), ChannelUtilization = reader["ChannelUtilization"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["ChannelUtilization"]), AirUtilTx = reader["AirUtilTx"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["AirUtilTx"]), UptimeSeconds = reader["UptimeSeconds"] == DBNull.Value ? (uint?)null : Convert.ToUInt32(reader["UptimeSeconds"]), Temperature = reader["Temperature"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["Temperature"]), RelativeHumidity = reader["RelativeHumidity"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["RelativeHumidity"]), BarometricPressure = reader["BarometricPressure"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["BarometricPressure"]), Latitude = reader["Latitude"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["Latitude"]), Longitude = reader["Longitude"] == DBNull.Value ? (double?)null : Convert.ToDouble(reader["Longitude"]), Altitude = reader["Altitude"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["Altitude"]), RawTelemetry = Convert.ToString(reader["RawTelemetry"])
                         });
                     }
                     return result;
                 }
             }
         }
-        private DbConnection Open() { var c = _factory.CreateConnection(); c.ConnectionString = _connectionString; c.Open(); return c; }
+        private DbConnection Open()
+        {
+            var connection = _factory.CreateConnection();
+            connection.ConnectionString = _connectionString;
+            connection.Open();
+            if (_sqlite)
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "PRAGMA synchronous=NORMAL; PRAGMA temp_store=MEMORY";
+                    command.ExecuteNonQuery();
+                }
+            }
+            return connection;
+        }
         private object IdValue(Guid id) { return _sqlite ? (object)id.ToString("D") : id; }
         private object TimeValue(DateTime value) { return _sqlite ? (object)value.ToUniversalTime().ToString("o") : value; }
         private static object NullableNumber(uint? value) { return value.HasValue ? (object)(long)value.Value : DBNull.Value; }
-        private void AddNodeParameters(DbCommand command, MeshNode node, DateTime timestamp)
+        private void AddNodeParameters(DbCommand command, MeshNode node, DateTime timestamp, bool hasLastHeard)
         {
-            Add(command, "@number", (long)node.Number); Add(command, "@id", node.Id); Add(command, "@longName", node.LongName); Add(command, "@shortName", node.ShortName); Add(command, "@lastReceived", TimeValue(timestamp)); Add(command, "@lat", node.Latitude); Add(command, "@lon", node.Longitude); Add(command, "@battery", node.BatteryLevel.HasValue ? (object)(long)node.BatteryLevel.Value : DBNull.Value); Add(command, "@hops", node.HopsAway.HasValue ? (object)(long)node.HopsAway.Value : DBNull.Value);
+            Add(command, "@number", (long)node.Number); Add(command, "@id", node.Id); Add(command, "@longName", node.LongName); Add(command, "@shortName", node.ShortName); Add(command, "@lastReceived", TimeValue(timestamp)); Add(command, "@hasLastHeard", _sqlite ? (object)(hasLastHeard ? 1 : 0) : hasLastHeard); Add(command, "@lat", node.Latitude); Add(command, "@lon", node.Longitude); Add(command, "@battery", node.BatteryLevel.HasValue ? (object)(long)node.BatteryLevel.Value : DBNull.Value); Add(command, "@hops", node.HopsAway.HasValue ? (object)(long)node.HopsAway.Value : DBNull.Value);
         }
         private static void Add(DbCommand command, string name, object value) { var p = command.CreateParameter(); p.ParameterName = name; p.Value = value ?? DBNull.Value; command.Parameters.Add(p); }
         private StoredMeshMessage Read(IDataRecord r)
@@ -382,6 +440,7 @@ namespace Meshtastic.Client
             Func<string, object> v = delegate(string name) { var value = r[name]; return value == DBNull.Value ? null : value; };
             return new StoredMeshMessage { Id = Guid.Parse(Convert.ToString(v("Id"))), OccurredUtc = ReadTime(v("OccurredUtc")), CreatedUtc = ReadTime(v("CreatedUtc")), Direction = (MessageDirection)Enum.Parse(typeof(MessageDirection), Convert.ToString(v("Direction"))), Kind = (StoredMessageKind)Enum.Parse(typeof(StoredMessageKind), Convert.ToString(v("Kind"))), PacketId = ReadUInt(v("PacketId")), FromNode = ReadUInt(v("FromNode")), ToNode = ReadUInt(v("ToNode")), ChannelIndex = v("ChannelIndex") == null ? (int?)null : Convert.ToInt32(v("ChannelIndex")), ChannelName = Convert.ToString(v("ChannelName")), Text = Convert.ToString(v("Text")), DeliveryStatus = Convert.ToString(v("DeliveryStatus")), DeliveryError = Convert.ToString(v("DeliveryError")), IsNew = v("IsNew") != null && Convert.ToInt32(v("IsNew")) != 0, Latitude = v("Latitude") == null ? (double?)null : Convert.ToDouble(v("Latitude")), Longitude = v("Longitude") == null ? (double?)null : Convert.ToDouble(v("Longitude")), RawMetadata = Convert.ToString(v("RawMetadata")) };
         }
+        private static DateTime UnixTime(uint seconds) { return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(seconds); }
         private static uint? ReadUInt(object value) { return value == null ? (uint?)null : Convert.ToUInt32(value); }
         private static DateTime ReadTime(object value) { return value is DateTime ? ((DateTime)value).ToUniversalTime() : DateTime.Parse(Convert.ToString(value), null, System.Globalization.DateTimeStyles.RoundtripKind).ToUniversalTime(); }
         public void Dispose() { }

@@ -1,0 +1,175 @@
+Offline-OSM-Karten fuer Meshtastic ConsoleClient erstellen
+==========================================================
+
+1. Was der ConsoleClient erwartet
+---------------------------------
+
+Die Kartendatei muss die Dateiendung .mbtiles besitzen und in diesem Ordner
+"osm" liegen. Der ConsoleClient oeffnet beim Start die alphabetisch erste
+*.mbtiles-Datei. Fuer einen eindeutigen Test sollte deshalb nur eine solche
+Datei im Ordner liegen. Alternativ kann die gewuenschte Datei beispielsweise
+"00-oberbayern.mbtiles" genannt werden.
+
+Unterstuetzt werden:
+
+  * Vektor-MBTiles mit Mapbox Vector Tiles (PBF), vorzugsweise im
+    OpenMapTiles-Schema. GZIP-komprimierte PBF-Kacheln sind erlaubt.
+  * Raster-MBTiles mit PNG- oder JPEG-Kacheln.
+
+Die MBTiles-Datei muss eine SQLite-Datenbank mit den ueblichen Tabellen
+"metadata" und "tiles" sein. Die Tabelle "tiles" muss mindestens diese
+Spalten enthalten:
+
+  zoom_level, tile_column, tile_row, tile_data
+
+tile_row muss der MBTiles-Spezifikation entsprechend in TMS-Reihenfolge
+gespeichert sein. Bei Vektordaten sollte die Metadatentabelle mindestens
+folgende Werte enthalten:
+
+  format   = pbf
+  minzoom  = kleinste enthaltene Zoomstufe
+  maxzoom  = groesste enthaltene Zoomstufe
+  bounds   = West,Sued,Ost,Nord
+  json     = Beschreibung der vector_layers (empfohlen)
+
+Der eingebaute einfache Vektor-Renderer erkennt insbesondere diese Layernamen:
+
+  transportation, transportation_name, road, railway, boundary,
+  building, waterway, water, landcover, landuse, park
+
+Ein anderes Vektorschema kann zwar technisch eine gueltige MBTiles-Datei sein,
+aber trotzdem nur einen schwarzen Hintergrund ergeben, wenn seine Layernamen
+nicht erkannt werden.
+
+
+2. OSM-Rohdaten herunterladen
+-----------------------------
+
+Regionale *.osm.pbf-Auszüge koennen beispielsweise von Geofabrik geladen
+werden:
+
+  https://download.geofabrik.de/europe/germany.html
+
+Fuer Tests ist ein kleiner Regierungsbezirk oder Landkreis wesentlich besser
+als ganz Deutschland. Die Rohdatei wird beispielsweise als
+"oberbayern-latest.osm.pbf" gespeichert.
+
+OpenStreetMap-Daten stehen unter der ODbL. Bei einer Weitergabe der Karte muss
+die erforderliche Quellenangabe, normalerweise "(c) OpenStreetMap contributors",
+beibehalten werden. Weitere Informationen: https://www.openstreetmap.org/copyright
+
+
+3. Vektor-MBTiles mit tilemaker erzeugen
+----------------------------------------
+
+Die vollstaendige tilemaker-Ausgabe entpacken. Neben tilemaker.exe wird der
+Ordner "resources" mit einer JSON-Konfiguration und einer Lua-Prozessdatei
+benoetigt. Nur die EXE alleine reicht nicht aus.
+
+PowerShell im tilemaker-Ordner oeffnen und zuerst die vorhandenen Dateien
+pruefen:
+
+  Get-ChildItem .\resources\*.json
+  Get-ChildItem .\resources\*.lua
+
+Bei Paketen mit config-example.json und process-example.lua lautet der Aufruf:
+
+  .\tilemaker.exe `
+    --input ".\oberbayern-latest.osm.pbf" `
+    --output ".\oberbayern.mbtiles" `
+    --config ".\resources\config-example.json" `
+    --process ".\resources\process-example.lua" `
+    --verbose
+
+Wenn das verwendete Paket stattdessen Dateien mit "openmaptiles" im Namen
+enthaelt, muessen exakt diese vorhandenen Namen eingesetzt werden, zum Beispiel:
+
+  .\tilemaker.exe `
+    --input ".\oberbayern-latest.osm.pbf" `
+    --output ".\oberbayern.mbtiles" `
+    --config ".\resources\config-openmaptiles.json" `
+    --process ".\resources\process-openmaptiles.lua" `
+    --verbose
+
+Bei zu wenig Arbeitsspeicher kann ein temporaerer Datenspeicher helfen:
+
+  New-Item -ItemType Directory -Force ".\tilemaker-store"
+
+Dann den Parameter ergaenzen:
+
+  --store ".\tilemaker-store"
+
+Der Ausgabeordner muss beschreibbar sein und es darf dort keine alte, gerade
+von einem anderen Programm geoeffnete oberbayern.mbtiles liegen. Erscheint nur
+die Bounding Box und tilemaker endet sofort ohne Ausgabedatei, ist dies kein
+erfolgreicher Durchlauf. Dann den Exitcode mit "$LASTEXITCODE" pruefen. Bei
+einem Absturz empfiehlt sich eine aktuelle tilemaker-Version oder die
+Linux-/Docker-Ausgabe, da einige aeltere Windows-Builds bei groesseren
+PBF-Dateien abstuerzen.
+
+
+4. Zoomstufen und Dateigroesse
+------------------------------
+
+Fuer eine Terminalkarte sind Zoomstufen bis 14 normalerweise ein guter Anfang.
+Gebaeude und kleine Strassen sollten in der JSON-Konfiguration bis zur
+gewuenschten maxzoom-Stufe aktiviert sein. Zoom 15 oder 16 liefert mehr lokale
+Details, vergroessert Erstellungszeit und Datei aber deutlich.
+
+Eine flaechendeckende Deutschlandkarte mit echtem Detail bis etwa 1 m pro
+Bildpunkt waere extrem gross. Der ConsoleClient benoetigt wegen seiner groben
+Terminalzellen normalerweise keine Rasterkarte in dieser Aufloesung. Eine
+regionale Vektorkarte bis Zoom 14 bis 16 ist der sinnvollere Kompromiss.
+
+Beim Aendern der tilemaker-Konfiguration beachten:
+
+  * "minzoom" und "maxzoom" des jeweiligen Layers bestimmen, wann er erscheint.
+  * Wasser, Strassen, Gebaeude und Landnutzung muessen in den oben genannten
+    Layern ausgegeben werden.
+  * Eine hoehere globale maxzoom-Stufe allein genuegt nicht, wenn ein Layer
+    bereits bei einer kleineren Stufe endet.
+
+
+5. Ergebnis kontrollieren und installieren
+-------------------------------------------
+
+Nach erfolgreicher Erzeugung muss die Datei groesser als 0 Byte sein:
+
+  Get-Item ".\oberbayern.mbtiles"
+
+Optional kann sie mit sqlite3 kontrolliert werden:
+
+  sqlite3 ".\oberbayern.mbtiles" "SELECT name,value FROM metadata;"
+  sqlite3 ".\oberbayern.mbtiles" "SELECT zoom_level,COUNT(*) FROM tiles GROUP BY zoom_level ORDER BY zoom_level;"
+
+Die fertige Datei in den osm-Unterordner des Builds kopieren, zum Beispiel:
+
+  Copy-Item ".\oberbayern.mbtiles" `
+    "C:\Users\Tobias\Documents\ConsoleClientBuilds\Windows\osm\00-oberbayern.mbtiles"
+
+Unter Linux gehoert sie entsprechend nach:
+
+  ConsoleClientBuilds/Linux/osm/00-oberbayern.mbtiles
+
+Den ConsoleClient danach neu starten. Auf der Node-Map schaltet Taste 8 die
+Hintergrundkarte ein und aus. Bleibt alles schwarz, zuerst kontrollieren:
+
+  * Liegt die aktuelle Kartenposition innerhalb von "bounds"?
+  * Ist dies wirklich die alphabetisch erste .mbtiles-Datei?
+  * Steht bei Vektorkarten "format=pbf" in den Metadaten?
+  * Verwendet die Datei erkannte OpenMapTiles-Layernamen?
+  * Enthaelt die Datei Kacheln fuer die gerade verwendete Zoomstufe?
+
+
+6. Raster-MBTiles
+-----------------
+
+Alternativ kann eine fertige Karte mit einem GIS- oder Rendering-Werkzeug als
+PNG/JPEG-MBTiles exportiert werden. Die Metadaten sollten dann "format=png",
+"format=jpg" oder "format=jpeg" sowie korrekte Werte fuer minzoom, maxzoom und
+bounds enthalten. Der ConsoleClient reduziert die Bildfarben automatisch auf
+die fuer das Terminal verwendete Farbpalette.
+
+Rasterkacheln benoetigen bei hohen Zoomstufen sehr viel mehr Speicherplatz als
+Vektorkacheln. Fuer grosse Gebiete deshalb nur die tatsaechlich benoetigten
+Zoomstufen exportieren.

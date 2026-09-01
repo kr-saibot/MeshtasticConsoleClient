@@ -72,6 +72,7 @@ namespace Meshtastic.ConsoleHost
                     bool parsed;
                     if (Boolean.TryParse(value, out parsed)) DarkMode = parsed;
                 }
+
                 if (values.TryGetValue("WindowWidth", out value))
                 {
                     int parsed;
