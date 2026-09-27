@@ -334,6 +334,9 @@ namespace ConsoleClient
             var name = RawAttribute(attributes, "name:en");
             if (String.IsNullOrWhiteSpace(name)) name = RawAttribute(attributes, "name");
             if (String.IsNullOrWhiteSpace(name)) name = RawAttribute(attributes, "name:de");
+            // tilemaker's OpenMapTiles profile uses these names by default.
+            if (String.IsNullOrWhiteSpace(name)) name = RawAttribute(attributes, "name:latin");
+            if (String.IsNullOrWhiteSpace(name)) name = RawAttribute(attributes, "name_int");
             var reference = RawAttribute(attributes, "ref");
             if (!String.IsNullOrWhiteSpace(name)) return "OSM " + layerName + " | " + name + (String.IsNullOrWhiteSpace(reference) ? "" : " | " + reference);
             if (!String.IsNullOrWhiteSpace(reference)) return "OSM " + layerName + " | " + reference;

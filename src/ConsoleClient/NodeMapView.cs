@@ -51,6 +51,8 @@ namespace ConsoleClient
         public Color ClusterColor { get; set; } = Color.BrightMagenta;
         public Color GridColor { get; set; } = Color.DarkGray;
         public bool ShowKnownNodes { get; set; } = true;
+        public bool HopLimitEnabled { get; set; }
+        public int HopLimit { get; set; }
         public bool ShowBackgroundMap { get; set; } = true;
         public bool HasBackgroundMap { get { return _offlineMap != null; } }
         public NodeMapView() { CanFocus = true; }
@@ -58,7 +60,7 @@ namespace ConsoleClient
         public void SetData(IEnumerable<StoredMeshNode> source, double? latitude, double? longitude)
         {
             _nodes.Clear();
-            _nodes.AddRange(source.Where(HasPosition));
+            _nodes.AddRange(source.Where(HasPosition).Where(node => !HopLimitEnabled || (node.HopsAway.HasValue && node.HopsAway.Value <= HopLimit)));
             _ownLatitude = ValidLatitude(latitude) ? latitude : null;
             _ownLongitude = ValidLongitude(longitude) ? longitude : null;
             Center(false);
@@ -401,6 +403,16 @@ namespace ConsoleClient
         {
             if (!ValidLatitude(latitude) || !ValidLongitude(longitude)) return;
             _centerLatitude = latitude; _centerLongitude = longitude; ClearSelectionAndShowCrosshair(); NotifyViewChanged(); SetNeedsDisplay();
+        }
+        public bool CenterOnNode(uint nodeNumber)
+        {
+            var node = _nodes.FirstOrDefault(item => item.NodeNumber == nodeNumber);
+            if (node == null || !HasPosition(node)) return false;
+            _centerLatitude = node.Latitude.Value; _centerLongitude = node.Longitude.Value;
+            _selectedKey = "n:" + node.NodeNumber; _selectionSuppressed = false; _selectCrosshairAfterViewChange = false;
+            if (OverlaySelectionChanged != null) OverlaySelectionChanged(null);
+            NotifySelection(node); NotifyViewChanged(); SetNeedsDisplay();
+            return true;
         }
         public void RestoreView(double latitude, double longitude, double metersPerRow)
         {

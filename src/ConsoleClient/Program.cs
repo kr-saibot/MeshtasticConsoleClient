@@ -172,6 +172,24 @@ namespace ConsoleClient
             NotifySelectionChanged();
             return base.OnLeave(view);
         }
+        public override bool OnEnter(View view)
+        {
+            var lastMessage = _messageItems.LastOrDefault(item => item != null);
+            if (lastMessage != null)
+            {
+                _selectedMessageId = lastMessage.Id;
+                _selectedEmojiIndex = -1;
+                var lines = BuildDisplayLines(Math.Max(2, Bounds.Width));
+                List<StoredMeshMessage> owners;
+                List<bool> starts;
+                BuildDisplayMetadata(Math.Max(2, Bounds.Width), out owners, out starts);
+                var row = owners.FindLastIndex(item => item != null && item.Id == lastMessage.Id);
+                if (row >= 0) EnsureEmojiVisible(row, lines.Count);
+                SetNeedsDisplay();
+                NotifySelectionChanged();
+            }
+            return base.OnEnter(view);
+        }
         public override bool ProcessKey(KeyEvent keyEvent)
         {
             if (keyEvent.Key == Key.Enter)
@@ -696,6 +714,7 @@ namespace ConsoleClient
         private static string _lastMapPointShortName = "";
         private static string _lastMapPointDescription = "";
         private static bool _mapFollowGps;
+        private static int _deviceTimeSyncActive;
         private static System.Windows.Forms.NotifyIcon _desktopNotificationIcon;
 
         private static void Main(string[] args)
@@ -719,16 +738,18 @@ namespace ConsoleClient
             InitializeDesktopNotifications();
             BuildUi();
             // Start only after the first UI cycle so the waiting window can be drawn first.
-            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { StartConnect(); return false; });
+            Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(500), delegate(MainLoop loop) { if (Volatile.Read(ref _shutdownStarted) == 0) StartConnect(); return false; });
             Application.Run(HandleTerminalGuiException);
-            try { SaveMapViewState(); SaveNodeListState(); MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); } catch { }
-            EnsureShutdownCompleted();
-            if (_mesh != null && Environment.OSVersion.Platform == PlatformID.Win32NT) try { _mesh.Dispose(); } catch { }
-            if (_databaseWrites != null) try { _databaseWrites.Dispose(); } catch { }
-            if (_store != null) try { _store.Dispose(); } catch { }
-            if (_desktopNotificationIcon != null) try { _desktopNotificationIcon.Visible = false; _desktopNotificationIcon.Dispose(); } catch { }
-            try { Application.Shutdown(); } catch { }
-            RestoreUnixTerminalState();
+            WriteShutdownLog("UI loop returned");
+            RunShutdownStep("save settings", delegate { SaveMapViewState(); SaveNodeListState(); MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); });
+            RunShutdownStep("wait for shutdown worker", EnsureShutdownCompleted);
+            if (_mesh != null && Environment.OSVersion.Platform == PlatformID.Win32NT) RunShutdownStep("dispose mesh", _mesh.Dispose);
+            if (_databaseWrites != null) RunShutdownStep("dispose database writer", _databaseWrites.Dispose);
+            if (_store != null) RunShutdownStep("close database", _store.Dispose);
+            if (_desktopNotificationIcon != null) RunShutdownStep("dispose notification icon", delegate { _desktopNotificationIcon.Visible = false; _desktopNotificationIcon.Dispose(); });
+            RunShutdownStep("Terminal.Gui shutdown", Application.Shutdown);
+            RunShutdownStep("restore terminal state", RestoreUnixTerminalState);
+            WriteShutdownLog("cleanup finished; exiting process");
             // Mono can keep native SerialPort/HttpClient helper threads alive for about a minute.
             // All application data has already been flushed above, so end the Unix process explicitly.
             if (Environment.OSVersion.Platform != PlatformID.Win32NT) Environment.Exit(0);
@@ -1120,15 +1141,15 @@ namespace ConsoleClient
             ApplyAppearanceSettings();
             ApplyLogoSettings();
             InstallReadOnInteractionHandlers();
-            Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); RotateLogoIfDue(); return true; });
-            Application.MainLoop.AddTimeout(TimeSpan.FromMinutes(5), delegate(MainLoop loop) { RefreshNodesFromDeviceAutomatically(); return true; });
+            Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { if (Volatile.Read(ref _shutdownStarted) != 0) return false; UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); RotateLogoIfDue(); return true; });
+            Application.MainLoop.AddTimeout(TimeSpan.FromMinutes(5), delegate(MainLoop loop) { if (Volatile.Read(ref _shutdownStarted) != 0) return false; RefreshNodesFromDeviceAutomatically(); return true; });
         }
 
         private static void InstallReadOnInteractionHandlers()
         {
             Application.RootKeyEvent += delegate(KeyEvent keyEvent)
             {
-                Application.MainLoop.Invoke(MarkSelectedChatMessagesRead);
+                Ui(MarkSelectedChatMessagesRead);
                 return false;
             };
             Application.RootMouseEvent += delegate(MouseEvent mouseEvent)
@@ -1137,7 +1158,7 @@ namespace ConsoleClient
                     || mouseEvent.Flags.HasFlag(MouseFlags.Button1DoubleClicked)
                     || mouseEvent.Flags.HasFlag(MouseFlags.Button2Clicked)
                     || mouseEvent.Flags.HasFlag(MouseFlags.Button3Clicked);
-                if (clicked) Application.MainLoop.Invoke(MarkSelectedChatMessagesRead);
+                if (clicked) Ui(MarkSelectedChatMessagesRead);
             };
         }
 
@@ -1156,9 +1177,9 @@ namespace ConsoleClient
 
         private static void SubscribeMeshEvents()
         {
-            _mesh.ConnectionStateChanged += delegate { Ui(UpdateStatus); };
+            _mesh.ConnectionStateChanged += delegate(object sender, ConnectionStateChangedEventArgs e) { if (e.State == ConnectionState.Disconnected) Interlocked.Exchange(ref _deviceTimeSyncActive, 0); Ui(UpdateStatus); };
             _mesh.SerialTraffic += delegate(object sender, SerialTrafficEventArgs e) { WriteSerialComLog(e); };
-            _mesh.DeviceInfoUpdated += delegate { Ui(delegate { UpdateStatus(); UpdateChatPageTitle(); UpdateMapGpsPosition(); }); };
+            _mesh.DeviceInfoUpdated += delegate { TrySynchronizeDeviceTime(); Ui(delegate { UpdateStatus(); UpdateChatPageTitle(); UpdateMapGpsPosition(); }); };
             _mesh.NodeDiscovered += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }, "node:" + e.Node.Number.ToString(CultureInfo.InvariantCulture)); };
             _mesh.NodeUpdated += delegate(object sender, NodeEventArgs e) { Save(delegate { _store.AddOrUpdateNode(e.Node); Ui(QueueNodePageRefresh); }, "node:" + e.Node.Number.ToString(CultureInfo.InvariantCulture)); };
             _mesh.MessageReceived += delegate(object sender, MeshMessageEventArgs e)
@@ -1199,6 +1220,17 @@ namespace ConsoleClient
                     RefreshTelemetryViews(e.Packet.From, true);
                 });
             };
+        }
+
+        private static void TrySynchronizeDeviceTime()
+        {
+            if (_mesh == null || !_mesh.IsConnected || _mesh.Device.MyNode == null) return;
+            if (Interlocked.CompareExchange(ref _deviceTimeSyncActive, 1, 0) != 0) return;
+            // DeviceInfoUpdated is raised as soon as MyNodeInfo arrives during the
+            // configuration stream. Complete this small write before the reader
+            // accepts subsequently replayed packets so firmware can attach rxTime.
+            try { _mesh.SetDeviceTimeAsync().GetAwaiter().GetResult(); }
+            catch { }
         }
 
         private static bool IsFavoriteNode(uint nodeNumber)
@@ -1248,7 +1280,7 @@ namespace ConsoleClient
                     {
                         if (attemptId != _connectionAttemptId) return;
                         var c = _settings.Connection;
-                        if (c.Transport == MeshtasticTransportType.Serial) await _mesh.ConnectSerialAsync(c.SerialPort, c.SerialBaudRate, cancellation.Token);
+                        if (c.Transport == MeshtasticTransportType.Serial) await _mesh.ConnectSerialAsync(c.SerialPort, c.SerialBaudRate, c.SerialDtrEnable, c.SerialRtsEnable, cancellation.Token);
                         else await _mesh.ConnectTcpAsync(c.TcpHost, c.TcpPort, cancellation.Token);
                         if (attemptId != _connectionAttemptId) return;
                         Ui(delegate { if (attemptId == _connectionAttemptId) ShowPleaseWait("Loading nodes and device data..."); });
@@ -1322,6 +1354,7 @@ namespace ConsoleClient
             Application.MainLoop.AddTimeout(TimeSpan.FromMilliseconds(250), delegate(MainLoop loop)
             {
                 _nodeRefreshPending = false;
+                if (Volatile.Read(ref _shutdownStarted) != 0) return false;
                 RefreshNodePage();
                 UpdateNodeLoadingProgress();
                 if (_chatPage != null && _chatPage.Visible && _selected != null && _selected.Kind == ChatKind.Direct) _nodeConnectionInfo.Text = BuildNodeConnectionLine(_selected);
@@ -1384,6 +1417,8 @@ namespace ConsoleClient
                 "Configured transport: " + configured.Transport + "\n" +
                 "Configured serial port: " + (configured.SerialPort ?? "-") + "\n" +
                 "Configured baud rate: " + configured.SerialBaudRate + "\n" +
+                "Configured DTR: " + (configured.SerialDtrEnable ? "enabled" : "disabled") + "\n" +
+                "Configured RTS: " + (configured.SerialRtsEnable ? "enabled" : "disabled") + "\n" +
                 "Configured TCP host: " + (configured.TcpHost ?? "-") + "\n" +
                 "Configured TCP port: " + configured.TcpPort + "\n\n" +
                 "Connected since: " + FormatConnectionTime(info.ConnectedSinceUtc) + "\n" +
@@ -1719,7 +1754,16 @@ namespace ConsoleClient
             var width = Math.Min(Math.Max(54, Application.Driver.Cols - 4), 100);
             var height = Math.Min(Math.Max(18, Application.Driver.Rows - 4), 32);
             var dialog = new Dialog("Message details", width, height);
-            var view = new TextView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(2), ReadOnly = true, WordWrap = true, CanFocus = true, Text = details.ToString() };
+            var view = new TextView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(4), ReadOnly = true, WordWrap = true, CanFocus = true, Text = details.ToString() };
+            var senderAction = 0;
+            var senderDetails = new Button("Sender details") { X = 0, Y = 0, Enabled = message.FromNode.HasValue };
+            var senderChat = new Button("Direct chat") { X = Pos.Right(senderDetails) + 2, Y = 0, Enabled = message.FromNode.HasValue };
+            var showOnMap = new Button("Show on map") { X = Pos.Right(senderChat) + 2, Y = 0, Enabled = message.FromNode.HasValue };
+            var senderButtons = new View { X = Pos.Center(), Y = Pos.AnchorEnd(3), Width = senderDetails.Frame.Width + 2 + senderChat.Frame.Width + 2 + showOnMap.Frame.Width, Height = 1, CanFocus = true };
+            senderButtons.Add(senderDetails, senderChat, showOnMap);
+            senderDetails.Clicked += delegate { senderAction = 1; Application.RequestStop(); };
+            senderChat.Clicked += delegate { senderAction = 2; Application.RequestStop(); };
+            showOnMap.Clicked += delegate { senderAction = 3; Application.RequestStop(); };
             var deleted = false;
             var copy = new Button("Copy message");
             copy.Clicked += delegate
@@ -1738,7 +1782,7 @@ namespace ConsoleClient
             };
             var close = new Button("Close", true);
             close.Clicked += delegate { Application.RequestStop(); };
-            dialog.Add(view);
+            dialog.Add(view, senderButtons);
             dialog.AddButton(copy);
             dialog.AddButton(copyChat);
             dialog.AddButton(delete);
@@ -1750,6 +1794,27 @@ namespace ConsoleClient
                 ShowSelectedChat();
             }
             if (_messages != null) _messages.SetFocus();
+            if (senderAction != 0 && message.FromNode.HasValue)
+            {
+                var number = message.FromNode.Value;
+                var sender = _store.GetNodes(StoredNodeSort.Name).FirstOrDefault(node => node.NodeNumber == number);
+                if (senderAction == 1)
+                {
+                    if (sender != null) ShowNodeDetails(sender);
+                    else MessageBox.Query("Sender details", "Node: !" + number.ToString("x8") + "\nNo stored node details are available for this sender.", "OK");
+                }
+                else if (senderAction == 2)
+                {
+                    _selected = new ChatItem { Kind = ChatKind.Direct, Id = number, Name = sender == null || String.IsNullOrWhiteSpace(sender.LongName) ? "!" + number.ToString("x8") : sender.LongName };
+                    ShowChatPage(); ShowSelectedChat(); _input.SetFocus();
+                }
+                else
+                {
+                    ShowMapPage();
+                    if (!_nodeMap.CenterOnNode(number)) ShowBriefMapPopup("No visible map position is available for this node.");
+                    else _nodeMap.SetFocus();
+                }
+            }
         }
         private static void CopyMapToClipboard()
         {
@@ -1949,6 +2014,8 @@ namespace ConsoleClient
             var savedScale = _settings.Map.MetersPerRow;
             _nodeMap.ShowKnownNodes = _settings.Map.ShowKnownNodes;
             _nodeMap.ShowBackgroundMap = _settings.Map.ShowBackgroundMap;
+            _nodeMap.HopLimitEnabled = _settings.Map.HopLimitEnabled;
+            _nodeMap.HopLimit = _settings.Map.HopLimit;
             _nodeMap.SetData(_store.GetNodes(StoredNodeSort.Name), _mesh.Device.Latitude, _mesh.Device.Longitude);
             RefreshMapOverlays();
             if (savedLatitude.HasValue && savedLongitude.HasValue) _nodeMap.RestoreView(savedLatitude.Value, savedLongitude.Value, savedScale);
@@ -1989,10 +2056,47 @@ namespace ConsoleClient
                 followGps,
                 showKnownNodes,
                 showBackgroundMap,
+                new MenuItem("_Hop Limit", "", ShowMapHopLimitSettings),
                 new MenuItem("_Position history", "", ShowPositionTrackSettings),
                 new MenuItem("_Overlays", "", ShowMapOverlayOrderPopup),
                 new MenuItem("_Copy current map", "", CopyMapToClipboard)
             };
+        }
+
+        private static void ShowMapHopLimitSettings()
+        {
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            var dialog = new Dialog("Map Hop Limit", 62, 12);
+            var enabled = new CheckBox("Enable hop limit filter") { X = 1, Y = 1, Checked = _settings.Map.HopLimitEnabled };
+            var value = new TextField(_settings.Map.HopLimit.ToString(CultureInfo.InvariantCulture)) { X = 31, Y = 3, Width = 8 };
+            dialog.Add(enabled, new Label("Maximum hops (0 = direct):") { X = 1, Y = 3 }, value);
+            dialog.Add(new Label("Nodes without a known hop count are hidden while enabled.") { X = 1, Y = 5, Width = Dim.Fill(2) });
+            var save = new Button("Save", true);
+            save.Clicked += delegate
+            {
+                int limit;
+                if (!Int32.TryParse(value.Text.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out limit) || limit < 0 || limit > 255)
+                {
+                    MessageBox.ErrorQuery("Hop Limit", "Enter a value from 0 to 255.", "OK");
+                    return;
+                }
+                _settings.Map.HopLimitEnabled = enabled.Checked;
+                _settings.Map.HopLimit = limit;
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+                Application.RequestStop();
+            };
+            var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(save); dialog.AddButton(cancel);
+            value.SetFocus();
+            Application.Run(dialog, HandleTerminalGuiException);
+            if (_mapPage != null && _mapPage.Visible)
+            {
+                _nodeMap.HopLimitEnabled = _settings.Map.HopLimitEnabled;
+                _nodeMap.HopLimit = _settings.Map.HopLimit;
+                _nodeMap.SetData(_store.GetNodes(StoredNodeSort.Name), _mesh.Device.Latitude, _mesh.Device.Longitude);
+                _nodeMap.SetFocus();
+            }
+            if (_mapMenu != null) _mapMenu.Children = BuildMapMenuItems();
         }
 
         private static void ToggleBackgroundMapFromMap()
@@ -2820,7 +2924,7 @@ namespace ConsoleClient
                 "\nName: " + (node.LongName ?? "-") +
                 "\nShort name: " + (node.ShortName ?? "-") +
                 "\nFavorite: " + (node.IsFavorite ? "yes" : "no") +
-                "\nLast received: " + node.LastReceivedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") +
+                "\nLast received: " + node.LastReceivedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " (" + FormatDetailedAge(node.LastReceivedUtc) + ")" +
                 "\nPosition: " + (node.Latitude.HasValue && node.Longitude.HasValue ? node.Latitude.Value.ToString("F6", CultureInfo.InvariantCulture) + ", " + node.Longitude.Value.ToString("F6", CultureInfo.InvariantCulture) : "not available") +
                 "\nDistance: " + distanceText +
                 "\nDirection: " + direction +
@@ -2833,6 +2937,31 @@ namespace ConsoleClient
             else if (selectedButton == 3) { _store.SetNodeFavorite(node.NodeNumber, !node.IsFavorite); RefreshNodePage(); }
             else if (selectedButton == 4) CopyNodePositionToClipboard(node);
             else if (selectedButton == 5 && MessageBox.Query("Delete node", "Delete this node from the database?", "Delete", "Cancel") == 0) { _store.DeleteNode(node.NodeNumber); RefreshNodePage(); }
+        }
+        private static string FormatDetailedAge(DateTime timestampUtc)
+        {
+            var age = DateTime.UtcNow - timestampUtc.ToUniversalTime();
+            if (age < TimeSpan.Zero) age = TimeSpan.Zero;
+            if (age.TotalDays >= 1d)
+            {
+                var days = (int)age.TotalDays;
+                return days.ToString(CultureInfo.InvariantCulture) + (days == 1 ? " day " : " days ") +
+                    age.Hours.ToString(CultureInfo.InvariantCulture) + (age.Hours == 1 ? " hour ago" : " hours ago");
+            }
+            if (age.TotalHours >= 1d)
+            {
+                var hours = (int)age.TotalHours;
+                return hours.ToString(CultureInfo.InvariantCulture) + (hours == 1 ? " hour " : " hours ") +
+                    age.Minutes.ToString(CultureInfo.InvariantCulture) + (age.Minutes == 1 ? " minute ago" : " minutes ago");
+            }
+            if (age.TotalMinutes >= 1d)
+            {
+                var minutes = (int)age.TotalMinutes;
+                return minutes.ToString(CultureInfo.InvariantCulture) + (minutes == 1 ? " minute " : " minutes ") +
+                    age.Seconds.ToString(CultureInfo.InvariantCulture) + (age.Seconds == 1 ? " second ago" : " seconds ago");
+            }
+            var seconds = Math.Max(0, (int)age.TotalSeconds);
+            return seconds.ToString(CultureInfo.InvariantCulture) + (seconds == 1 ? " second ago" : " seconds ago");
         }
         private static void ShowNodePositionHistory(StoredMeshNode node)
         {
@@ -3237,15 +3366,17 @@ namespace ConsoleClient
         private static void ShowSettings()
         {
             var c = _settings.Connection;
-            var dialog = new Dialog("Connection settings", 70, 17);
+            var dialog = new Dialog("Connection settings", 70, 19);
             var transport = new RadioGroup(new Rect(1, 1, 20, 2), new ustring[] { "Serial", "TCP" }) { SelectedItem = c.Transport == MeshtasticTransportType.Serial ? 0 : 1 };
             var serial = new TextField(c.SerialPort) { X = 16, Y = 4, Width = 20 };
             var baud = new TextField(c.SerialBaudRate.ToString(CultureInfo.InvariantCulture)) { X = 16, Y = 5, Width = 20 };
-            var host = new TextField(c.TcpHost) { X = 16, Y = 7, Width = 35 };
-            var port = new TextField(c.TcpPort.ToString(CultureInfo.InvariantCulture)) { X = 16, Y = 8, Width = 20 };
-            var automaticReconnect = new CheckBox("Automatic reconnect") { X = 1, Y = 10, Checked = c.AutomaticReconnect };
-            var reconnectInterval = new TextField(c.ReconnectIntervalSeconds.ToString(CultureInfo.InvariantCulture)) { X = 30, Y = 11, Width = 8 };
-            dialog.Add(transport, new Label("Serial port:") { X = 1, Y = 4 }, serial, new Label("Baud rate:") { X = 1, Y = 5 }, baud, new Label("TCP host:") { X = 1, Y = 7 }, host, new Label("TCP port:") { X = 1, Y = 8 }, port, automaticReconnect, new Label("Reconnect interval (seconds):") { X = 1, Y = 11 }, reconnectInterval);
+            var dtr = new CheckBox("DTR enabled") { X = 1, Y = 6, Checked = c.SerialDtrEnable };
+            var rts = new CheckBox("RTS enabled") { X = 22, Y = 6, Checked = c.SerialRtsEnable };
+            var host = new TextField(c.TcpHost) { X = 16, Y = 8, Width = 35 };
+            var port = new TextField(c.TcpPort.ToString(CultureInfo.InvariantCulture)) { X = 16, Y = 9, Width = 20 };
+            var automaticReconnect = new CheckBox("Automatic reconnect") { X = 1, Y = 11, Checked = c.AutomaticReconnect };
+            var reconnectInterval = new TextField(c.ReconnectIntervalSeconds.ToString(CultureInfo.InvariantCulture)) { X = 30, Y = 12, Width = 8 };
+            dialog.Add(transport, new Label("Serial port:") { X = 1, Y = 4 }, serial, new Label("Baud rate:") { X = 1, Y = 5 }, baud, dtr, rts, new Label("TCP host:") { X = 1, Y = 8 }, host, new Label("TCP port:") { X = 1, Y = 9 }, port, automaticReconnect, new Label("Reconnect interval (seconds):") { X = 1, Y = 12 }, reconnectInterval);
             var save = new Button("Save", true);
             save.Clicked += delegate
             {
@@ -3254,6 +3385,7 @@ namespace ConsoleClient
                 if (!Int32.TryParse(reconnectInterval.Text.ToString(), out parsedReconnectInterval) || parsedReconnectInterval < 1 || parsedReconnectInterval > 86400) { MessageBox.ErrorQuery("Settings", "The reconnect interval must be between 1 and 86400 seconds.", "OK"); return; }
                 c.Transport = transport.SelectedItem == 0 ? MeshtasticTransportType.Serial : MeshtasticTransportType.Tcp;
                 c.SerialPort = serial.Text.ToString(); c.SerialBaudRate = parsedBaud; c.TcpHost = host.Text.ToString(); c.TcpPort = parsedPort;
+                c.SerialDtrEnable = dtr.Checked; c.SerialRtsEnable = rts.Checked;
                 c.AutomaticReconnect = automaticReconnect.Checked; c.ReconnectIntervalSeconds = parsedReconnectInterval;
                 ApplyConnectionReconnectSettings();
                 try { MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); Application.RequestStop(); } catch (Exception ex) { MessageBox.ErrorQuery("Settings", ex.Message, "OK"); }
@@ -4233,7 +4365,12 @@ namespace ConsoleClient
         private static void Ui(Action action)
         {
             if (Volatile.Read(ref _shutdownStarted) != 0) return;
-            Application.MainLoop.Invoke(action);
+            Application.MainLoop.Invoke(delegate
+            {
+                // Also discard work queued before shutdown began.
+                if (Volatile.Read(ref _shutdownStarted) != 0) return;
+                action();
+            });
         }
         private static void RequestQuit()
         {
@@ -4244,6 +4381,9 @@ namespace ConsoleClient
             _connectionAttemptCancellation = null;
             if (cancellation != null) cancellation.Cancel();
             if (_status != null) { _status.Text = " Closing ConsoleClient..."; _status.SetNeedsDisplay(); }
+            // Capture the root window while still on the UI thread. Parameterless
+            // RequestStop can target a stale nested RunState after dialogs were used.
+            var shutdownTop = Application.Top;
             var completion = new TaskCompletionSource<object>();
             _shutdownTask = completion.Task;
             var shutdownThread = new Thread(new ThreadStart(delegate
@@ -4254,8 +4394,45 @@ namespace ConsoleClient
                     UpdateShutdownStatus("starting shutdown", elapsed);
                     StopExternalServicesWithProgress(TimeSpan.FromSeconds(6), elapsed);
                     CompleteDatabaseWritesWithProgress(TimeSpan.FromSeconds(5), elapsed);
+                    if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                    {
+                        // Terminal.Gui's Unix/Mono main loop can enter a permanent
+                        // CPU-bound spin in RequestStop/MainLoop.Stop after a long
+                        // runtime. All persistent work is already bounded and
+                        // flushed above, so finish the remaining cleanup here and
+                        // do not ask Terminal.Gui to unwind its loop.
+                        WriteShutdownLog("Linux fast shutdown after bounded cleanup");
+                        RunShutdownStep("save settings", delegate { SaveMapViewState(); SaveNodeListState(); MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); });
+                        if (_databaseWrites != null) RunShutdownStep("dispose database writer", _databaseWrites.Dispose);
+                        if (_store != null) RunShutdownStep("close database", _store.Dispose);
+                        RunShutdownStep("restore terminal state", RestoreUnixTerminalState);
+                        WriteShutdownLog("Linux cleanup finished; exiting process");
+                        completion.TrySetResult(null);
+                        Environment.Exit(0);
+                        return;
+                    }
                     UpdateShutdownStatus("closing terminal interface", elapsed);
-                    try { Application.MainLoop.Invoke(delegate { Application.RequestStop(); }); } catch { }
+                    WriteShutdownLog("requesting UI loop stop");
+                    var dispatchWatch = Stopwatch.StartNew();
+                    try
+                    {
+                        Application.MainLoop.Invoke(delegate
+                        {
+                            WriteShutdownLog("UI stop callback entered after " + dispatchWatch.Elapsed.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture) + "s");
+                            WriteShutdownLog("shutdown target: " + (shutdownTop == null ? "null" : shutdownTop.GetType().FullName) + ", running=" + (shutdownTop != null && shutdownTop.Running));
+                            var stopWatch = Stopwatch.StartNew();
+                            WriteShutdownLog("START Application.RequestStop");
+                            try
+                            {
+                                if (shutdownTop != null) Application.RequestStop(shutdownTop);
+                                else Application.RequestStop();
+                            }
+                            catch (Exception error) { WriteShutdownLog("ERROR Application.RequestStop: " + error); }
+                            finally { WriteShutdownLog("END Application.RequestStop (" + stopWatch.Elapsed.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture) + "s)"); }
+                        });
+                        WriteShutdownLog("UI stop Invoke returned after " + dispatchWatch.Elapsed.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture) + "s");
+                    }
+                    catch (Exception error) { WriteShutdownLog("ERROR enqueueing UI stop: " + error); }
                 }
                 finally { completion.TrySetResult(null); }
             })) { IsBackground = true, Name = "ConsoleClient shutdown" };
@@ -4282,7 +4459,10 @@ namespace ConsoleClient
             {
                 var pending = String.Join(", ", stops.Where(item => !item.Value.IsCompleted).Select(item => item.Key));
                 UpdateShutdownStatus("waiting for " + pending, elapsed);
-                try { Task.WaitAny(stops.Select(item => item.Value).ToArray(), TimeSpan.FromMilliseconds(250)); } catch { }
+                // Completed tasks make WaitAny return immediately and flood the UI queue.
+                var pendingTasks = stops.Where(item => !item.Value.IsCompleted).Select(item => item.Value).ToArray();
+                if (pendingTasks.Length == 0) break;
+                try { Task.WaitAny(pendingTasks, TimeSpan.FromMilliseconds(250)); } catch { }
             }
             var unfinished = stops.Where(item => !item.Value.IsCompleted).Select(item => item.Key).ToList();
             UpdateShutdownStatus(unfinished.Count == 0 ? "external services stopped" : "timeout while stopping " + String.Join(", ", unfinished), elapsed);
@@ -4323,6 +4503,21 @@ namespace ConsoleClient
         {
             try { return stop() ?? Task.FromResult(0); }
             catch { return Task.FromResult(0); }
+        }
+
+        private static void WriteShutdownLog(string detail)
+        {
+            try { File.AppendAllText("shutdown.log", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture) + " | " + detail + Environment.NewLine); }
+            catch { }
+        }
+
+        private static void RunShutdownStep(string name, Action action)
+        {
+            WriteShutdownLog("START " + name);
+            var watch = Stopwatch.StartNew();
+            try { action(); }
+            catch (Exception error) { WriteShutdownLog("ERROR " + name + ": " + error.GetType().Name + " - " + error.Message); }
+            finally { WriteShutdownLog("END " + name + " (" + watch.Elapsed.TotalSeconds.ToString("F3", CultureInfo.InvariantCulture) + "s)"); }
         }
 
         private static void EnsureShutdownCompleted()

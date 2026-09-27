@@ -91,7 +91,7 @@ namespace Meshtastic.Client
         public string Type { get { return Telemetry.VariantCase.ToString(); } }
     }
 
-    public enum MessageDeliveryState { QueuedAtDevice, Delivered, Failed }
+    public enum MessageDeliveryState { QueuedAtDevice, Sent, Delivered, Failed }
 
     public sealed class MessageDeliveryEventArgs : EventArgs
     {

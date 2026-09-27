@@ -172,11 +172,16 @@ namespace Meshtastic.Client
 
         public Task ConnectSerialAsync(string portName, int baudRate = 115200, CancellationToken cancellationToken = default(CancellationToken))
         {
+            return ConnectSerialAsync(portName, baudRate, true, false, cancellationToken);
+        }
+
+        public Task ConnectSerialAsync(string portName, int baudRate, bool dtrEnable, bool rtsEnable, CancellationToken cancellationToken = default(CancellationToken))
+        {
             if (String.IsNullOrWhiteSpace(portName)) throw new ArgumentException("A serial port is required.", "portName");
             portName = portName.Trim();
             if (!System.IO.Ports.SerialPort.GetPortNames().Any(p => String.Equals(p, portName, StringComparison.OrdinalIgnoreCase)))
                 throw new IOException("Serial port " + portName + " is not available. Check the connection settings and whether the device is connected.");
-            return StartAsync(delegate { return new SerialTransport(portName, baudRate); }, cancellationToken);
+            return StartAsync(delegate { return new SerialTransport(portName, baudRate, dtrEnable, rtsEnable); }, cancellationToken);
         }
 
         public Task ConnectTcpAsync(string host, int port = 4403, CancellationToken cancellationToken = default(CancellationToken))
@@ -362,6 +367,16 @@ namespace Meshtastic.Client
             if (Device.MyNode == null) throw new InvalidOperationException("Local node information has not been received yet.");
             var admin = new AdminMessage { RemoveFixedPosition = true };
             var packet = new MeshPacket { To = Device.MyNode.MyNodeNum, WantAck = true, Decoded = new Data { Portnum = PortNum.AdminApp, WantResponse = true, Payload = admin.ToByteString() } };
+            return SendAsync(new ToRadio { Packet = packet }, cancellationToken);
+        }
+
+        /// <summary>Sets the clock of the locally connected node to the current UTC time.</summary>
+        public Task SetDeviceTimeAsync(CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (Device.MyNode == null) throw new InvalidOperationException("Local node information has not been received yet.");
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var admin = new AdminMessage { SetTimeOnly = checked((uint)(DateTime.UtcNow - epoch).TotalSeconds) };
+            var packet = new MeshPacket { To = Device.MyNode.MyNodeNum, Decoded = new Data { Portnum = PortNum.AdminApp, Payload = admin.ToByteString() } };
             return SendAsync(new ToRadio { Packet = packet }, cancellationToken);
         }
 
@@ -656,7 +671,9 @@ namespace Meshtastic.Client
             bool awaitingAck;
             if (_pendingDeliveries.TryGetValue(status.MeshPacketId, out awaitingAck))
             {
-                var state = status.Res == 0 ? MessageDeliveryState.QueuedAtDevice : MessageDeliveryState.Failed;
+                var state = status.Res != 0
+                    ? MessageDeliveryState.Failed
+                    : awaitingAck ? MessageDeliveryState.QueuedAtDevice : MessageDeliveryState.Sent;
                 Raise(MessageDeliveryChanged, new MessageDeliveryEventArgs(status.MeshPacketId, state, Routing.Types.Error.None));
                 if (status.Res != 0 || !awaitingAck) _pendingDeliveries.TryRemove(status.MeshPacketId, out awaitingAck);
             }

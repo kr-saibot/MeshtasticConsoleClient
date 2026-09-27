@@ -121,6 +121,7 @@ namespace Meshtastic.Client
             // Older database files received IsNew=1 as the column default. Sent messages are
             // never unread, including existing rows after the schema migration.
             Execute("UPDATE MeshtasticMessages SET IsNew=0 WHERE Direction='Outgoing'", null);
+            Execute("UPDATE MeshtasticMessages SET DeliveryStatus='Sent' WHERE Direction='Outgoing' AND Kind='Channel' AND DeliveryStatus='QueuedAtDevice'", null);
             Execute("CREATE INDEX " + (_sqlite ? "IF NOT EXISTS " : "") + "IX_MeshtasticMessages_Time ON MeshtasticMessages(OccurredUtc)", null, ignoreFailure: !_sqlite);
             Execute("CREATE INDEX " + (_sqlite ? "IF NOT EXISTS " : "") + "IX_MeshtasticMessages_ChannelTime ON MeshtasticMessages(Kind,ChannelIndex,OccurredUtc)", null, ignoreFailure: !_sqlite);
             Execute("CREATE INDEX " + (_sqlite ? "IF NOT EXISTS " : "") + "IX_MeshtasticMessages_FromTime ON MeshtasticMessages(Kind,FromNode,OccurredUtc)", null, ignoreFailure: !_sqlite);

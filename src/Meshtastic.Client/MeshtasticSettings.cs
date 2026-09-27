@@ -15,6 +15,8 @@ namespace Meshtastic.Client
         public MeshtasticTransportType Transport { get; set; }
         public string SerialPort { get; set; }
         public int SerialBaudRate { get; set; }
+        public bool SerialDtrEnable { get; set; }
+        public bool SerialRtsEnable { get; set; }
         public string TcpHost { get; set; }
         public int TcpPort { get; set; }
         public bool AutomaticReconnect { get; set; }
@@ -25,6 +27,8 @@ namespace Meshtastic.Client
             Transport = MeshtasticTransportType.Serial;
             SerialPort = Environment.OSVersion.Platform == PlatformID.Win32NT ? "COM5" : "/dev/ttyACM0";
             SerialBaudRate = 115200;
+            SerialDtrEnable = true;
+            SerialRtsEnable = false;
             TcpHost = "192.168.1.1";
             TcpPort = 4403;
             AutomaticReconnect = true;
@@ -176,13 +180,15 @@ namespace Meshtastic.Client
         public List<string> ActiveOverlayFiles { get; set; }
         public bool ShowKnownNodes { get; set; }
         public bool ShowBackgroundMap { get; set; }
+        public bool HopLimitEnabled { get; set; }
+        public int HopLimit { get; set; }
         public uint? PositionTrackNodeNumber { get; set; }
         public bool PositionTrackVisible { get; set; }
         public int PositionTrackFromHoursAgo { get; set; }
         public int PositionTrackToHoursAgo { get; set; }
         public string PositionTrackColor { get; set; }
         public string PositionTrackSymbol { get; set; }
-        public MeshtasticMapSettings() { MetersPerRow = 1000d; ShowKnownNodes = true; ShowBackgroundMap = true; PositionTrackVisible = true; PositionTrackFromHoursAgo = 0; PositionTrackToHoursAgo = 24; PositionTrackColor = "BrightYellow"; PositionTrackSymbol = "O"; }
+        public MeshtasticMapSettings() { MetersPerRow = 1000d; ShowKnownNodes = true; ShowBackgroundMap = true; HopLimit = 0; PositionTrackVisible = true; PositionTrackFromHoursAgo = 0; PositionTrackToHoursAgo = 24; PositionTrackColor = "BrightYellow"; PositionTrackSymbol = "O"; }
     }
     /// <summary>Root object for a readable, application-owned settings file.</summary>
     [XmlRoot("MeshtasticApplicationSettings")]
@@ -227,6 +233,7 @@ namespace Meshtastic.Client
                 NormalizeAppearance(settings.Appearance);
                 if (settings.Logo == null) settings.Logo = new MeshtasticLogoSettings();
                 if (settings.Map == null) settings.Map = new MeshtasticMapSettings();
+                if (settings.Map.HopLimit < 0) settings.Map.HopLimit = 0;
                 if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackColor)) settings.Map.PositionTrackColor = "BrightYellow";
                 if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackSymbol)) settings.Map.PositionTrackSymbol = "O";
                 if (settings.Map.PositionTrackFromHoursAgo < 0) settings.Map.PositionTrackFromHoursAgo = 0;
@@ -258,6 +265,7 @@ namespace Meshtastic.Client
             NormalizeAppearance(settings.Appearance);
             if (settings.Logo == null) settings.Logo = new MeshtasticLogoSettings();
             if (settings.Map == null) settings.Map = new MeshtasticMapSettings();
+            if (settings.Map.HopLimit < 0) settings.Map.HopLimit = 0;
             if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackColor)) settings.Map.PositionTrackColor = "BrightYellow";
             if (String.IsNullOrWhiteSpace(settings.Map.PositionTrackSymbol)) settings.Map.PositionTrackSymbol = "O";
             if (settings.Map.PositionTrackFromHoursAgo < 0) settings.Map.PositionTrackFromHoursAgo = 0;

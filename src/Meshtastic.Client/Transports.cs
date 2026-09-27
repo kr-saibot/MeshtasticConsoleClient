@@ -20,8 +20,8 @@ namespace Meshtastic.Client
 
     internal sealed class SerialTransport : ITransport
     {
-        private readonly string _port; private readonly int _baudRate; private SerialPort _serial;
-        public SerialTransport(string port, int baudRate) { _port = port; _baudRate = baudRate; }
+        private readonly string _port; private readonly int _baudRate; private readonly bool _dtrEnable, _rtsEnable; private SerialPort _serial;
+        public SerialTransport(string port, int baudRate, bool dtrEnable, bool rtsEnable) { _port = port; _baudRate = baudRate; _dtrEnable = dtrEnable; _rtsEnable = rtsEnable; }
         public Stream Stream
         {
             get { var serial = Volatile.Read(ref _serial); return serial == null ? null : serial.BaseStream; }
@@ -39,12 +39,9 @@ namespace Meshtastic.Client
         public Task OpenAsync(CancellationToken cancellationToken)
         {
             _serial = new SerialPort(_port, _baudRate, Parity.None, 8, StopBits.One);
-            // nRF/TinyUSB USB-CDC devices use DTR to determine whether a host is ready
-            // to receive data. SerialPort defaults DTR to false, which permits TX but
-            // can suppress every response from these devices.
             _serial.Handshake = Handshake.None;
-            _serial.DtrEnable = true;
-            _serial.RtsEnable = false;
+            _serial.DtrEnable = _dtrEnable;
+            _serial.RtsEnable = _rtsEnable;
             _serial.ReadTimeout = SerialPort.InfiniteTimeout; _serial.WriteTimeout = SerialPort.InfiniteTimeout;
             _serial.Open();
             // Four START1 bytes wake the device and resynchronize its stream parser
@@ -58,7 +55,13 @@ namespace Meshtastic.Client
         {
             var serial = Interlocked.Exchange(ref _serial, null);
             if (serial == null) return;
-            try { try { serial.BaseStream.Close(); } catch { } serial.Close(); }
+            try
+            {
+                // Preserve the configured line state until the port is closed.
+                // In particular, do not generate a client-side DTR/RTS transition.
+                try { serial.BaseStream.Close(); } catch { }
+                serial.Close();
+            }
             finally { serial.Dispose(); }
         }
         public void Dispose() { Close(); }

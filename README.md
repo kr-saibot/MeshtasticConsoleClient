@@ -28,17 +28,24 @@ Source code and releases: https://github.com/kr-saibot/MeshtasticConsoleClient
 ## Features
 
 - Native serial and TCP transports with automatic reconnect and connection statistics
+- Separately configurable DTR and RTS control lines for serial/COM connections
 - Node, channel, text-message, position and telemetry handling
 - SQLite message, node and telemetry storage
-- Terminal chat interface with direct chats, channels, node details and telemetry
+- Terminal chat interface with direct chats, channels, node details, telemetry and
+  message-detail actions for opening the sender, starting a direct chat or locating
+  the sender on the map
 - Interactive node map with clustering, pan/zoom, GPS centring, XML overlays and
   optional offline raster or OpenMapTiles-compatible vector MBTiles backgrounds
 - Selectable OSM roads, buildings and map features with English-name preference
 - Stored node-position history with an automatic latest-available 24-hour window
+- Optional map hop-limit filter, including hop limit zero for directly received nodes
 - Filterable and sortable node list with saved view settings
+- Meshtastic receive-time handling, device-clock synchronisation and distinct delivery
+  states for direct and channel messages
 - Optional Telegram gateways, local chat bots and HTTP bots
 - Configurable appearance, logo rotation and emoji replacement/picker support
 - Windows desktop host with ConPTY rendering, mouse support and persistent settings
+- Bounded Linux shutdown that avoids prolonged Terminal.Gui/Mono exit delays
 
 ## Windows desktop host
 
@@ -107,11 +114,32 @@ the newest stored position, even when that position is older than one day. Brief
 map and layer notifications remain visible for up to four seconds and close
 immediately when any key is pressed.
 
+**Map > Hop Limit** enables a hop-count filter independently from its numeric
+value. A limit of `0` therefore shows directly received nodes rather than
+disabling the filter. Nodes without known hop information are hidden while the
+filter is enabled. Node details show both the last-received timestamp and a
+readable relative age, for example `(2 days 10 hours ago)`.
+
+## Messages and delivery status
+
 Incoming text messages use the Meshtastic packet `rx_time` as their displayed
 receive time when firmware supplies it, with the PC receive time used only as a
-fallback. During shutdown, the status line reports whether the client is waiting
-for the mesh connection, Telegram gateways or queued database writes. This makes
-slow Linux shutdowns easier to diagnose.
+fallback. The client sets the connected device clock early in the connection so
+that subsequently received packets can contain a useful receive timestamp.
+
+The message-details window can open the sender's node details, start a direct
+chat, or centre and select the sender on the map. When the messages window gains
+focus, it selects the timestamp of the newest message automatically.
+
+Direct messages remain **Queued at device** until the corresponding acknowledgement
+arrives and then change to **Delivered**. Channel broadcasts cannot receive an
+individual delivery acknowledgement, so a successfully queued channel message is
+shown as **Sent** instead of remaining indefinitely at **Queued at device**.
+
+On Linux, shutdown uses bounded waits for background services and queued database
+writes, restores the terminal and then exits directly. This prevents the
+Terminal.Gui/Mono event loop from consuming CPU for minutes or hours after a
+long-running session.
 
 ## Emoji picker
 
@@ -153,6 +181,18 @@ Start `ConsoleClient.exe`. On its first start, enter the serial or TCP settings
 through the Settings menu. The application writes local settings and its SQLite
 database next to the executable; these files can contain private information
 and are deliberately excluded from version control.
+
+### Serial/COM control lines (DTR and RTS)
+
+The connection settings provide separate **DTR enabled** and **RTS enabled**
+options for serial/COM-port connections. The defaults are DTR enabled and RTS
+disabled. Changes take effect on the next connection and do not affect TCP.
+
+Some ESP32-S3 boards and USB serial circuits, including certain Heltec WiFi LoRa
+32 V3 configurations, connect DTR and RTS to reset or boot-control signals. If a
+device resets, appears to shut down, or loses its clock when ConsoleClient closes
+the port, disable both DTR and RTS and reconnect. Other boards or drivers may need
+DTR to communicate, so keep the default unless the device exhibits this problem.
 
 ### Linux serial-port permissions
 
