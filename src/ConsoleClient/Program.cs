@@ -713,6 +713,8 @@ namespace ConsoleClient
         private static string _lastMapPointColor = "Green";
         private static string _lastMapPointShortName = "";
         private static string _lastMapPointDescription = "";
+        private const string SharedMapPointPrefix = "///MAP+";
+        private const string SharedMapPointDeletionPrefix = "///MAP-";
         private static bool _mapFollowGps;
         private static int _deviceTimeSyncActive;
         private static System.Windows.Forms.NotifyIcon _desktopNotificationIcon;
@@ -729,7 +731,7 @@ namespace ConsoleClient
             _store = MeshtasticMessageStore.CreateSqlite("meshtastic-messages.db");
             _store.Initialize();
             _databaseWrites = new DatabaseWriteQueue();
-            _lastKnownUnreadCount = _store.CountNewMessages();
+            _lastKnownUnreadCount = _store.CountNewMessages(_settings.Alerts.SuppressMapMessageAlerts);
             _mesh = new MeshtasticClient();
             ApplyConnectionReconnectSettings();
             SubscribeMeshEvents();
@@ -1094,6 +1096,11 @@ namespace ConsoleClient
             PageFrames.Add(_mapPage);
             _nodeMap = new NodeMapView { X = 0, Y = 0, Width = Dim.Fill(), Height = Dim.Fill(3) };
             _nodeMap.NodeActivated = ShowNodeDetails;
+            _nodeMap.ClusterActivated = ShowMapClusterNodes;
+            _nodeMap.OwnPositionMarkerRequested = SetOwnPositionMarker;
+            _nodeMap.PositionMarkerListRequested = ShowPositionMarkerList;
+            _nodeMap.PositionMarkerSelected = UpdatePositionMarkerInfo;
+            _nodeMap.PositionMarkerActivated = ShowPositionMarkerDetails;
             _nodeMap.SelectionChanged = UpdateMapInfo;
             _nodeMap.OverlaySelectionChanged = UpdateMapOverlayInfo;
             _nodeMap.MapFeatureSelectionChanged = delegate(string description) { if (_mapInfo != null) _mapInfo.Text = description; };
@@ -1141,7 +1148,7 @@ namespace ConsoleClient
             ApplyAppearanceSettings();
             ApplyLogoSettings();
             InstallReadOnInteractionHandlers();
-            Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { if (Volatile.Read(ref _shutdownStarted) != 0) return false; UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); RotateLogoIfDue(); return true; });
+            Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { if (Volatile.Read(ref _shutdownStarted) != 0) return false; UpdateStatus(); UpdateMapGpsPosition(); CheckRepeatingAlertBeep(); UpdateLogoBlink(); RotateLogoIfDue(); if (_nodeMap != null) _nodeMap.RefreshPositionMarkerInfo(); return true; });
             Application.MainLoop.AddTimeout(TimeSpan.FromMinutes(5), delegate(MainLoop loop) { if (Volatile.Read(ref _shutdownStarted) != 0) return false; RefreshNodesFromDeviceAutomatically(); return true; });
         }
 
@@ -1192,6 +1199,7 @@ namespace ConsoleClient
                     if (!ownEcho) NotifyAlertStateChanged(e.Message);
                     RefreshChatsUi();
                 });
+                if (!ownEcho) TryReceiveSharedMapPoint(e.Message);
                 if (!ownEcho) Task.Run(async delegate { await RunMatchingChatBotsAsync(e.Message); await RunMatchingHttpBotsAsync(e.Message); });
             };
             _mesh.MessageDeliveryChanged += delegate(object sender, MessageDeliveryEventArgs e)
@@ -1987,7 +1995,11 @@ namespace ConsoleClient
                 "\nW A S D     Pan the map" +
                 "\nShift+WASD  Pan by a larger step" +
                 "\nC           Center the map" +
-                "\nN           Create a new overlay point" +
+                "\nSpace       Center the selected item" +
+                "\nM           Cycle measurement: off / line / circle / rectangle" +
+                "\nN           Create a new overlay item" +
+                "\nO           Set/share own position marker" +
+                "\nL           List position markers" +
                 "\nEnter       Activate the selected item" +
                 "\nF           Next/newer stored position" +
                 "\nR           Previous/older stored position" +
@@ -2057,10 +2069,286 @@ namespace ConsoleClient
                 showKnownNodes,
                 showBackgroundMap,
                 new MenuItem("_Hop Limit", "", ShowMapHopLimitSettings),
+                new MenuItem("Map point _sharing", "", ShowMapPointSharingSettings),
+                new MenuItem("Position _Markers", "", ShowPositionMarkerSettings),
                 new MenuItem("_Position history", "", ShowPositionTrackSettings),
                 new MenuItem("_Overlays", "", ShowMapOverlayOrderPopup),
                 new MenuItem("_Copy current map", "", CopyMapToClipboard)
             };
+        }
+
+
+        private static void ShowPositionMarkerSettings()
+        {
+            var map = _settings.Map;
+            var dialog = new Dialog("Position Markers", 90, 25);
+            var info = new TextView { X = 49, Y = 3, Width = Dim.Fill(2), Height = 8, WordWrap = true, Text = map.PositionMarkerInfo ?? "" };
+            var receive = new CheckBox("Evaluate received markers") { X = 49, Y = 14, Checked = map.ReceivePositionMarkers };
+            var confirm = new CheckBox("Confirm setting own marker") { X = 49, Y = 16, Checked = map.ConfirmPositionMarkerPlacement };
+            var positionSource = new RadioGroup(new Rect(49, 19, 36, 2), new ustring[] { "Crosshair position", "Current GPS position" }) { SelectedItem = map.PositionMarkerUseGps ? 1 : 0 };
+            var callSign = new TextField(map.PositionMarkerCallSign ?? "") { X = 16, Y = 1, Width = 30 };
+            var symbol = new TextField(map.PositionMarkerSymbol ?? "+") { X = 16, Y = 3, Width = 4 };
+            var picker = new Button("Symbol") { X = 23, Y = 3 };
+            picker.Clicked += delegate { ShowMapPointSymbolPicker(symbol); };
+            var colors = MapPositionMarkerProtocol.Colors;
+            var color = new RadioGroup(new Rect(16, 5, 30, colors.Length), colors.Select(value => (ustring)value).ToArray());
+            color.SelectedItem = Math.Max(0, Array.FindIndex(colors, value => String.Equals(value, map.PositionMarkerColor, StringComparison.OrdinalIgnoreCase)));
+            dialog.Add(new Label("Call sign:") { X = 1, Y = 1 }, callSign, new Label("Centre symbol:") { X = 1, Y = 3 }, symbol, picker,
+                new Label("Color:") { X = 1, Y = 5 }, color, new Label("Info text:") { X = 49, Y = 1 }, info,
+                new Label("Shared message limit: 233 UTF-8 bytes") { X = 49, Y = 12, Width = Dim.Fill(2) },
+                receive, confirm, new Label("Position source:") { X = 49, Y = 18 }, positionSource);
+            var save = new Button("Save", true);
+            save.Clicked += delegate
+            {
+                var name = callSign.Text.ToString().Trim();
+                if (String.IsNullOrWhiteSpace(name) || name.Length > 80 || name.IndexOfAny(new[] { '\r', '\n', '\t' }) >= 0)
+                { MessageBox.ErrorQuery("Position Markers", "Enter a call sign with 1 to 80 characters.", "OK"); return; }
+                if (!MapPositionMarkerProtocol.ValidSymbol(symbol.Text.ToString()))
+                { MessageBox.ErrorQuery("Position Markers", "Choose one single-cell symbol.", "OK"); return; }
+                if (color.SelectedItem < 0 || color.SelectedItem >= colors.Length) return;
+                map.PositionMarkerInfo = info.Text.ToString();
+                map.ReceivePositionMarkers = receive.Checked;
+                map.ConfirmPositionMarkerPlacement = confirm.Checked;
+                map.PositionMarkerUseGps = positionSource.SelectedItem == 1;
+                map.PositionMarkerCallSign = name; map.PositionMarkerSymbol = symbol.Text.ToString(); map.PositionMarkerColor = colors[color.SelectedItem];
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+                Application.RequestStop();
+            };
+            var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
+        }
+        private static void SetOwnPositionMarker(double latitude, double longitude)
+        {
+            var localNode = _mesh.Device.MyNode;
+            if (localNode == null || localNode.MyNodeNum == 0)
+            { MessageBox.ErrorQuery("Position Markers", "Connect to a Meshtastic device first so its node ID is known.", "OK"); return; }
+            var map = _settings.Map;
+            if (String.IsNullOrWhiteSpace(map.PositionMarkerCallSign)) ShowPositionMarkerSettings();
+            if (String.IsNullOrWhiteSpace(map.PositionMarkerCallSign)) return;
+            if (map.PositionMarkerUseGps)
+            {
+                var gpsLatitude = _mesh.Device.Latitude; var gpsLongitude = _mesh.Device.Longitude;
+                if (!gpsLatitude.HasValue || !gpsLongitude.HasValue ||
+                    Double.IsNaN(gpsLatitude.Value) || Double.IsInfinity(gpsLatitude.Value) || gpsLatitude.Value < -90 || gpsLatitude.Value > 90 ||
+                    Double.IsNaN(gpsLongitude.Value) || Double.IsInfinity(gpsLongitude.Value) || gpsLongitude.Value < -180 || gpsLongitude.Value > 180)
+                { MessageBox.ErrorQuery("Position Markers", "No valid GPS position is available. The marker was not set.", "OK"); return; }
+                latitude = gpsLatitude.Value; longitude = gpsLongitude.Value;
+            }
+            var marker = new MapPositionMarker { NodeNumber = localNode.MyNodeNum, Latitude = latitude, Longitude = longitude,
+                Color = map.PositionMarkerColor ?? "BrightYellow", Symbol = map.PositionMarkerSymbol ?? "+",
+                CallSign = map.PositionMarkerCallSign.Trim(), Info = map.PositionMarkerInfo ?? "", UpdatedUtc = DateTime.UtcNow };
+            if (!MapPositionMarkerProtocol.ValidSymbol(marker.Symbol))
+            { MessageBox.ErrorQuery("Position Markers", "Configure a valid centre symbol first.", "OK"); return; }
+            var message = MapPositionMarkerProtocol.Build(marker);
+            if (map.MapPointSharingEnabled && Encoding.UTF8.GetByteCount(message) > MeshtasticClient.MaximumTextPayloadBytes)
+            { MessageBox.ErrorQuery("Position Markers", "The call sign and info text exceed the sharing limit of 233 UTF-8 bytes. Shorten them in Position Markers.", "OK"); return; }
+            if (map.ConfirmPositionMarkerPlacement &&
+                MessageBox.Query("Set position marker", "Set " + marker.CallSign + " at " +
+                    latitude.ToString("F6", CultureInfo.InvariantCulture) + ", " + longitude.ToString("F6", CultureInfo.InvariantCulture) +
+                    "\nSource: " + (map.PositionMarkerUseGps ? "GPS" : "Crosshair") +
+                    (map.MapPointSharingEnabled ? "\nThe position will also be shared." : ""), "Cancel", "Set") != 1) return;
+            _nodeMap.SetPositionMarker(marker);
+            UpdatePositionMarkerInfo(marker);
+            if (map.MapPointSharingEnabled)
+            {
+                try { SendSharedMapMessage(message); }
+                catch (Exception error) { MessageBox.ErrorQuery("Position Markers", "Marker set locally, but sharing failed:\n" + error.Message, "OK"); }
+            }
+        }
+
+        private static double? PositionMarkerDistance(MapPositionMarker marker)
+        {
+            double? latitude = _mesh.Device.Latitude, longitude = _mesh.Device.Longitude;
+            if (_mesh.Device.MyNode != null)
+            {
+                var own = _nodeMap.GetPositionMarker(_mesh.Device.MyNode.MyNodeNum);
+                if (own != null) { latitude = own.Latitude; longitude = own.Longitude; }
+            }
+            return MeshtasticClient.GetDistanceMeters(latitude, longitude, marker.Latitude, marker.Longitude);
+        }
+        private static string PositionMarkerDistanceText(MapPositionMarker marker)
+        {
+            var distance = PositionMarkerDistance(marker);
+            return distance.HasValue ? (distance.Value < 1000 ? distance.Value.ToString("F0", CultureInfo.InvariantCulture) + " m" : (distance.Value / 1000).ToString("F2", CultureInfo.InvariantCulture) + " km") : "-";
+        }
+        private static string PositionMarkerDirection(MapPositionMarker marker)
+        {
+            double? latitude = _mesh.Device.Latitude, longitude = _mesh.Device.Longitude;
+            if (_mesh.Device.MyNode != null)
+            {
+                var own = _nodeMap.GetPositionMarker(_mesh.Device.MyNode.MyNodeNum);
+                if (own != null) { latitude = own.Latitude; longitude = own.Longitude; }
+            }
+            var bearing = MeshtasticClient.GetInitialBearingDegrees(latitude, longitude, marker.Latitude, marker.Longitude);
+            return bearing.HasValue && PositionMarkerDistance(marker).GetValueOrDefault() > .01
+                ? Math.Round(bearing.Value) + "° " + MeshtasticClient.GetCompassDirection(bearing.Value) : "-";
+        }
+        private static void UpdatePositionMarkerInfo(MapPositionMarker marker)
+        {
+            if (_mapInfo != null) _mapInfo.Text = "Position marker | " + marker.CallSign + " | Distance " + PositionMarkerDistanceText(marker) +
+                " | Direction " + PositionMarkerDirection(marker) + " | Updated " + FormatDetailedAge(marker.UpdatedUtc);
+        }
+        private static void StartPositionMarkerChat(MapPositionMarker marker)
+        {
+            _selected = new ChatItem { Kind = ChatKind.Direct, Id = marker.NodeNumber, Name = marker.CallSign };
+            ShowChatPage(); ShowSelectedChat(); _input.SetFocus();
+        }
+        private static void ShowPositionMarkerDetails(MapPositionMarker marker)
+        {
+            if (ShowPositionMarkerInfoBox(marker)) StartPositionMarkerChat(marker);
+        }
+        // Return the chat action to the caller so enclosing dialogs can close first.
+        private static bool ShowPositionMarkerInfoBox(MapPositionMarker marker)
+        {
+            var dialog = new Dialog("Position marker", Math.Max(30, Math.Min(90, Application.Top.Frame.Width - 2)), Math.Max(12, Math.Min(24, Application.Top.Frame.Height - 2)));
+            var text = new TextView { X = 1, Y = 1, Width = Dim.Fill(1), Height = Dim.Fill(2), ReadOnly = true, WordWrap = true };
+            Action refresh = delegate
+            {
+                marker = _nodeMap.GetPositionMarker(marker.NodeNumber) ?? marker;
+                text.Text = marker.CallSign + "\nMeshtastic ID: !" + marker.NodeNumber.ToString("x8") +
+                    "\nPosition: " + marker.Latitude.ToString("F6", CultureInfo.InvariantCulture) + ", " + marker.Longitude.ToString("F6", CultureInfo.InvariantCulture) +
+                    "\nDistance to me: " + PositionMarkerDistanceText(marker) + "\nDirection from me: " + PositionMarkerDirection(marker) +
+                    "\nLast update: " + marker.UpdatedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " (" + FormatDetailedAge(marker.UpdatedUtc) + ")" +
+                    "\n\nInfo:\n" + (String.IsNullOrWhiteSpace(marker.Info) ? "-" : marker.Info);
+            };
+            refresh(); dialog.Add(text);
+            var action = 0;
+            foreach (var option in new[] { "Center", "Node details", "Delete", "Direct message", "Close" }.Select((label, index) => new { label, index }))
+            {
+                var chosen = option.index;
+                var button = new Button(option.label);
+                button.Clicked += delegate { action = chosen + 1; Application.RequestStop(); };
+                dialog.AddButton(button);
+            }
+            var timer = Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { refresh(); return true; });
+            try { Application.Run(dialog, HandleTerminalGuiException); }
+            finally { Application.MainLoop.RemoveTimeout(timer); }
+            if (action == 1) _nodeMap.SelectPositionMarker(marker.NodeNumber);
+            else if (action == 2)
+            {
+                var node = _store.GetNodes(StoredNodeSort.Name).FirstOrDefault(item => item.NodeNumber == marker.NodeNumber);
+                if (node != null) ShowNodeDetails(node);
+                else MessageBox.Query("Position marker", "No node details are stored for this Meshtastic ID.", "OK");
+            }
+            else if (action == 3 && MessageBox.Query("Delete position marker",
+                "Delete " + marker.CallSign + " (!" + marker.NodeNumber.ToString("x8") + ") locally?", "Cancel", "Delete") == 1)
+                _nodeMap.RemovePositionMarker(marker.NodeNumber);
+            return action == 4;
+        }
+        private static void ShowPositionMarkerList()
+        {
+            var markers = _nodeMap.GetPositionMarkers().ToList();
+            if (markers.Count == 0) { MessageBox.Query("Position markers", "No position markers are available.", "OK"); return; }
+            var width = Math.Min(Application.Top.Frame.Width - 2, Math.Max(28, Application.Top.Frame.Width / 4));
+            var dialog = new Dialog("Position markers", width, Math.Max(8, Math.Min(25, Application.Top.Frame.Height - 2))) { X = Pos.AnchorEnd(width + 2), Y = 3 };
+            var nameWidth = Math.Max(2, width - 22);
+            Func<string, int, string> column = (value, length) => (value.Length > length ? value.Substring(0, Math.Max(0, length - 1)) + "~" : value).PadRight(length);
+            Func<MapPositionMarker, string> distance = marker =>
+            {
+                var meters = PositionMarkerDistance(marker);
+                return !meters.HasValue ? "-" : meters.Value < 1000 ? meters.Value.ToString("F0", CultureInfo.InvariantCulture) + "m" :
+                    (meters.Value / 1000).ToString(meters.Value < 100000 ? "F1" : "F0", CultureInfo.InvariantCulture) + "km";
+            };
+            Func<DateTime, string> age = updated =>
+            {
+                var elapsed = DateTime.UtcNow - updated.ToUniversalTime();
+                return elapsed.TotalDays >= 1 ? ((int)elapsed.TotalDays).ToString() + "d" :
+                    elapsed.TotalHours >= 1 ? ((int)elapsed.TotalHours).ToString() + "h" :
+                    elapsed.TotalMinutes >= 1 ? ((int)elapsed.TotalMinutes).ToString() + "m" :
+                    Math.Max(0, (int)elapsed.TotalSeconds).ToString() + "s";
+            };
+            var list = new ListView { X = 1, Y = 2, Width = Dim.Fill(1), Height = Dim.Fill(2) };
+            dialog.Add(new Label(column("Callsign", nameWidth) + " | " + column("Dist", 6) + " | " + column("Age", 6)) { X = 1, Y = 1, Width = Dim.Fill(1) }, list);
+            var updating = false;
+            Action refresh = delegate
+            {
+                var selectedId = list.SelectedItem >= 0 && list.SelectedItem < markers.Count ? (uint?)markers[list.SelectedItem].NodeNumber : null;
+                updating = true;
+                markers = _nodeMap.GetPositionMarkers().ToList();
+                list.SetSource(markers.Select(marker => column(marker.CallSign, nameWidth) +
+                    " | " + column(distance(marker), 6) + " | " + column(age(marker.UpdatedUtc), 6)).ToList());
+                if (markers.Count > 0)
+                {
+                    var index = selectedId.HasValue ? markers.FindIndex(marker => marker.NodeNumber == selectedId.Value) : 0;
+                    list.SelectedItem = index >= 0 ? index : Math.Min(Math.Max(0, list.SelectedItem), markers.Count - 1);
+                }
+                updating = false;
+            };
+            Action select = delegate { if (!updating && list.SelectedItem >= 0 && list.SelectedItem < markers.Count) _nodeMap.SelectPositionMarker(markers[list.SelectedItem].NodeNumber); };
+            list.SelectedItemChanged += delegate { select(); };
+            MapPositionMarker chat = null;
+            Action details = delegate
+            {
+                if (list.SelectedItem < 0 || list.SelectedItem >= markers.Count) return;
+                var selected = markers[list.SelectedItem];
+                if (ShowPositionMarkerInfoBox(selected)) { chat = selected; Application.RequestStop(); return; }
+                refresh(); select();
+            };
+            list.OpenSelectedItem += delegate { details(); };
+            var open = new Button("Details", true); open.Clicked += delegate { details(); };
+            var close = new Button("Close"); close.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(open); dialog.AddButton(close);
+            refresh(); select();
+            var timer = Application.MainLoop.AddTimeout(TimeSpan.FromSeconds(1), delegate(MainLoop loop) { refresh(); select(); return true; });
+            try { Application.Run(dialog, HandleTerminalGuiException); }
+            finally { Application.MainLoop.RemoveTimeout(timer); }
+            if (chat != null) StartPositionMarkerChat(chat);
+            else _nodeMap.SetFocus();
+        }
+
+        private static void ShowMapPointSharingSettings()
+        {
+            if (_settings.Map == null) _settings.Map = new MeshtasticMapSettings();
+            var writableFiles = MapOverlayFiles.Where(file => file.Data != null && !file.Data.WriteProtected).ToList();
+            var channelIndexes = Enumerable.Range(0, 8).ToList();
+            var channelLabels = channelIndexes.Select(index =>
+            {
+                var configured = _mesh.Channels.FirstOrDefault(channel => channel.Index == index);
+                return "Channel " + index.ToString(CultureInfo.InvariantCulture) + (configured == null || String.IsNullOrWhiteSpace(configured.Name) ? "" : " - " + configured.Name);
+            }).ToList();
+            var dialog = new Dialog("Map point sharing", 82, 24);
+            var enabled = new CheckBox("Enable sending and receiving shared map points") { X = 1, Y = 1, Checked = _settings.Map.MapPointSharingEnabled };
+            var receiveDeletions = new CheckBox("Apply received ///MAP- deletion messages") { X = 1, Y = 16, Checked = _settings.Map.ReceiveSharedMapPointDeletions };
+            var centerReceived = new CheckBox("Center map view on newly received points") { X = 1, Y = 17, Checked = _settings.Map.CenterMapOnReceivedSharedPoint };
+            var overlayList = new ListView(writableFiles.Select(file => file.DisplayName + " (" + Path.GetFileName(file.FileName) + ")").ToList()) { X = 1, Y = 4, Width = 48, Height = 7 };
+            var channelList = new ListView(channelLabels) { X = 52, Y = 4, Width = 26, Height = 7 };
+            var overlayIndex = writableFiles.FindIndex(file => String.Equals(Path.GetFileName(file.FileName), _settings.Map.MapPointSharingOverlayFile, StringComparison.OrdinalIgnoreCase));
+            if (overlayIndex >= 0) overlayList.SelectedItem = overlayIndex;
+            else if (writableFiles.Count > 0) overlayList.SelectedItem = 0;
+            var channelIndex = channelIndexes.IndexOf(_settings.Map.MapPointSharingChannelIndex);
+            if (channelIndex >= 0) channelList.SelectedItem = channelIndex;
+            else channelList.SelectedItem = 0;
+            dialog.Add(enabled,
+                new Label("Destination overlay XML:") { X = 1, Y = 3 }, overlayList,
+                new Label("Meshtastic channel:") { X = 52, Y = 3 }, channelList,
+                new Label("Received ///MAP+ messages on this channel are added to the selected XML.") { X = 1, Y = 13, Width = Dim.Fill(2) },
+                new Label("The destination XML must remain writable. UUIDs prevent duplicate imports.") { X = 1, Y = 14, Width = Dim.Fill(2) },
+                receiveDeletions,
+                centerReceived);
+            var save = new Button("Save", true);
+            save.Clicked += delegate
+            {
+                if (enabled.Checked && (overlayList.SelectedItem < 0 || overlayList.SelectedItem >= writableFiles.Count)) { MessageBox.ErrorQuery("Map point sharing", "Select a writable overlay XML file.", "OK"); return; }
+                if (enabled.Checked && (channelList.SelectedItem < 0 || channelList.SelectedItem >= channelIndexes.Count)) { MessageBox.ErrorQuery("Map point sharing", "Select a Meshtastic channel.", "OK"); return; }
+                _settings.Map.MapPointSharingEnabled = enabled.Checked;
+                _settings.Map.ReceiveSharedMapPointDeletions = receiveDeletions.Checked;
+                _settings.Map.CenterMapOnReceivedSharedPoint = centerReceived.Checked;
+                if (overlayList.SelectedItem >= 0 && overlayList.SelectedItem < writableFiles.Count)
+                {
+                    var selectedOverlay = writableFiles[overlayList.SelectedItem];
+                    _settings.Map.MapPointSharingOverlayFile = Path.GetFileName(selectedOverlay.FileName);
+                    if (enabled.Checked) selectedOverlay.Enabled = true;
+                }
+                if (channelList.SelectedItem >= 0 && channelList.SelectedItem < channelIndexes.Count) _settings.Map.MapPointSharingChannelIndex = channelIndexes[channelList.SelectedItem];
+                SaveMapOverlayState();
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings);
+                RefreshMapOverlays();
+                Application.RequestStop();
+            };
+            var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(save); dialog.AddButton(cancel);
+            Application.Run(dialog, HandleTerminalGuiException);
+            if (_nodeMap != null && _mapPage != null && _mapPage.Visible) _nodeMap.SetFocus();
         }
 
         private static void ShowMapHopLimitSettings()
@@ -2276,11 +2564,183 @@ namespace ConsoleClient
             dialog.AddButton(create); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException);
         }
 
+        private static string EncodeSharedMapText(string value)
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(value ?? "")).TrimEnd('=');
+        }
+
+        private static string DecodeSharedMapText(string value)
+        {
+            value = value ?? "";
+            var remainder = value.Length % 4;
+            if (remainder != 0) value = value.PadRight(value.Length + 4 - remainder, '=');
+            return Encoding.UTF8.GetString(Convert.FromBase64String(value));
+        }
+
+        private static string FormatSharedMapCoordinate(double value)
+        {
+            var formatted = value.ToString("F6", CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+            return formatted == "-0" ? "0" : formatted;
+        }
+
+        private static string BuildSharedMapPointMessage(MapOverlayPoint point)
+        {
+            var colors = new[] { "Black", "Blue", "Green", "Cyan", "Red", "Magenta", "Brown", "Gray", "DarkGray", "BrightBlue", "BrightGreen", "BrightCyan", "BrightRed", "BrightMagenta", "BrightYellow", "White" };
+            var shapes = new[] { "Point", "Line", "Rectangle", "Circle" };
+            var colorCode = Math.Max(0, Array.FindIndex(colors, value => String.Equals(value, point.Color, StringComparison.OrdinalIgnoreCase)));
+            var shapeCode = Math.Max(0, Array.FindIndex(shapes, value => String.Equals(value, point.Shape, StringComparison.OrdinalIgnoreCase)));
+            return SharedMapPointPrefix + "1|" + point.Uuid.Replace("-", "") + "|" +
+                FormatSharedMapCoordinate(point.Latitude) + "|" +
+                FormatSharedMapCoordinate(point.Longitude) + "|" +
+                colorCode.ToString("x", CultureInfo.InvariantCulture) + "|" + shapeCode.ToString(CultureInfo.InvariantCulture) + "|" + point.EffectiveFillDensity.ToString(CultureInfo.InvariantCulture) + "|" +
+                EncodeSharedMapText(point.ShortName) + "|" + EncodeSharedMapText(point.Description) + "|" + EncodeSharedMapText(point.FillSymbol) + "|" +
+                (point.ReferenceLatitude.HasValue ? FormatSharedMapCoordinate(point.ReferenceLatitude.Value) : "") + "|" +
+                (point.ReferenceLongitude.HasValue ? FormatSharedMapCoordinate(point.ReferenceLongitude.Value) : "");
+        }
+
+        private static bool TryParseSharedMapPoint(string text, out MapOverlayPoint point)
+        {
+            point = null;
+            if (String.IsNullOrWhiteSpace(text) || !text.StartsWith(SharedMapPointPrefix, StringComparison.Ordinal)) return false;
+            var parts = text.Substring(SharedMapPointPrefix.Length).Split('|');
+            Guid uuid;
+            double latitude, longitude;
+            if (parts.Length != 12 || parts[0] != "1") return false;
+            if (!Guid.TryParse(parts[1], out uuid) ||
+                !Double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out latitude) ||
+                !Double.TryParse(parts[3], NumberStyles.Float, CultureInfo.InvariantCulture, out longitude) ||
+                latitude < -90d || latitude > 90d || longitude < -180d || longitude > 180d) return false;
+            try
+            {
+                int colorCode, shapeCode, fillDensity;
+                if (!Int32.TryParse(parts[4], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out colorCode) || colorCode < 0 || colorCode > 15 || !Int32.TryParse(parts[5], out shapeCode) || shapeCode < 0 || shapeCode > 3 || !Int32.TryParse(parts[6], out fillDensity) || fillDensity < 0 || fillDensity > 9) return false;
+                var colors = new[] { "Black", "Blue", "Green", "Cyan", "Red", "Magenta", "Brown", "Gray", "DarkGray", "BrightBlue", "BrightGreen", "BrightCyan", "BrightRed", "BrightMagenta", "BrightYellow", "White" };
+                var shapes = new[] { "Point", "Line", "Rectangle", "Circle" };
+                var name = DecodeSharedMapText(parts[7]).Trim();
+                if (String.IsNullOrWhiteSpace(name)) return false;
+                point = new MapOverlayPoint
+                {
+                    Uuid = uuid.ToString("D"), Latitude = latitude, Longitude = longitude,
+                    Color = colors[colorCode], Shape = shapes[shapeCode], Filled = fillDensity > 0, FillDensity = fillDensity,
+                    ShortName = name, Description = DecodeSharedMapText(parts[8]).Trim(), FillSymbol = DecodeSharedMapText(parts[9])
+                };
+                if (point.Shape != "Point")
+                {
+                    double referenceLatitude, referenceLongitude;
+                    if (Double.TryParse(parts[10], NumberStyles.Float, CultureInfo.InvariantCulture, out referenceLatitude) && Double.TryParse(parts[11], NumberStyles.Float, CultureInfo.InvariantCulture, out referenceLongitude) && referenceLatitude >= -90d && referenceLatitude <= 90d && referenceLongitude >= -180d && referenceLongitude <= 180d)
+                    { point.ReferenceLatitude = referenceLatitude; point.ReferenceLongitude = referenceLongitude; }
+                    else return false;
+                }
+                return true;
+            }
+            catch { return false; }
+        }
+
+        private static string FormatMapPointCreator(uint nodeNumber)
+        {
+            var nodeId = "!" + nodeNumber.ToString("x8");
+            var display = DisplayNodeName(nodeNumber);
+            return String.IsNullOrWhiteSpace(display) || String.Equals(display, nodeId, StringComparison.OrdinalIgnoreCase) ? nodeId : display + " (" + nodeId + ")";
+        }
+
+        private static void SendSharedMapMessage(string message)
+        {
+            var channelIndex = _settings.Map.MapPointSharingChannelIndex;
+            var packetId = _mesh.SendTextToChannelWithIdAsync(channelIndex, message).GetAwaiter().GetResult();
+            var channel = _mesh.Channels.FirstOrDefault(item => item.Index == channelIndex);
+            _store.AddOutgoing(packetId, _mesh.Device.MyNode == null ? 0u : _mesh.Device.MyNode.MyNodeNum, UInt32.MaxValue, message, channelIndex, channel == null ? null : channel.Name);
+            RefreshChatsUi();
+        }
+
+        private static void TryReceiveSharedMapPoint(MeshMessage message)
+        {
+            if (_settings == null || _settings.Map == null || !_settings.Map.MapPointSharingEnabled || message == null ||
+                !message.IsChannelMessage || !message.ChannelIndex.HasValue || (int)message.ChannelIndex.Value != _settings.Map.MapPointSharingChannelIndex) return;
+            MapPositionMarker position;
+            if (MapPositionMarkerProtocol.TryParse(message.Text, message.From, out position))
+            {
+                if (!_settings.Map.ReceivePositionMarkers) return;
+                Ui(delegate { if (_nodeMap != null) _nodeMap.SetPositionMarker(position); });
+                return;
+            }
+            if (message.Text != null && message.Text.StartsWith(SharedMapPointDeletionPrefix, StringComparison.Ordinal))
+            {
+                if (!_settings.Map.ReceiveSharedMapPointDeletions) return;
+                Guid deletionUuid;
+                if (!Guid.TryParse(message.Text.Substring(SharedMapPointDeletionPrefix.Length).Trim(), out deletionUuid)) return;
+                var normalizedUuid = deletionUuid.ToString("D");
+                Ui(delegate
+                {
+                    var target = MapOverlayFiles.FirstOrDefault(file => file.Data != null && !file.Data.WriteProtected && file.Data.Places != null && String.Equals(Path.GetFileName(file.FileName), _settings.Map.MapPointSharingOverlayFile, StringComparison.OrdinalIgnoreCase));
+                    if (target == null) return;
+                    var deletionPoint = target.Data.Places.FirstOrDefault(item => !String.IsNullOrWhiteSpace(item.Uuid) && String.Equals(item.Uuid, normalizedUuid, StringComparison.OrdinalIgnoreCase));
+                    if (deletionPoint == null) return;
+                    target.Data.Places.Remove(deletionPoint);
+                    try { SaveMapOverlayFile(target); RefreshMapOverlays(); }
+                    catch { target.Data.Places.Add(deletionPoint); }
+                });
+                return;
+            }
+            MapOverlayPoint point;
+            if (!TryParseSharedMapPoint(message.Text, out point)) return;
+            point.Creator = FormatMapPointCreator(message.From);
+            Ui(delegate
+            {
+                var target = MapOverlayFiles.FirstOrDefault(file => file.Data != null && !file.Data.WriteProtected && String.Equals(Path.GetFileName(file.FileName), _settings.Map.MapPointSharingOverlayFile, StringComparison.OrdinalIgnoreCase));
+                if (target == null) return;
+                if (MapOverlayFiles.Any(file => file.Data != null && file.Data.Places != null && file.Data.Places.Any(existing => !String.IsNullOrWhiteSpace(existing.Uuid) && String.Equals(existing.Uuid, point.Uuid, StringComparison.OrdinalIgnoreCase)))) return;
+                point.SourceFile = target.FileName;
+                point.OverlayName = target.DisplayName;
+                point.Selectable = target.Data.Selectable;
+                try
+                {
+                    target.Data.Places.Add(point);
+                    SaveMapOverlayFile(target);
+                    target.Enabled = true;
+                    SaveMapOverlayState();
+                    RefreshMapOverlays();
+                    if (_settings.Map.CenterMapOnReceivedSharedPoint && _nodeMap != null) _nodeMap.CenterOn(point.Latitude, point.Longitude);
+                }
+                catch { }
+            });
+        }
+
+        private static void ShowMapPointSymbolPicker(TextField shortName)
+        {
+            var symbols = new[]
+            {
+                "␀", "☺", "☻", "♥", "♦", "♣", "♠", "•", "◘", "○", "◙", "♂", "♀", "♪", "♫", "☼",
+                "►", "◄", "↕", "‼", "¶", "§", "▬", "↨", "↑", "↓", "→", "←", "∟", "↔", "▲", "▼"
+            };
+            symbols = symbols.Concat(new[] { "\u2302" })
+                .Concat(Enumerable.Range(0x2295, 0x22A1 - 0x2295 + 1).Select(code => Char.ConvertFromUtf32(code)))
+                .Concat(Enumerable.Range(0x29E8, 0x29F3 - 0x29E8 + 1).Select(code => Char.ConvertFromUtf32(code))).ToArray();
+            var labels = symbols.Select((symbol, index) => index.ToString("00", CultureInfo.InvariantCulture) + "   " + symbol +
+                "   U+" + Char.ConvertToUtf32(symbol, 0).ToString("X4", CultureInfo.InvariantCulture)).ToList();
+            var dialog = new Dialog("Map point symbol", 54, 19);
+            var list = new ListView(labels) { X = 2, Y = 3, Width = 30, Height = 10 };
+            dialog.Add(
+                new Label("CP437 symbols and additional Unicode symbols") { X = 2, Y = 1, Width = Dim.Fill(2) },
+                list);
+            var select = new Button("Select", true);
+            select.Clicked += delegate
+            {
+                if (list.SelectedItem < 0 || list.SelectedItem >= symbols.Length) return;
+                shortName.Text = symbols[list.SelectedItem];
+                Application.RequestStop();
+            };
+            var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(select); dialog.AddButton(cancel);
+            Application.Run(dialog, HandleTerminalGuiException);
+            shortName.SetFocus();
+        }
+
         private static void CreateMapOverlayPoint(double latitudeValue, double longitudeValue)
         {
             var writableFiles = MapOverlayFiles.Where(file => file.Data != null && !file.Data.WriteProtected).ToList();
             if (writableFiles.Count == 0) { MessageBox.Query("New map point", "Create or unlock a map XML file first.", "OK"); return; }
-            var dialog = new Dialog("New map point", 92, 22);
+            var dialog = new Dialog("New map item", 92, 29);
+            var pendingUuid = Guid.NewGuid().ToString("D");
             var latitude = new TextField(latitudeValue.ToString("F6", CultureInfo.InvariantCulture)) { X = 16, Y = 1, Width = 22 };
             var longitude = new TextField(longitudeValue.ToString("F6", CultureInfo.InvariantCulture)) { X = 16, Y = 2, Width = 22 };
             var files = new ListView(writableFiles.Select(file => file.DisplayName + " (" + Path.GetFileName(file.FileName) + ")").ToList()) { X = 16, Y = 4, Width = 38, Height = 5 };
@@ -2290,14 +2750,41 @@ namespace ConsoleClient
             var color = new RadioGroup(new Rect(60, 1, 27, colorNames.Length), colorNames.Select(name => (ustring)name).ToArray());
             var previousColor = Array.FindIndex(colorNames, name => String.Equals(name, _lastMapPointColor, StringComparison.OrdinalIgnoreCase));
             color.SelectedItem = previousColor >= 0 ? previousColor : Array.IndexOf(colorNames, "Green");
-            var shortName = new TextField(_lastMapPointShortName) { X = 16, Y = 10, Width = 38 };
-            var description = new MessageInputView { X = 16, Y = 12, Width = 38, Height = 6, WordWrap = true, Text = _lastMapPointDescription };
+            var shapeNames = new[] { "Point", "Line", "Rectangle", "Circle" };
+            var shape = new RadioGroup(new Rect(16, 10, 24, shapeNames.Length), shapeNames.Select(name => (ustring)name).ToArray());
+            shape.SelectedItem = Array.IndexOf(shapeNames, _nodeMap.MeasurementShape);
+            var fillDensity = new TextField("0") { X = 16, Y = 14, Width = 3 };
+            var fillSymbol = new TextField("*") { X = 16, Y = 15, Width = 4 };
+            var selectFillSymbol = new Button("Symbol") { X = 23, Y = 15 };
+            selectFillSymbol.Clicked += delegate { ShowMapPointSymbolPicker(fillSymbol); };
+            var shortName = new TextField(_lastMapPointShortName) { X = 16, Y = 16, Width = 27 };
+            var selectSymbol = new Button("Symbol") { X = 45, Y = 16 };
+            selectSymbol.Clicked += delegate { ShowMapPointSymbolPicker(shortName); };
+            var description = new MessageInputView { X = 16, Y = 18, Width = 38, Height = 5, WordWrap = true, Text = _lastMapPointDescription };
+            var sendPoint = new CheckBox("Send item through configured channel") { X = 16, Y = 24, Checked = _settings.Map != null && _settings.Map.MapPointSharingEnabled };
+            var remaining = new Label("") { X = 16, Y = 23, Width = 52 };
+            Func<MapOverlayPoint> buildPoint = delegate
+            {
+                var selectedShape = shape.SelectedItem >= 0 && shape.SelectedItem < shapeNames.Length ? shapeNames[shape.SelectedItem] : "Point";
+                var selectedColor = color.SelectedItem >= 0 && color.SelectedItem < colorNames.Length ? colorNames[color.SelectedItem] : "Green";
+                double currentLatitude, currentLongitude; if (!TryParseCoordinate(latitude.Text.ToString(), out currentLatitude)) currentLatitude = latitudeValue; if (!TryParseCoordinate(longitude.Text.ToString(), out currentLongitude)) currentLongitude = longitudeValue;
+                int density; if (!Int32.TryParse(fillDensity.Text.ToString(), out density)) density = 0;
+                return new MapOverlayPoint { Uuid = pendingUuid, Shape = selectedShape, Filled = density > 0, FillDensity = density, Latitude = currentLatitude, Longitude = currentLongitude, ReferenceLatitude = selectedShape != "Point" && _nodeMap.HasMeasurementPoint ? (double?)_nodeMap.MeasurementLatitude : null, ReferenceLongitude = selectedShape != "Point" && _nodeMap.HasMeasurementPoint ? (double?)_nodeMap.MeasurementLongitude : null, Color = selectedColor, ShortName = shortName.Text.ToString().Trim(), Description = description.Text.ToString().Trim(), FillSymbol = fillSymbol.Text.ToString() };
+            };
+            Action updateRemaining = delegate { var used = Encoding.UTF8.GetByteCount(BuildSharedMapPointMessage(buildPoint())); remaining.Text = "Meshtastic message: " + Math.Max(0, MeshtasticClient.MaximumTextPayloadBytes - used).ToString(CultureInfo.InvariantCulture) + " bytes remaining"; };
+            latitude.TextChanged += delegate { updateRemaining(); }; longitude.TextChanged += delegate { updateRemaining(); }; shortName.TextChanged += delegate { updateRemaining(); }; description.TextChanged += delegate { updateRemaining(); }; fillDensity.TextChanged += delegate { updateRemaining(); }; fillSymbol.TextChanged += delegate { updateRemaining(); }; shape.SelectedItemChanged += delegate { updateRemaining(); };
             dialog.Add(new Label("Latitude:") { X = 1, Y = 1 }, latitude,
                 new Label("Longitude:") { X = 1, Y = 2 }, longitude,
                 new Label("XML file:") { X = 1, Y = 4 }, files,
                 new Label("Colors:") { X = 60, Y = 0 }, color,
-                new Label("Short name:") { X = 1, Y = 10 }, shortName,
-                new Label("Description:") { X = 1, Y = 12 }, description);
+                new Label("Shape:") { X = 1, Y = 10 }, shape,
+                new Label(_nodeMap.HasMeasurementPoint ? "Reference M is available" : "Press M on map for shapes") { X = 16, Y = 9, Width = 38 },
+                new Label("Fill density:") { X = 1, Y = 14 }, fillDensity, new Label("(0-9)") { X = 21, Y = 14 },
+                new Label("Fill symbol:") { X = 1, Y = 15 }, fillSymbol, selectFillSymbol,
+                new Label("Short name:") { X = 1, Y = 16 }, shortName, selectSymbol,
+                new Label("Description:") { X = 1, Y = 18 }, description,
+                remaining, sendPoint);
+            updateRemaining();
             var save = new Button("Save", true);
             save.Clicked += delegate
             {
@@ -2307,16 +2794,41 @@ namespace ConsoleClient
                 if (files.SelectedItem < 0 || files.SelectedItem >= writableFiles.Count) { MessageBox.ErrorQuery("New map point", "Select an XML file.", "OK"); return; }
                 if (String.IsNullOrWhiteSpace(shortName.Text.ToString())) { MessageBox.ErrorQuery("New map point", "Enter a short name.", "OK"); return; }
                 if (color.SelectedItem < 0 || color.SelectedItem >= colorNames.Length) { MessageBox.ErrorQuery("New map point", "Select a color.", "OK"); return; }
+                if (shape.SelectedItem < 0 || shape.SelectedItem >= shapeNames.Length) { MessageBox.ErrorQuery("New map item", "Select a shape.", "OK"); return; }
+                if (shape.SelectedItem > 0 && !_nodeMap.HasMeasurementPoint) { MessageBox.ErrorQuery("New map item", "Press M on the map first to set the second reference point.", "OK"); return; }
+                int parsedFillDensity;
+                if (!Int32.TryParse(fillDensity.Text.ToString(), out parsedFillDensity) || parsedFillDensity < 0 || parsedFillDensity > 9) { MessageBox.ErrorQuery("New map item", "Enter a fill density from 0 to 9.", "OK"); return; }
+                if (parsedFillDensity > 0 && (String.IsNullOrEmpty(fillSymbol.Text.ToString()) || new StringInfo(fillSymbol.Text.ToString()).LengthInTextElements != 1)) { MessageBox.ErrorQuery("New map item", "Select exactly one fill symbol.", "OK"); return; }
                 var selectedColor = colorNames[color.SelectedItem];
                 var target = writableFiles[files.SelectedItem];
-                var point = new MapOverlayPoint { Latitude = parsedLatitude, Longitude = parsedLongitude, Color = selectedColor, ShortName = shortName.Text.ToString().Trim(), Description = description.Text.ToString().Trim(), SourceFile = target.FileName, OverlayName = target.DisplayName };
-                try
+                var localNodeNumber = _mesh.Device.MyNode == null ? 0u : _mesh.Device.MyNode.MyNodeNum;
+                var point = buildPoint();
+                point.Creator = localNodeNumber == 0u ? "Local user" : FormatMapPointCreator(localNodeNumber); point.Latitude = parsedLatitude; point.Longitude = parsedLongitude; point.Color = selectedColor; point.SourceFile = target.FileName; point.OverlayName = target.DisplayName;
+                if (point.Shape == "Circle" && _nodeMap.HasMeasurementPoint)
                 {
-                    target.Data.Places.Add(point); SaveMapOverlayFile(target); target.Enabled = true;
-                    _lastMapPointFile = Path.GetFileName(target.FileName); _lastMapPointColor = point.Color; _lastMapPointShortName = point.ShortName; _lastMapPointDescription = point.Description;
-                    SaveMapOverlayState(); RefreshMapOverlays(); if (_mapMenu != null) _mapMenu.Children = BuildMapMenuItems(); Application.RequestStop();
+                    // The measurement anchor is the circle centre; the cursor defines its radius.
+                    point.ReferenceLatitude = parsedLatitude; point.ReferenceLongitude = parsedLongitude;
+                    point.Latitude = _nodeMap.MeasurementLatitude; point.Longitude = _nodeMap.MeasurementLongitude;
                 }
-                catch (Exception ex) { MessageBox.ErrorQuery("New map point", ex.Message, "OK"); }
+                string sharedMessage = null;
+                if (sendPoint.Checked)
+                {
+                    if (_settings.Map == null || !_settings.Map.MapPointSharingEnabled) { MessageBox.ErrorQuery("New map point", "Enable and configure map point sharing in the Map menu first.", "OK"); return; }
+                    if (!_mesh.IsConnected) { MessageBox.ErrorQuery("New map point", "The Meshtastic device is not connected.", "OK"); return; }
+                    sharedMessage = BuildSharedMapPointMessage(point);
+                    if (Encoding.UTF8.GetByteCount(sharedMessage) > MeshtasticClient.MaximumTextPayloadBytes) { MessageBox.ErrorQuery("New map point", "This point needs " + Encoding.UTF8.GetByteCount(sharedMessage).ToString(CultureInfo.InvariantCulture) + " bytes, but a Meshtastic text message can contain only " + MeshtasticClient.MaximumTextPayloadBytes.ToString(CultureInfo.InvariantCulture) + ". Shorten the name or description.", "OK"); return; }
+                }
+                target.Data.Places.Add(point);
+                try { SaveMapOverlayFile(target); }
+                catch (Exception ex) { target.Data.Places.Remove(point); MessageBox.ErrorQuery("New map point", ex.Message, "OK"); return; }
+                target.Enabled = true;
+                if (sendPoint.Checked)
+                {
+                    try { SendSharedMapMessage(sharedMessage); }
+                    catch (Exception ex) { MessageBox.ErrorQuery("Map point sharing", "The point was saved locally, but could not be sent:\n" + ex.Message, "OK"); }
+                }
+                _lastMapPointFile = Path.GetFileName(target.FileName); _lastMapPointColor = point.Color; _lastMapPointShortName = point.ShortName; _lastMapPointDescription = point.Description;
+                _nodeMap.ResetMeasurement(); SaveMapOverlayState(); RefreshMapOverlays(); if (_mapMenu != null) _mapMenu.Children = BuildMapMenuItems(); Application.RequestStop();
             };
             var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
             dialog.AddButton(save); dialog.AddButton(cancel); Application.Run(dialog, HandleTerminalGuiException); _nodeMap.SetFocus();
@@ -2523,7 +3035,7 @@ namespace ConsoleClient
         private static void UpdateMapInfo(StoredMeshNode node)
         {
             if (_mapInfo == null) return;
-            if (node == null) { _mapInfo.Text = "Multiple nodes selected - press Enter to center"; return; }
+            if (node == null) { _mapInfo.Text = "Multiple nodes selected - Enter: node list | Space: center"; return; }
             var distance = MeshtasticClient.GetDistanceMeters(_mesh.Device.Latitude, _mesh.Device.Longitude, node.Latitude, node.Longitude);
             var bearing = MeshtasticClient.GetInitialBearingDegrees(_mesh.Device.Latitude, _mesh.Device.Longitude, node.Latitude, node.Longitude);
             var distanceText = !distance.HasValue ? "-" : distance.Value < 1000d ? Math.Round(distance.Value) + " m" : (distance.Value / 1000d).ToString("F1", CultureInfo.InvariantCulture) + " km";
@@ -2571,6 +3083,26 @@ namespace ConsoleClient
                 (position.Altitude.HasValue ? position.Altitude.Value.ToString(CultureInfo.InvariantCulture) : "")));
             CopyTextWithFallback(String.Join(Environment.NewLine, rows), positions.Count + " stored positions copied with timestamps.", "Node position history");
         }
+
+        private static bool ConfirmMapOverlayPointDeletion(MapOverlayPoint point, MapOverlayFile source, out bool sendDeletion)
+        {
+            var canShare = _settings != null && _settings.Map != null && _settings.Map.MapPointSharingEnabled && !String.IsNullOrWhiteSpace(point.Uuid);
+            var confirmed = false;
+            var dialog = new Dialog("Delete map item", 72, 12);
+            var send = new CheckBox("Send deletion through configured channel") { X = 2, Y = 4, Checked = canShare, Enabled = !String.IsNullOrWhiteSpace(point.Uuid) };
+            dialog.Add(
+                new Label("Delete this item from " + Path.GetFileName(source.FileName) + "?") { X = 2, Y = 1, Width = Dim.Fill(2) },
+                new Label(String.IsNullOrWhiteSpace(point.Uuid) ? "This older point has no UUID and cannot be deleted remotely." : "UUID: " + point.Uuid) { X = 2, Y = 2, Width = Dim.Fill(2) },
+                send);
+            var delete = new Button("Delete", true);
+            delete.Clicked += delegate { confirmed = true; Application.RequestStop(); };
+            var cancel = new Button("Cancel"); cancel.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(delete); dialog.AddButton(cancel);
+            Application.Run(dialog, HandleTerminalGuiException);
+            sendDeletion = confirmed && send.Checked;
+            return confirmed;
+        }
+
         private static void ShowMapOverlayDetails(MapOverlayPoint point)
         {
             if (point == null) return;
@@ -2600,18 +3132,65 @@ namespace ConsoleClient
                 "\nFile: " + Path.GetFileName(point.SourceFile ?? "-") +
                 "\nDescription: " + (String.IsNullOrWhiteSpace(point.Description) ? "-" : point.Description) +
                 "\nShort name: " + (String.IsNullOrWhiteSpace(point.ShortName) ? "-" : point.ShortName) +
+                "\nUUID: " + (String.IsNullOrWhiteSpace(point.Uuid) ? "-" : point.Uuid) +
+                "\nCreator: " + (String.IsNullOrWhiteSpace(point.Creator) ? "-" : point.Creator) +
+                "\nShape: " + (String.IsNullOrWhiteSpace(point.Shape) ? "Point" : point.Shape) + (point.Shape != null && !String.Equals(point.Shape, "Point", StringComparison.OrdinalIgnoreCase) ? " (fill density " + point.EffectiveFillDensity.ToString(CultureInfo.InvariantCulture) + ")" : "") +
+                "\nFill symbol: " + (String.IsNullOrWhiteSpace(point.FillSymbol) ? "-" : point.FillSymbol) +
+                "\nReference: " + (point.ReferenceLatitude.HasValue && point.ReferenceLongitude.HasValue ? point.ReferenceLatitude.Value.ToString("F6", CultureInfo.InvariantCulture) + ", " + point.ReferenceLongitude.Value.ToString("F6", CultureInfo.InvariantCulture) : "-") +
                 "\nPosition: " + point.Latitude.ToString("F6", CultureInfo.InvariantCulture) + ", " + point.Longitude.ToString("F6", CultureInfo.InvariantCulture) +
                 "\nColor: " + (point.Color ?? "-") +
                 "\nWrite protected: " + (source != null && source.Data != null && source.Data.WriteProtected ? "yes" : "no");
-            var choice = MessageBox.Query("Map item details", text, "Center", "Delete item", "Close");
+            var choice = MessageBox.Query("Map item details", text, "Center", "Delete item", "Send again", "Close");
             if (choice == 0) _nodeMap.CenterOn(point.Latitude, point.Longitude);
+            else if (choice == 2)
+            {
+                if (_settings.Map == null || !_settings.Map.MapPointSharingEnabled)
+                { MessageBox.ErrorQuery("Send map item", "Enable map point sharing and select a channel first.", "OK"); return; }
+                if (!_mesh.IsConnected)
+                { MessageBox.ErrorQuery("Send map item", "The Meshtastic device is not connected.", "OK"); return; }
+                Guid uuid;
+                if (!Guid.TryParse(point.Uuid, out uuid) || String.IsNullOrWhiteSpace(point.ShortName))
+                { MessageBox.ErrorQuery("Send map item", "The item needs a valid UUID and a short name before it can be shared.", "OK"); return; }
+                var message = BuildSharedMapPointMessage(point);
+                var bytes = Encoding.UTF8.GetByteCount(message);
+                if (bytes > MeshtasticClient.MaximumTextPayloadBytes)
+                { MessageBox.ErrorQuery("Send map item", "This item needs " + bytes.ToString(CultureInfo.InvariantCulture) + " bytes, but a Meshtastic text message can contain only " + MeshtasticClient.MaximumTextPayloadBytes.ToString(CultureInfo.InvariantCulture) + ". Shorten the name or description.", "OK"); return; }
+                try
+                {
+                    SendSharedMapMessage(message);
+                    MessageBox.Query("Send map item", "The item was sent to the configured sharing channel.", "OK");
+                }
+                catch (Exception ex) { MessageBox.ErrorQuery("Send map item", "The item could not be sent:\n" + ex.Message, "OK"); }
+            }
             else if (choice == 1)
             {
                 if (source == null || source.Data == null) { MessageBox.ErrorQuery("Delete map item", "The source XML file is unavailable.", "OK"); return; }
                 if (source.Data.WriteProtected) { MessageBox.ErrorQuery("Delete map item", "The source XML file is write protected.", "OK"); return; }
-                if (MessageBox.Query("Delete map item", "Delete this item from " + Path.GetFileName(source.FileName) + "?", "Delete", "Cancel") != 0) return;
-                try { source.Data.Places.Remove(point); SaveMapOverlayFile(source); RefreshMapOverlays(); _mapInfo.Text = "No item selected"; }
-                catch (Exception ex) { MessageBox.ErrorQuery("Delete map item", ex.Message, "OK"); }
+                bool sendDeletion;
+                if (!ConfirmMapOverlayPointDeletion(point, source, out sendDeletion)) return;
+                try
+                {
+                    source.Data.Places.Remove(point);
+                    SaveMapOverlayFile(source);
+                    RefreshMapOverlays();
+                    _mapInfo.Text = "No item selected";
+                }
+                catch (Exception ex) { source.Data.Places.Add(point); MessageBox.ErrorQuery("Delete map item", ex.Message, "OK"); return; }
+                if (sendDeletion)
+                {
+                    if (_settings.Map == null || !_settings.Map.MapPointSharingEnabled) MessageBox.ErrorQuery("Map point sharing", "The point was deleted locally, but map point sharing is disabled.", "OK");
+                    else if (!_mesh.IsConnected) MessageBox.ErrorQuery("Map point sharing", "The point was deleted locally, but the Meshtastic device is not connected.", "OK");
+                    else
+                    {
+                        Guid uuid;
+                        if (!Guid.TryParse(point.Uuid, out uuid)) MessageBox.ErrorQuery("Map point sharing", "The point was deleted locally, but its UUID is invalid.", "OK");
+                        else
+                        {
+                            try { SendSharedMapMessage(SharedMapPointDeletionPrefix + uuid.ToString("N")); }
+                            catch (Exception ex) { MessageBox.ErrorQuery("Map point sharing", "The point was deleted locally, but the deletion message could not be sent:\n" + ex.Message, "OK"); }
+                        }
+                    }
+                }
             }
         }
         private static void ShowAllTelemetry()
@@ -2913,6 +3492,39 @@ namespace ConsoleClient
             }
             ShowNodeDetails(node);
         }
+        private static void ShowMapClusterNodes(IReadOnlyList<StoredMeshNode> cluster)
+        {
+            if (cluster == null || cluster.Count == 0) return;
+            var nodes = cluster.OrderBy(node => node.ShortName ?? "", StringComparer.CurrentCultureIgnoreCase)
+                .ThenBy(node => node.LongName ?? "", StringComparer.CurrentCultureIgnoreCase).ToList();
+            Func<string, int, string> column = (value, length) =>
+            {
+                value = ReplaceGraphicalSymbols(value ?? "").Replace('\r', ' ').Replace('\n', ' ');
+                return (value.Length > length ? value.Substring(0, length) : value).PadRight(length);
+            };
+            var labels = nodes.Select(node => column(node.ShortName, 8) + " | " +
+                column(node.HopsAway.HasValue ? node.HopsAway.Value.ToString(CultureInfo.InvariantCulture) : "-", 4) + " | " +
+                column(String.IsNullOrWhiteSpace(node.LongName) ? node.NodeId ?? "!" + node.NodeNumber.ToString("x8") : node.LongName, 32) + " | " +
+                (node.LastReceivedUtc == DateTime.MinValue ? "-" : node.LastReceivedUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") + " (" + FormatDetailedAge(node.LastReceivedUtc) + ")")).ToList();
+            var width = Math.Max(30, Math.Min(116, Application.Top.Frame.Width - 2));
+            var height = Math.Max(8, Math.Min(nodes.Count + 7, Application.Top.Frame.Height - 2));
+            var dialog = new Dialog("Nodes in cluster (" + nodes.Count.ToString(CultureInfo.InvariantCulture) + ")", width, height);
+            var list = new ListView(labels) { X = 1, Y = 2, Width = Dim.Fill(1), Height = Dim.Fill(2) };
+            dialog.Add(new Label(column("Short", 8) + " | " + column("Hops", 4) + " | " + column("Long name", 32) + " | Last heard") { X = 1, Y = 1, Width = Dim.Fill(1) }, list);
+            Action details = delegate
+            {
+                if (list.SelectedItem >= 0 && list.SelectedItem < nodes.Count) ShowNodeDetails(nodes[list.SelectedItem]);
+            };
+            list.OpenSelectedItem += delegate { details(); };
+            var open = new Button("Details", true);
+            open.Clicked += delegate { details(); };
+            var close = new Button("Close");
+            close.Clicked += delegate { Application.RequestStop(); };
+            dialog.AddButton(open); dialog.AddButton(close);
+            Application.Run(dialog, HandleTerminalGuiException);
+            if (_nodeMap != null) _nodeMap.SetFocus();
+        }
+
         private static void ShowNodeDetails(StoredMeshNode node)
         {
             var distance = MeshtasticClient.GetDistanceMeters(_mesh.Device.Latitude, _mesh.Device.Longitude, node.Latitude, node.Longitude);
@@ -3408,11 +4020,13 @@ namespace ConsoleClient
             var httpUrl = new TextField(_settings.Alerts.HttpGetUrl ?? "") { X = 22, Y = 11, Width = 65 };
             var executableEnabled = new CheckBox("Enable alert shell command") { X = 1, Y = 13, Checked = _settings.Alerts.EnableExecutable };
             var executable = new TextField(_settings.Alerts.ExecutablePath ?? "") { X = 22, Y = 14, Width = 65 };
+            var suppressMap = new CheckBox("Suppress alerts for ///MAP messages") { X = 1, Y = 16, Checked = _settings.Alerts.SuppressMapMessageAlerts };
             var save = new Button("Save", true);
             save.Clicked += delegate
             {
                 int parsedInterval;
                 if (!Int32.TryParse(interval.Text.ToString(), out parsedInterval) || parsedInterval < 0) { MessageBox.ErrorQuery("Alert settings", "The repeat interval must be zero or a positive number of seconds.", "OK"); return; }
+                _settings.Alerts.SuppressMapMessageAlerts = suppressMap.Checked;
                 _settings.Alerts.EnableWindowsBeep = windowsBeep.Checked;
                 _settings.Alerts.EnableTerminalBell = terminalBell.Checked;
                 _settings.EnableNewMessageBeep = windowsBeep.Checked || terminalBell.Checked;
@@ -3423,7 +4037,7 @@ namespace ConsoleClient
                 _settings.Alerts.HttpGetUrl = httpUrl.Text.ToString().Trim();
                 _settings.Alerts.EnableExecutable = executableEnabled.Checked;
                 _settings.Alerts.ExecutablePath = executable.Text.ToString().Trim();
-                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); Application.RequestStop();
+                MeshtasticSettingsStore.Save("meshtastic-settings.xml", _settings); NotifyAlertStateChanged(null); UpdateLogoBlink(); Application.RequestStop();
             };
             var cancel = new Button("Cancel");
             cancel.Clicked += delegate { Application.RequestStop(); };
@@ -3432,7 +4046,7 @@ namespace ConsoleClient
                 desktopNotification, testNotification,
                 blinkLogo,
                 httpEnabled, new Label("HTTP GET URL:") { X = 1, Y = 11 }, httpUrl,
-                executableEnabled, new Label("Shell command:") { X = 1, Y = 14 }, executable);
+                executableEnabled, new Label("Shell command:") { X = 1, Y = 14 }, executable, suppressMap);
             dialog.AddButton(save); dialog.AddButton(cancel);
             Application.Run(dialog, HandleTerminalGuiException);
         }
@@ -3920,11 +4534,14 @@ namespace ConsoleClient
         private static void NotifyAlertStateChanged(MeshMessage message)
         {
             int unreadCount;
-            try { unreadCount = _store.CountNewMessages(); }
+            try { unreadCount = _store.CountNewMessages(_settings.Alerts.SuppressMapMessageAlerts); }
             catch { return; }
 
             var becameFullyRead = message == null && unreadCount == 0 && _lastKnownUnreadCount > 0;
             _lastKnownUnreadCount = unreadCount;
+
+            if (message != null && _settings.Alerts.SuppressMapMessageAlerts &&
+                (message.Text ?? "").StartsWith("///MAP", StringComparison.Ordinal)) return;
 
             if (message != null && (_settings.Alerts.EnableWindowsBeep || _settings.Alerts.EnableTerminalBell)) PlayAlertBeep();
             if (message != null && _settings.Alerts.EnableDesktopNotifications) ShowDesktopNotification(message);
@@ -3965,7 +4582,7 @@ namespace ConsoleClient
             _nextRepeatedAlertCheckUtc = now.AddSeconds(_settings.Alerts.RepeatBeepIntervalSeconds);
             try
             {
-                if (_store.CountNewMessages() > 0) PlayAlertBeep();
+                if (_store.CountNewMessages(_settings.Alerts.SuppressMapMessageAlerts) > 0) PlayAlertBeep();
             }
             catch { }
         }

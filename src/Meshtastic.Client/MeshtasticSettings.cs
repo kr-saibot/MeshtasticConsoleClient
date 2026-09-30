@@ -151,6 +151,7 @@ namespace Meshtastic.Client
         public bool EnableWindowsBeep { get; set; }
         public bool EnableTerminalBell { get; set; }
         public bool EnableDesktopNotifications { get; set; }
+        public bool SuppressMapMessageAlerts { get; set; }
         public bool BlinkLogoForUnreadMessages { get; set; }
         public int RepeatBeepIntervalSeconds { get; set; }
         public bool EnableHttpGet { get; set; }
@@ -182,13 +183,25 @@ namespace Meshtastic.Client
         public bool ShowBackgroundMap { get; set; }
         public bool HopLimitEnabled { get; set; }
         public int HopLimit { get; set; }
+        public string PositionMarkerColor { get; set; } = "BrightYellow";
+        public string PositionMarkerSymbol { get; set; } = "+";
+        public string PositionMarkerCallSign { get; set; } = "";
+        public string PositionMarkerInfo { get; set; } = "";
+        public bool ReceivePositionMarkers { get; set; } = true;
+        public bool ConfirmPositionMarkerPlacement { get; set; } = true;
+        public bool PositionMarkerUseGps { get; set; }
+        public bool MapPointSharingEnabled { get; set; }
+        public bool ReceiveSharedMapPointDeletions { get; set; }
+        public bool CenterMapOnReceivedSharedPoint { get; set; }
+        public string MapPointSharingOverlayFile { get; set; }
+        public int MapPointSharingChannelIndex { get; set; }
         public uint? PositionTrackNodeNumber { get; set; }
         public bool PositionTrackVisible { get; set; }
         public int PositionTrackFromHoursAgo { get; set; }
         public int PositionTrackToHoursAgo { get; set; }
         public string PositionTrackColor { get; set; }
         public string PositionTrackSymbol { get; set; }
-        public MeshtasticMapSettings() { MetersPerRow = 1000d; ShowKnownNodes = true; ShowBackgroundMap = true; HopLimit = 0; PositionTrackVisible = true; PositionTrackFromHoursAgo = 0; PositionTrackToHoursAgo = 24; PositionTrackColor = "BrightYellow"; PositionTrackSymbol = "O"; }
+        public MeshtasticMapSettings() { MetersPerRow = 1000d; ShowKnownNodes = true; ShowBackgroundMap = true; HopLimit = 0; ReceiveSharedMapPointDeletions = true; MapPointSharingOverlayFile = ""; MapPointSharingChannelIndex = 0; PositionTrackVisible = true; PositionTrackFromHoursAgo = 0; PositionTrackToHoursAgo = 24; PositionTrackColor = "BrightYellow"; PositionTrackSymbol = "O"; }
     }
     /// <summary>Root object for a readable, application-owned settings file.</summary>
     [XmlRoot("MeshtasticApplicationSettings")]

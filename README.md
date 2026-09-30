@@ -54,11 +54,11 @@ unchanged terminal application. It uses Windows ConPTY and the Windows Terminal
 renderer, so keyboard navigation, Tab, cursor keys, mouse input, Unicode symbols
 and terminal colours work as they do in a modern terminal.
 
-Keep `MeshtasticConsoleHost.exe`, `ConsoleClient.exe` and all files and folders
-from the release package together. On startup, the host always uses the
-`ConsoleClient.exe` in its own directory first. If it is missing, the host uses
-a previously selected valid fallback or opens a file picker. A different client
-can also be selected manually from the window system menu.
+Keep the release directory structure intact: the client and its dependencies
+belong in the Windows output root; the host and its dependencies belong in the
+**Host** subdirectory. This prevents dependency-version collisions. The host
+locates the packaged client or uses a selected fallback. A different client can
+also be selected manually from the window system menu.
 
 The host adds the following Windows integration:
 
@@ -120,6 +120,69 @@ disabling the filter. Nodes without known hop information are hidden while the
 filter is enabled. Node details show both the last-received timestamp and a
 readable relative age, for example `(2 days 10 hours ago)`.
 
+### Overlay shapes and measurement
+
+XML overlays support points, lines, circles and rectangles with configurable
+colours, fill symbols and fill density. The symbol picker includes the CP437
+symbols and additional Unicode symbols; the Windows host preserves these symbols
+during terminal output. **Copy current map** includes rendered shapes and markers.
+
+Press **M** repeatedly to cycle measurement through **Off**, **Line**, **Circle**
+and **Rectangle**. Temporary shapes are drawn with **M** characters between the
+measurement anchor and the cursor. **Selected Item** shows distance and direction
+for a line, radius and area for a circle, or width, height and area for a rectangle.
+Press **N** to create an item with the current measurement shape; when measurement
+is off, a point is selected. Creating the item turns measurement off.
+
+Press **Space** to centre a selected item. **Enter** or a double click on a node
+cluster opens a list showing short name, hops, long name and last-heard time.
+Select a node to open its details.
+
+### Map sharing
+
+Configure **Map point sharing** and its channel to exchange overlay objects with
+other clients. Points, lines, circles, rectangles and their fill settings are
+transmitted as ordinary Meshtastic text messages. **Map item details > Send again**
+resends the selected object with its existing UUID. Objects already present at the
+receiver are deduplicated by UUID; resending does not update an existing object.
+Deletion can also be shared.
+
+Messages must fit within 233 UTF-8 bytes; long names or descriptions may need to
+be shortened. The format and receiving rules are documented in
+[MAP-SYNC-PROTOKOLL.md](MAP-SYNC-PROTOKOLL.md).
+
+### Position markers
+
+**Map > Position Markers** configures the own marker's call sign, free-text info,
+colour and centre symbol. Markers look like crosshairs, render above all other map
+layers and are stored only in memory. Each Meshtastic node ID has one marker;
+incoming updates replace that node's marker.
+
+Press **O** to set the own marker. Settings choose the crosshair or current device
+GPS position, whether to ask before setting it, and whether received marker
+messages are evaluated. GPS mode requires a valid device position. With map point
+sharing enabled, setting the marker also sends it to the configured channel.
+
+Press **L** to open the narrow marker list near the right edge. It shows call sign,
+distance and update age. Moving through the list centres and selects each marker;
+**Enter** or a double click opens its info box. Details include free text, update
+age, distance and direction relative to the own marker, or device GPS if no own
+marker exists. Actions centre the map, open node details, start a direct chat or
+delete the marker locally after confirmation. A later received update can recreate
+a deleted marker. Markers disappear when the application exits.
+
+### Included Germany overlays
+
+- Federal-state boundaries use red asterisk (*) lines, including island outlines.
+- The water and city overlay contains blue **w** river and lake outlines,
+  brown filled **.** circles for major cities and green points for smaller places.
+  City-circle radii approximate municipality area, rather than built-up area.
+  Autobahns are not included.
+
+See the [water and city overlay documentation](src/ConsoleClient/map/germany-water-cities-motorways.md)
+for coverage, approximation details, sources and licences. Its historical filename
+is retained for compatibility with saved overlay settings.
+
 ## Messages and delivery status
 
 Incoming text messages use the Meshtastic packet `rx_time` as their displayed
@@ -141,6 +204,14 @@ writes, restores the terminal and then exits directly. This prevents the
 Terminal.Gui/Mono event loop from consuming CPU for minutes or hours after a
 long-running session.
 
+### Alerts
+
+**Settings > Alerts > Suppress alerts for ///MAP messages** excludes map-object,
+deletion and position-marker messages from desktop notifications, Windows beeps,
+terminal BEL, repeated beeps, unread-message logo blinking, alert HTTP requests
+and alert shell commands. Messages remain in chat and map synchronisation remains
+active. The option is off by default.
+
 ## Emoji picker
 
 The emoji picker provides keyboard-friendly selection and preview of emoji in a
@@ -154,26 +225,25 @@ Prerequisites:
 
 - .NET SDK with .NET Framework 4.7.2 targeting support
 - NuGet package restore access
-- A Meshtastic device, a TCP-connected Meshtastic service, or both for live use
 
-```powershell
-dotnet restore MeshtasticNet472.sln
-dotnet build MeshtasticNet472.sln --configuration Release
-```
+Create both Windows and Linux builds with the repository's build script:
 
-For the Linux output configuration:
+~~~powershell
+.\tools\Build-All.ps1
+~~~
 
-```powershell
-dotnet build MeshtasticNet472.sln --configuration Linux
-```
+Canonical output directories:
 
-The terminal client is built to `src/ConsoleClient/bin/<configuration>/net472/`.
-The Windows host project is located in `src/ConsoleHost/` and targets x64.
-Release builds do not include `.pdb` debug-symbol files. These symbols are not
-needed at runtime; use a Debug build when source-level crash diagnostics are
-required.
-On Linux it is intended to run with Mono and uses the distribution-provided
-`libsqlite3.so` library.
+- Windows: C:\Users\Tobias\Documents\ConsoleClientBuilds\Windows
+- Linux: C:\Users\Tobias\Documents\ConsoleClientBuilds\Linux
+
+The script uses .build-staging temporarily and overwrites program files while
+preserving existing runtime data, including meshtastic-settings.xml,
+meshtastic-messages.db and Host/settings.ini. The Windows host and its dependencies
+are packaged in Windows/Host separately from the client.
+
+Release builds omit debug symbols. The Windows host targets x64.
+On Linux, run the client with Mono and the distribution's libsqlite3.so.
 
 ## Running
 

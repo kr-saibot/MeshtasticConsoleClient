@@ -180,7 +180,11 @@ namespace Meshtastic.Client
         public void DeleteChannelMessages(int channelIndex) { Execute("DELETE FROM MeshtasticMessages WHERE Kind='Channel' AND ChannelIndex=@channel", delegate(DbCommand c) { Add(c, "@channel", channelIndex); }); }
         public int CountNewChannelMessages(int channelIndex) { return Count("SELECT COUNT(*) FROM MeshtasticMessages WHERE Kind='Channel' AND ChannelIndex=@channel AND IsNew=1", delegate(DbCommand c) { Add(c, "@channel", channelIndex); }); }
         public int CountNewDirectMessages(uint node) { return Count("SELECT COUNT(*) FROM MeshtasticMessages WHERE Kind='Direct' AND (FromNode=@node OR ToNode=@node) AND IsNew=1", delegate(DbCommand c) { Add(c, "@node", (long)node); }); }
-        public int CountNewMessages() { return Count("SELECT COUNT(*) FROM MeshtasticMessages WHERE IsNew=1", null); }
+        public int CountNewMessages(bool excludeMapMessages = false)
+        {
+            return Count("SELECT COUNT(*) FROM MeshtasticMessages WHERE IsNew=1" +
+                (excludeMapMessages ? " AND (Text IS NULL OR Text NOT LIKE '///MAP%')" : ""), null);
+        }
         public void MarkChannelMessagesRead(int channelIndex) { Execute("UPDATE MeshtasticMessages SET IsNew=0 WHERE Kind='Channel' AND ChannelIndex=@channel", delegate(DbCommand c) { Add(c, "@channel", channelIndex); }); }
         public void MarkDirectMessagesRead(uint node) { Execute("UPDATE MeshtasticMessages SET IsNew=0 WHERE Kind='Direct' AND (FromNode=@node OR ToNode=@node)", delegate(DbCommand c) { Add(c, "@node", (long)node); }); }
         public void MarkAllMessagesRead() { Execute("UPDATE MeshtasticMessages SET IsNew=0", null); }

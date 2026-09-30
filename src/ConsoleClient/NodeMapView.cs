@@ -16,23 +16,35 @@ namespace ConsoleClient
             public double Latitude, Longitude;
             public string Label, Key;
             public MapOverlayPoint Overlay;
+            public MapPositionMarker Position;
             public Color Color;
         }
 
+        private readonly Dictionary<uint, MapPositionMarker> _positionMarkers = new Dictionary<uint, MapPositionMarker>();
         private readonly List<StoredMeshNode> _nodes = new List<StoredMeshNode>();
         private readonly List<MapOverlayPoint> _overlayPoints = new List<MapOverlayPoint>();
         private readonly List<Marker> _markers = new List<Marker>();
+        private readonly Dictionary<string, MapOverlayPoint> _shapeHitCells = new Dictionary<string, MapOverlayPoint>();
         private readonly OfflineMapProvider _offlineMap = OfflineMapProvider.TryOpenDefault();
         private double? _ownLatitude, _ownLongitude;
         private double _centerLatitude, _centerLongitude, _metersPerRow = 1000d;
+        private double? _measurementLatitude, _measurementLongitude;
+        private int _measurementMode;
+        private char[][] _mapTextRows;
         private string _selectedKey;
+        private MapOverlayPoint _selectedShapeOverlay;
         private bool _selectionSuppressed;
         private bool _selectCrosshairAfterViewChange;
         private Color[,] _backgroundColors;
         private int _backgroundWidth, _backgroundHeight;
         private double _backgroundLatitude, _backgroundLongitude, _backgroundMetersPerRow;
 
+        public Action PositionMarkerListRequested { get; set; }
+        public Action<double, double> OwnPositionMarkerRequested { get; set; }
+        public Action<MapPositionMarker> PositionMarkerSelected { get; set; }
+        public Action<MapPositionMarker> PositionMarkerActivated { get; set; }
         public Action<StoredMeshNode> NodeActivated { get; set; }
+        public Action<IReadOnlyList<StoredMeshNode>> ClusterActivated { get; set; }
         public Action<StoredMeshNode> SelectionChanged { get; set; }
         public Action<MapOverlayPoint> OverlaySelectionChanged { get; set; }
         public Action<MapOverlayPoint> OverlayActivated { get; set; }
@@ -47,6 +59,10 @@ namespace ConsoleClient
         public double CenterLatitude { get { return _centerLatitude; } }
         public double CenterLongitude { get { return _centerLongitude; } }
         public double MetersPerRow { get { return _metersPerRow; } }
+        public bool HasMeasurementPoint { get { return _measurementLatitude.HasValue && _measurementLongitude.HasValue; } }
+        public string MeasurementShape { get { return _measurementMode == 1 ? "Line" : _measurementMode == 2 ? "Circle" : _measurementMode == 3 ? "Rectangle" : "Point"; } }
+        public double MeasurementLatitude { get { return _measurementLatitude.GetValueOrDefault(); } }
+        public double MeasurementLongitude { get { return _measurementLongitude.GetValueOrDefault(); } }
         public Color NodeColor { get; set; } = Color.BrightCyan;
         public Color ClusterColor { get; set; } = Color.BrightMagenta;
         public Color GridColor { get; set; } = Color.DarkGray;
@@ -96,7 +112,18 @@ namespace ConsoleClient
             if (e.Key == (Key)'-') { _metersPerRow = Math.Min(2000000d, _metersPerRow * 2d); NotifyViewChanged(); SetNeedsDisplay(); return true; }
             if (e.Key == (Key)'c' || e.Key == (Key)'C') { Center(); return true; }
             if (e.Key == Key.Enter) { ActivateSelection(); return true; }
+            if (e.Key == (Key)' ') { CenterSelectedItem(); return true; }
+            if (e.Key == (Key)'l' || e.Key == (Key)'L') { if (PositionMarkerListRequested != null) PositionMarkerListRequested(); return true; }
+            if (e.Key == (Key)'o' || e.Key == (Key)'O') { if (OwnPositionMarkerRequested != null) OwnPositionMarkerRequested(_centerLatitude, _centerLongitude); return true; }
             if (e.Key == (Key)'n' || e.Key == (Key)'N') { if (NewOverlayPointRequested != null) NewOverlayPointRequested(_centerLatitude, _centerLongitude); return true; }
+            if (e.Key == (Key)'m' || e.Key == (Key)'M')
+            {
+                if (_measurementMode == 0) { _measurementLatitude = _centerLatitude; _measurementLongitude = _centerLongitude; }
+                _measurementMode = (_measurementMode + 1) % 4;
+                if (_measurementMode == 0) ResetMeasurement();
+                ShowMeasurementInfo();
+                SetNeedsDisplay(); return true;
+            }
             if (e.Key == (Key)'h' || e.Key == (Key)'H') { if (HelpRequested != null) HelpRequested(); return true; }
             if (e.Key >= (Key)'1' && e.Key <= (Key)'7') { if (OverlayToggleRequested != null) OverlayToggleRequested((int)e.Key - (int)(Key)'1'); return true; }
             if (e.Key == (Key)'8') { if (BackgroundMapToggleRequested != null) BackgroundMapToggleRequested(); return true; }
@@ -133,7 +160,8 @@ namespace ConsoleClient
                 double latitude, longitude; Unproject(e.X, e.Y, Bounds.Width, Bounds.Height, out latitude, out longitude); CenterOn(latitude, longitude); return true;
             }
             if (!e.Flags.HasFlag(MouseFlags.Button1Clicked) && !e.Flags.HasFlag(MouseFlags.Button1DoubleClicked)) return base.MouseEvent(e);
-            var marker = _markers.Where(item => item.Overlay == null || item.Overlay.Selectable).OrderBy(item => Math.Abs(item.X - e.X) + Math.Abs(item.Y - e.Y) * 2).FirstOrDefault();
+            var marker = _markers.LastOrDefault(item => item.Position != null && ((item.Y == e.Y && Math.Abs(item.X - e.X) <= 2) || (item.X == e.X && Math.Abs(item.Y - e.Y) == 1))) ??
+                _markers.Where(item => item.Overlay == null || item.Overlay.Selectable).OrderBy(item => Math.Abs(item.X - e.X) + Math.Abs(item.Y - e.Y) * 2).FirstOrDefault();
             if (marker == null || Math.Abs(marker.Y - e.Y) > 1 || Math.Abs(marker.X - e.X) > Math.Max(2, marker.Label.Length))
             {
                 double latitude, longitude;
@@ -161,11 +189,13 @@ namespace ConsoleClient
                 for (var x = width / 2 % 10; x < width; x += 10) Draw(x, y, ".", GridColor, Color.Black, width);
 
             DrawCenterCrosshair(width, height);
+            DrawOverlayShapes(width, height);
             BuildVisibleMarkers(width, height);
             AddOverlayMarkers(width, height);
+            AddPositionMarkers(width, height);
             if (_selectCrosshairAfterViewChange) SelectCrosshairItem(width, height);
             EnsureVisibleSelection(width, height);
-            foreach (var marker in _markers)
+            foreach (var marker in _markers.Where(item => item.Position == null).OrderBy(item => item.Overlay != null && String.Equals(item.Overlay.Shape, "Point", StringComparison.OrdinalIgnoreCase) ? 1 : 0))
             {
                 var selected = marker.Key == _selectedKey;
                 var markerColor = marker.Overlay != null ? marker.Color : marker.Nodes.Count > 1 ? ClusterColor : NodeColor;
@@ -179,6 +209,8 @@ namespace ConsoleClient
                 Project(_ownLatitude.Value, _ownLongitude.Value, width, height, out x, out y);
                 Draw(x, y, "[YOU]", Color.BrightGreen, Color.Black, width);
             }
+            DrawMeasurementPreview(width, height);
+            if (HasMeasurementPoint) ShowMeasurementInfo();
 
             var columns = Math.Min(12, Math.Max(4, width / 6));
             var meters = columns * _metersPerRow * .5d;
@@ -189,6 +221,109 @@ namespace ConsoleClient
             var coordinatesLeft = Math.Max(0, scaleLeft - coordinates.Length - 1);
             Draw(coordinatesLeft + coordinates.Length / 2, height - 1, coordinates, Color.Gray, Color.Black, Math.Max(0, scaleLeft - 1));
             Draw(scaleLeft + scaleText.Length / 2, height - 1, scaleText, Color.Gray, Color.Black, width);
+            DrawPositionMarkers(width, height);
+        }
+
+
+
+        public IReadOnlyList<MapPositionMarker> GetPositionMarkers()
+        {
+            return _positionMarkers.Values.OrderBy(marker => marker.CallSign, StringComparer.CurrentCultureIgnoreCase).ToList();
+        }
+        public MapPositionMarker GetPositionMarker(uint number)
+        {
+            MapPositionMarker marker; return _positionMarkers.TryGetValue(number, out marker) ? marker : null;
+        }
+        public void RemovePositionMarker(uint number)
+        {
+            _positionMarkers.Remove(number);
+            _markers.RemoveAll(marker => marker.Position != null && marker.Position.NodeNumber == number);
+            if (_selectedKey == "p:" + number) { ClearSelectionAndShowCrosshair(); if (MapFeatureSelectionChanged != null) MapFeatureSelectionChanged(""); }
+            SetNeedsDisplay();
+        }
+        public void SelectPositionMarker(uint number)
+        {
+            var marker = GetPositionMarker(number); if (marker == null) return;
+            _centerLatitude = marker.Latitude; _centerLongitude = marker.Longitude;
+            _selectedKey = "p:" + number; _selectedShapeOverlay = null;
+            _selectionSuppressed = false; _selectCrosshairAfterViewChange = false;
+            NotifyViewChanged(); RefreshPositionMarkerInfo(); SetNeedsDisplay();
+        }
+        public void RefreshPositionMarkerInfo()
+        {
+            var marker = _positionMarkers.Values.FirstOrDefault(item => _selectedKey == "p:" + item.NodeNumber);
+            if (marker != null && PositionMarkerSelected != null) PositionMarkerSelected(marker);
+        }
+
+        public void SetPositionMarker(MapPositionMarker marker)
+        {
+            if (marker == null) return;
+            _positionMarkers[marker.NodeNumber] = marker;
+            if (_selectedKey == "p:" + marker.NodeNumber && PositionMarkerSelected != null) PositionMarkerSelected(marker);
+            SetNeedsDisplay();
+        }
+        private void AddPositionMarkers(int width, int height)
+        {
+            foreach (var position in _positionMarkers.Values)
+            {
+                int x, y; Project(position.Latitude, position.Longitude, width, height, out x, out y);
+                if (x < -2 || x >= width + 2 || y < -1 || y >= height - 1) continue;
+                _markers.Add(new Marker { X = x, Y = y, Latitude = position.Latitude, Longitude = position.Longitude,
+                    Label = position.Symbol, Key = "p:" + position.NodeNumber, Position = position });
+            }
+        }
+        private void DrawPositionMarkers(int width, int height)
+        {
+            foreach (var position in _positionMarkers.Values.OrderBy(item => "p:" + item.NodeNumber == _selectedKey ? 1 : 0))
+            {
+                int x, y; Project(position.Latitude, position.Longitude, width, height, out x, out y);
+                Color color; if (!Enum.TryParse(position.Color, true, out color)) color = Color.BrightYellow;
+                Action<int, int, string> draw = (px, py, symbol) => { if (py >= 0 && py < height - 1) Draw(px, py, symbol, color, Color.Black, width); };
+                draw(x, y - 1, "|"); draw(x - 1, y, "--"); draw(x + 2, y, "--"); draw(x, y + 1, "|");
+                if (y >= 0 && y < height - 1)
+                {
+                    if ("p:" + position.NodeNumber == _selectedKey) DrawSelected(x, y, position.Symbol, color, Color.Black, width);
+                    else draw(x, y, position.Symbol);
+                }
+            }
+        }
+
+        private void DrawMeasurementPreview(int width, int height)
+        {
+            if (!HasMeasurementPoint) return;
+            int mx, my;
+            Project(MeasurementLatitude, MeasurementLongitude, width, height, out mx, out my);
+            var cx = width / 2; var cy = height / 2;
+            Action<int, int> draw = (x, y) =>
+            {
+                if (x < 0 || x >= width || y < 0 || y >= height - 1) return;
+                if ((y == cy && Math.Abs(x - cx) <= 2) || (x == cx && Math.Abs(y - cy) == 1)) return;
+                Draw(x, y, "M", Color.BrightYellow, Color.Black, width);
+            };
+            Action<int, int, int, int> line = (x1, y1, x2, y2) =>
+            {
+                if (ClipLine(ref x1, ref y1, ref x2, ref y2, width, height - 1)) AddLineCells(x1, y1, x2, y2, draw);
+            };
+            if (_measurementMode == 1) line(mx, my, cx, cy);
+            else if (_measurementMode == 3)
+            {
+                line(mx, my, cx, my); line(cx, my, cx, cy);
+                line(cx, cy, mx, cy); line(mx, cy, mx, my);
+            }
+            else if (_measurementMode == 2)
+            {
+                var radius = MeshtasticClient.GetDistanceMeters(MeasurementLatitude, MeasurementLongitude, _centerLatitude, _centerLongitude).GetValueOrDefault();
+                var rx = radius / (_metersPerRow * .5d); var ry = radius / _metersPerRow;
+                var previousX = mx + (int)Math.Round(rx); var previousY = my;
+                for (var degree = 1; degree <= 360; degree++)
+                {
+                    var angle = degree * Math.PI / 180d;
+                    var x = mx + (int)Math.Round(Math.Cos(angle) * rx);
+                    var y = my + (int)Math.Round(Math.Sin(angle) * ry);
+                    line(previousX, previousY, x, y); previousX = x; previousY = y;
+                }
+            }
+            Draw(mx, my, "M", Color.BrightYellow, Color.Black, width);
         }
 
         private void DrawBackground(int width, int height)
@@ -227,13 +362,81 @@ namespace ConsoleClient
             _backgroundLatitude = _centerLatitude; _backgroundLongitude = _centerLongitude; _backgroundMetersPerRow = _metersPerRow;
         }
 
+        private void DrawOverlayShapes(int width, int height)
+        {
+            _shapeHitCells.Clear();
+            foreach (var point in _overlayPoints.Where(item => item.ReferenceLatitude.HasValue && item.ReferenceLongitude.HasValue && !String.Equals(item.Shape, "Point", StringComparison.OrdinalIgnoreCase)))
+            {
+                int x1, y1, x2, y2;
+                Project(point.Latitude, point.Longitude, width, height, out x1, out y1);
+                Project(point.ReferenceLatitude.Value, point.ReferenceLongitude.Value, width, height, out x2, out y2);
+                Color color; if (!Enum.TryParse(point.Color ?? "Green", true, out color)) color = Color.Green;
+                var fillDensity = point.EffectiveFillDensity;
+                var outlineCells = new HashSet<string>(); var fillCells = new HashSet<string>();
+                Action<HashSet<string>, int, int> add = delegate(HashSet<string> set, int x, int y) { if (x >= 0 && x < width && y >= 0 && y < height - 1) set.Add(x + ":" + y); };
+                if (String.Equals(point.Shape, "Line", StringComparison.OrdinalIgnoreCase)) { if (ClipLine(ref x1, ref y1, ref x2, ref y2, width, height - 1)) AddLineCells(x1, y1, x2, y2, (x, y) => add(outlineCells, x, y)); }
+                else if (String.Equals(point.Shape, "Rectangle", StringComparison.OrdinalIgnoreCase))
+                {
+                    var left = Math.Min(x1, x2); var right = Math.Max(x1, x2); var top = Math.Min(y1, y2); var bottom = Math.Max(y1, y2);
+                    for (var y = Math.Max(0, top); y <= Math.Min(height - 2, bottom); y++) for (var x = Math.Max(0, left); x <= Math.Min(width - 1, right); x++) if (x == left || x == right || y == top || y == bottom) add(outlineCells, x, y); else if (fillDensity > 0) add(fillCells, x, y);
+                }
+                else if (String.Equals(point.Shape, "Circle", StringComparison.OrdinalIgnoreCase))
+                {
+                    var radiusMeters = MeshtasticClient.GetDistanceMeters(point.Latitude, point.Longitude, point.ReferenceLatitude, point.ReferenceLongitude).GetValueOrDefault(_metersPerRow);
+                    var radiusX = Math.Max(1, (int)Math.Round(radiusMeters / (_metersPerRow * .5d))); var radiusY = Math.Max(1, (int)Math.Round(radiusMeters / _metersPerRow));
+                    if (fillDensity > 0)
+                    {
+                        for (var y = Math.Max(-radiusY, -y1); y <= Math.Min(radiusY, height - 2 - y1); y++) for (var x = Math.Max(-radiusX, -x1); x <= Math.Min(radiusX, width - 1 - x1); x++) if ((x * x) / (double)(radiusX * radiusX) + (y * y) / (double)(radiusY * radiusY) <= 1.0) add(fillCells, x1 + x, y1 + y);
+                    }
+                    for (var degree = 0; degree < 360; degree += 2) add(outlineCells, x1 + (int)Math.Round(Math.Cos(degree * Math.PI / 180d) * radiusX), y1 + (int)Math.Round(Math.Sin(degree * Math.PI / 180d) * radiusY));
+                }
+                var outlineSymbol = String.IsNullOrEmpty(point.ShortName) ? "?" : StringInfo.GetNextTextElement(point.ShortName);
+                var fillSymbol = String.IsNullOrEmpty(point.FillSymbol) ? "*" : StringInfo.GetNextTextElement(point.FillSymbol);
+                foreach (var cell in fillCells)
+                {
+                    var parts = cell.Split(':'); var fillX = Int32.Parse(parts[0], CultureInfo.InvariantCulture); var fillY = Int32.Parse(parts[1], CultureInfo.InvariantCulture);
+                    var crosshairX = width / 2; var crosshairY = height / 2;
+                    var occupiesCrosshair = (fillY == crosshairY && Math.Abs(fillX - crosshairX) <= 2) || (fillX == crosshairX && Math.Abs(fillY - crosshairY) == 1);
+                    if (occupiesCrosshair) continue;
+                    if (fillDensity > 1 && Math.Abs((fillX - x1) + (fillY - y1) * 131) % fillDensity != 0) continue;
+                    Draw(fillX, fillY, fillSymbol, color, Color.Black, width);
+                }
+                foreach (var cell in outlineCells) { var parts = cell.Split(':'); Draw(Int32.Parse(parts[0], CultureInfo.InvariantCulture), Int32.Parse(parts[1], CultureInfo.InvariantCulture), outlineSymbol, color, Color.Black, width); }
+                foreach (var cell in fillCells) _shapeHitCells[cell] = point;
+                foreach (var cell in outlineCells) _shapeHitCells[cell] = point;
+            }
+        }
+
+        private static void AddLineCells(int x1, int y1, int x2, int y2, Action<int, int> add)
+        {
+            var dx = Math.Abs(x2 - x1); var sx = x1 < x2 ? 1 : -1; var dy = -Math.Abs(y2 - y1); var sy = y1 < y2 ? 1 : -1; var error = dx + dy;
+            while (true) { add(x1, y1); if (x1 == x2 && y1 == y2) break; var twice = 2 * error; if (twice >= dy) { error += dy; x1 += sx; } if (twice <= dx) { error += dx; y1 += sy; } }
+        }
+
+        private static bool ClipLine(ref int x1, ref int y1, ref int x2, ref int y2, int width, int height)
+        {
+            double t0 = 0d, t1 = 1d; var dx = x2 - x1; var dy = y2 - y1;
+            var p = new[] { -dx, dx, -dy, dy }; var q = new[] { x1, width - 1 - x1, y1, height - 1 - y1 };
+            for (var index = 0; index < 4; index++)
+            {
+                if (p[index] == 0) { if (q[index] < 0) return false; continue; }
+                var ratio = q[index] / (double)p[index];
+                if (p[index] < 0) { if (ratio > t1) return false; if (ratio > t0) t0 = ratio; }
+                else { if (ratio < t0) return false; if (ratio < t1) t1 = ratio; }
+            }
+            var originalX = x1; var originalY = y1;
+            x1 = (int)Math.Round(originalX + t0 * dx); y1 = (int)Math.Round(originalY + t0 * dy);
+            x2 = (int)Math.Round(originalX + t1 * dx); y2 = (int)Math.Round(originalY + t1 * dy);
+            return true;
+        }
+
         private void AddOverlayMarkers(int width, int height)
         {
             var occupied = new HashSet<string>();
             foreach (var marker in _markers)
                 for (var column = marker.X - marker.Label.Length / 2 - 1; column <= marker.X + marker.Label.Length / 2 + 1; column++) occupied.Add(marker.Y + ":" + column);
             var index = 0;
-            foreach (var point in _overlayPoints)
+            foreach (var point in _overlayPoints.OrderBy(item => String.Equals(item.Shape, "Point", StringComparison.OrdinalIgnoreCase) ? 0 : 1))
             {
                 int x, y;
                 Project(point.Latitude, point.Longitude, width, height, out x, out y);
@@ -307,6 +510,7 @@ namespace ConsoleClient
         private void EnsureVisibleSelection(int width, int height)
         {
             if (_selectionSuppressed) return;
+            if (_selectedShapeOverlay != null) return;
             var selectableMarkers = _markers.Where(marker => marker.Overlay == null || marker.Overlay.Selectable).ToList();
             if (selectableMarkers.Any(marker => marker.Key == _selectedKey)) return;
             var centerX = width / 2;
@@ -356,17 +560,26 @@ namespace ConsoleClient
             return "t:" + point.TelemetryNodeNumber + ":" + point.TelemetryReceivedAtUtc.Value.Ticks;
         }
 
+        private void CenterSelectedItem()
+        {
+            if (_selectedShapeOverlay != null)
+            {
+                CenterOn(_selectedShapeOverlay.Latitude, _selectedShapeOverlay.Longitude);
+                return;
+            }
+            var marker = _markers.FirstOrDefault(item => item.Key == _selectedKey);
+            if (marker != null) CenterOn(marker.Latitude, marker.Longitude);
+        }
+
         private void ActivateSelection()
         {
+            if (_selectedShapeOverlay != null) { if (OverlayActivated != null) OverlayActivated(_selectedShapeOverlay); return; }
             var marker = _markers.FirstOrDefault(item => item.Key == _selectedKey);
             if (marker == null) return;
-            if (marker.Nodes.Count > 1)
+            if (marker.Position != null) { if (PositionMarkerActivated != null) PositionMarkerActivated(marker.Position); }
+            else if (marker.Nodes.Count > 1)
             {
-                _centerLatitude = marker.Latitude;
-                _centerLongitude = marker.Longitude;
-                NotifySelection(null);
-                NotifyViewChanged();
-                SetNeedsDisplay();
+                if (ClusterActivated != null) ClusterActivated(marker.Nodes.ToList());
             }
             else if (marker.Overlay != null && OverlayActivated != null) OverlayActivated(marker.Overlay);
             else if (marker.Nodes.Count == 1 && NodeActivated != null) NodeActivated(marker.Nodes[0]);
@@ -374,9 +587,14 @@ namespace ConsoleClient
 
         private void SetSelection(Marker marker)
         {
+            _selectedShapeOverlay = null;
             _selectionSuppressed = false;
             _selectedKey = marker.Key;
-            if (marker.Overlay != null)
+            if (marker.Position != null)
+            {
+                if (PositionMarkerSelected != null) PositionMarkerSelected(marker.Position);
+            }
+            else if (marker.Overlay != null)
             {
                 NotifySelection(null);
                 if (OverlaySelectionChanged != null) OverlaySelectionChanged(marker.Overlay);
@@ -409,7 +627,7 @@ namespace ConsoleClient
             var node = _nodes.FirstOrDefault(item => item.NodeNumber == nodeNumber);
             if (node == null || !HasPosition(node)) return false;
             _centerLatitude = node.Latitude.Value; _centerLongitude = node.Longitude.Value;
-            _selectedKey = "n:" + node.NodeNumber; _selectionSuppressed = false; _selectCrosshairAfterViewChange = false;
+            _selectedKey = "n:" + node.NodeNumber; _selectedShapeOverlay = null; _selectionSuppressed = false; _selectCrosshairAfterViewChange = false;
             if (OverlaySelectionChanged != null) OverlaySelectionChanged(null);
             NotifySelection(node); NotifyViewChanged(); SetNeedsDisplay();
             return true;
@@ -420,7 +638,31 @@ namespace ConsoleClient
             _centerLatitude = latitude; _centerLongitude = longitude; _metersPerRow = Math.Max(1d, Math.Min(2000000d, metersPerRow)); SetNeedsDisplay();
         }
 
-        private void NotifyViewChanged() { if (ViewChanged != null) ViewChanged(); }
+        private void NotifyViewChanged() { if (ViewChanged != null) ViewChanged(); if (HasMeasurementPoint) ShowMeasurementInfo(); }
+
+        public void ResetMeasurement()
+        {
+            _measurementMode = 0;
+            _measurementLatitude = null;
+            _measurementLongitude = null;
+            ClearSelectionAndShowCrosshair();
+            if (MapFeatureSelectionChanged != null) MapFeatureSelectionChanged("");
+            SetNeedsDisplay();
+        }
+
+        private void ShowMeasurementInfo()
+        {
+            if (MapFeatureSelectionChanged == null) return;
+            if (!HasMeasurementPoint) return;
+            var distance = MeshtasticClient.GetDistanceMeters(_measurementLatitude, _measurementLongitude, _centerLatitude, _centerLongitude).GetValueOrDefault();
+            var vertical = (_centerLatitude - _measurementLatitude.Value) * 111320d;
+            var horizontal = (_centerLongitude - _measurementLongitude.Value) * 111320d * Math.Cos((_centerLatitude + _measurementLatitude.Value) * .5d * Math.PI / 180d);
+            Func<double, string> meters = value => Math.Abs(value) < 1000d ? Math.Abs(value).ToString("F0", CultureInfo.InvariantCulture) + " m" : (Math.Abs(value) / 1000d).ToString("F2", CultureInfo.InvariantCulture) + " km";
+            Func<double, string> area = value => value < 1000000d ? value.ToString("F0", CultureInfo.InvariantCulture) + " m²" : (value / 1000000d).ToString("F2", CultureInfo.InvariantCulture) + " km²";
+            if (_measurementMode == 2) { MapFeatureSelectionChanged("Measurement: Circle | Radius " + meters(distance) + " | Area " + area(Math.PI * distance * distance)); return; }
+            if (_measurementMode == 3) { MapFeatureSelectionChanged("Measurement: Rectangle | Width " + meters(horizontal) + " | Height " + meters(vertical) + " | Area " + area(Math.Abs(horizontal * vertical))); return; }
+            MapFeatureSelectionChanged("Measurement: Line from M | Distance " + meters(distance) + " | Horizontal " + meters(horizontal) + " " + (horizontal < 0 ? "W" : "E") + " | Vertical " + meters(vertical) + " " + (vertical < 0 ? "S" : "N"));
+        }
         private void Pan(int dx, int dy, int horizontalCells, int verticalCells)
         {
             _centerLatitude -= dy * _metersPerRow * verticalCells / 111320d;
@@ -432,7 +674,7 @@ namespace ConsoleClient
 
         private void ClearSelectionAndShowCrosshair()
         {
-            _selectedKey = null; _selectionSuppressed = true; _selectCrosshairAfterViewChange = true;
+            _selectedKey = null; _selectedShapeOverlay = null; _selectionSuppressed = true; _selectCrosshairAfterViewChange = true;
         }
 
         private void SelectCrosshairItem(int width, int height)
@@ -442,12 +684,19 @@ namespace ConsoleClient
             var marker = _markers.Where(item => item.Overlay == null || item.Overlay.Selectable)
                 .LastOrDefault(item => item.Y == centerY && centerX >= item.X - item.Label.Length / 2 && centerX < item.X - item.Label.Length / 2 + item.Label.Length);
             if (marker != null) { SetSelection(marker); return; }
+            MapOverlayPoint shapePoint;
+            if (_shapeHitCells.TryGetValue(centerX + ":" + centerY, out shapePoint) && shapePoint.Selectable)
+            {
+                _selectedKey = null; _selectedShapeOverlay = shapePoint; _selectionSuppressed = false;
+                NotifySelection(null); if (OverlaySelectionChanged != null) OverlaySelectionChanged(shapePoint); return;
+            }
+            if (HasMeasurementPoint) { ShowMeasurementInfo(); return; }
             SelectMapFeature(_centerLatitude, _centerLongitude, "Offline map", false);
         }
 
         private void SelectMapFeature(double latitude, double longitude, string emptyText, bool redraw = true)
         {
-            _selectedKey = null; _selectionSuppressed = true;
+            _selectedKey = null; _selectedShapeOverlay = null; _selectionSuppressed = true;
             var description = ShowBackgroundMap && _offlineMap != null ? _offlineMap.GetFeatureDescription(latitude, longitude, _metersPerRow) : null;
             if (MapFeatureSelectionChanged != null) MapFeatureSelectionChanged(String.IsNullOrWhiteSpace(description) ? emptyText : description);
             if (redraw) SetNeedsDisplay();
@@ -467,8 +716,14 @@ namespace ConsoleClient
             };
             for (var y = height / 2 % 5; y < height; y += 5) for (var x = width / 2 % 10; x < width; x += 10) rows[y][x] = '.';
             putCentered(width / 2, height / 2 - 1, "|"); putCentered(width / 2, height / 2, "--+--"); putCentered(width / 2, height / 2 + 1, "|");
+            _mapTextRows = rows;
+            try { DrawOverlayShapes(width, height); }
+            finally { _mapTextRows = null; }
             foreach (var marker in _markers) putCentered(marker.X, marker.Y, marker.Label);
             if (_ownLatitude.HasValue && _ownLongitude.HasValue) { int x, y; Project(_ownLatitude.Value, _ownLongitude.Value, width, height, out x, out y); putCentered(x, y, "[YOU]"); }
+            _mapTextRows = rows;
+            try { DrawMeasurementPreview(width, height); }
+            finally { _mapTextRows = null; }
             var columns = Math.Min(12, Math.Max(4, width / 6)); var meters = columns * _metersPerRow * .5d;
             var distance = meters < 1000d ? Math.Round(meters) + " m" : (meters / 1000d).ToString(meters < 10000d ? "F1" : "F0", CultureInfo.InvariantCulture) + " km";
             var scaleText = "|" + new string('-', columns - 2) + "| " + distance; var scaleLeft = Math.Max(0, width - scaleText.Length - 1);
@@ -476,6 +731,9 @@ namespace ConsoleClient
             var coordinatesLeft = Math.Max(0, scaleLeft - coordinates.Length - 1);
             for (var index = 0; index < coordinates.Length && coordinatesLeft + index < Math.Max(0, scaleLeft - 1); index++) rows[height - 1][coordinatesLeft + index] = coordinates[index];
             for (var index = 0; index < scaleText.Length && scaleLeft + index < width; index++) rows[height - 1][scaleLeft + index] = scaleText[index];
+            _mapTextRows = rows;
+            try { DrawPositionMarkers(width, height); }
+            finally { _mapTextRows = null; }
             return String.Join(Environment.NewLine, rows.Select(row => new string(row).TrimEnd()));
         }
         private void Unproject(int x, int y, int width, int height, out double latitude, out double longitude)
@@ -493,6 +751,13 @@ namespace ConsoleClient
         private void Draw(int x, int y, string text, Color foreground, Color background, int width)
         {
             x -= text.Length / 2;
+            if (_mapTextRows != null)
+            {
+                if (y < 0 || y >= _mapTextRows.Length) return;
+                for (var index = 0; index < text.Length; index++)
+                    if (x + index >= 0 && x + index < width) _mapTextRows[y][x + index] = text[index];
+                return;
+            }
             if (y < 0 || y >= Bounds.Height || x >= width) return;
             if (x < 0) { if (-x >= text.Length) return; text = text.Substring(-x); x = 0; }
             if (x + text.Length > width) text = text.Substring(0, width - x);
@@ -560,8 +825,9 @@ namespace ConsoleClient
             {
                 var element = (string)elements.Current;
                 var category = CharUnicodeInfo.GetUnicodeCategory(element, 0);
-                var graphical = category == UnicodeCategory.OtherSymbol || category == UnicodeCategory.MathSymbol || category == UnicodeCategory.ModifierSymbol || Char.IsSurrogate(element[0]);
-                result.Append(graphical ? "?" : element);
+                var unsupported = category == UnicodeCategory.Control || category == UnicodeCategory.Format ||
+                    category == UnicodeCategory.LineSeparator || category == UnicodeCategory.ParagraphSeparator || Char.IsSurrogate(element[0]);
+                result.Append(unsupported ? "?" : element);
             }
             return result.ToString();
         }

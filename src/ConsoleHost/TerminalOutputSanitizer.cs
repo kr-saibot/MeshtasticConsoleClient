@@ -49,7 +49,12 @@ namespace Meshtastic.ConsoleHost
 
         private static HashSet<char> CreateAllowedSymbols()
         {
-            var result = new HashSet<char> { '\u221a' };
+            var result = new HashSet<char> { '\u221a', '\u2302' };
+            // Preserve every symbol offered by the ConsoleClient map symbol picker.
+            foreach (var symbol in "␀☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼")
+                result.Add(symbol);
+            AddRange(result, '\u2295', '\u22a1');
+            AddRange(result, '\u29e8', '\u29f3');
             AddRange(result, '\u2500', '\u259f');
             AddRange(result, '\u25a0', '\u25ff');
             return result;
